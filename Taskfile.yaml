@@ -1,0 +1,46 @@
+version: '3'
+
+vars:
+  VERSION: v1.8.0
+  COMMIT:
+    sh: git rev-parse --short HEAD
+
+tasks:
+  default:
+    cmds:
+      - task: mac_amd64
+      - task: mac_arm64
+      - task: windows
+      - task: linux_amd64
+      - task: linux_arm64
+      - task: zip
+  mac_amd64:
+    cmds:
+      - task: mkdir
+      - GOOS=darwin GOARCH=amd64 go build -o dist/twslogeye.darwin_amd64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+  mac_arm64:
+    cmds:
+      - task: mkdir
+      - GOOS=darwin GOARCH=arm64 go build -o dist/twslogeye.darwin_arm64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+  windows:
+    cmds:
+      - task: mkdir
+      - GOOS=windows GOARCH=amd64 go build -o dist/twslogeye.exe -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+  linux_amd64:
+    cmds:
+      - task: mkdir
+      - GOOS=linux GOARCH=amd64 go build -o dist/twslogeye.linux_amd64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+  linux_arm64:
+    cmds:
+      - task: mkdir
+      - GOOS=linux GOARCH=arm64 go build -o dist/twslogeye.linux_arm64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+  zip:
+    cmds:
+      - (cd dist;zip twslogeye.darwin.zip twslogeye.darwin*)
+      - (cd dist;zip twslogeye.windows.zip twslogeye.exe)
+      - (cd dist;zip twslogeye.linux.zip twslogeye.linux*) 
+  mkdir:
+    - mkdir -p dist
+  clean:
+    cmds:
+      - rm -rf dist/*
