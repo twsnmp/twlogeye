@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -63,12 +61,12 @@ func Audit(l *datastore.LogEnt) {
 }
 
 func getSigmaConfig() *sigma.Config {
-	if datastore.Config.SigmaConfig == "" {
-		return nil
-	}
-	c, err := os.ReadFile(datastore.Config.SigmaConfig)
+	c, err := datastore.GetSigmaConfig()
 	if err != nil {
 		log.Fatalln("sigma config not found")
+	}
+	if c == nil {
+		return nil
 	}
 	ret, err := sigma.ParseConfig(c)
 	if err != nil {
@@ -79,26 +77,10 @@ func getSigmaConfig() *sigma.Config {
 
 func loadSigmaRules() {
 	config := getSigmaConfig()
-	filepath.WalkDir(datastore.Config.SigmaRules, func(path string, info fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		ext := strings.ToLower(filepath.Ext(path))
-		if ext != ".yaml" && ext != ".yml" {
-			return nil
-		}
-		c, err := os.ReadFile(path)
-		if err != nil {
-			log.Fatalf("invalid rule %s %s", path, err)
-			return err
-		}
+	datastore.ForEachSigmaRules(func(c []byte, path string) {
 		rule, err := sigma.ParseRule(c)
 		if err != nil {
 			log.Fatalf("invalid rule %s %s", path, err)
-			return err
 		}
 		if rule.ID == "" {
 			rule.ID = path
@@ -108,7 +90,6 @@ func loadSigmaRules() {
 		} else {
 			evaluators = append(evaluators, evaluator.ForRule(rule, evaluator.CaseSensitive))
 		}
-		return nil
 	})
 }
 

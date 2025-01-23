@@ -1,0 +1,20 @@
+title: syslog test rule
+id: df53630a-5c64-4a8c-827c-190fb77738e1
+status: test
+description: syslog test rule
+author: Masayuki Yamai(twsnmp@gmail.com)
+date: 2025-01-23
+modified: 2025-01-23
+tags:
+    - attack.discovery
+    - attack.t1083
+logsource:
+    category: test
+    product: linux
+detection:
+    selection:
+        content|contains: 'test'
+    condition: selection
+falsepositives:
+    - Unknown
+level: medium

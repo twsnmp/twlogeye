@@ -21,7 +21,7 @@ import (
 	"golang.org/x/text/transform"
 )
 
-//go:embed mibs
+//go:embed mibs/*
 var mibfs embed.FS
 
 var MIBDB *gomibdb.MIBDB
