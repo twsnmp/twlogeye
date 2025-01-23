@@ -26,6 +26,7 @@ import (
 )
 
 var cfgFile string
+var apiURL string
 
 var rootCmd = &cobra.Command{
 	Use:   "twlogeye",
@@ -49,6 +50,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./twlogeye.yaml)")
+	rootCmd.PersistentFlags().StringVar(&apiURL, "api", "http://localhost:8081", "gRPC URL")
 
 }
 
@@ -57,7 +59,7 @@ func initConfig() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
-		viper.AddConfigPath("/etc/twlogeye")
+		viper.AddConfigPath("/etc/")
 		viper.AddConfigPath(".")
 		viper.SetConfigType("yaml")
 		viper.SetConfigName("twlogeye")

@@ -3,12 +3,20 @@ module github.com/twsnmp/twlogeye
 go 1.22.7
 
 require (
+	github.com/bradleyjkemp/sigma-go v0.6.6
 	github.com/dgraph-io/badger/v4 v4.5.0
+	github.com/elastic/go-grok v0.3.1
+	github.com/gosnmp/gosnmp v1.38.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
+	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
 )
 
 require (
+	github.com/BobuSumisu/aho-corasick v1.0.3 // indirect
+	github.com/PaesslerAG/gval v1.0.0 // indirect
+	github.com/PaesslerAG/jsonpath v0.1.1 // indirect
+	github.com/alecthomas/participle v0.7.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.0.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -18,6 +26,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/magefile/mage v1.15.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect

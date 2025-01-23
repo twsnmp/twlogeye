@@ -1,0 +1,73 @@
+TWHRTRAP-MIB DEFINITIONS ::= BEGIN
+
+   IMPORTS
+       MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,enterprises
+           FROM SNMPv2-SMI
+       DisplayString FROM SNMPv2-TC;
+
+twise                OBJECT IDENTIFIER ::= { enterprises 17861 }
+twProducts           OBJECT IDENTIFIER ::= { twise 1 }
+
+twLogEyeTrap MODULE-IDENTITY
+       LAST-UPDATED "2501210000Z"
+       ORGANIZATION "Twise Labo Inc."
+       CONTACT-INFO
+                  "Masayuki Yamai
+               Postal: Twise Labo  Inc.
+                       Saitama Japan
+               E-mail: twsnmp@gmail.com"
+       DESCRIPTION       "A MIB module for twLogEye"
+
+      ::= { twProducts 11 }
+
+twLogEyeTrapTraps            OBJECT IDENTIFIER ::= { twLogEyeTrap 0 }
+twLogEyeTrapObjects          OBJECT IDENTIFIER ::= { twLogEyeTrap 1 }
+
+-- Trap data
+
+twLogEyeTrapSrc OBJECT-TYPE
+    SYNTAX     DisplayString
+    MAX-ACCESS accessible-for-notify
+    STATUS     current
+    DESCRIPTION "src name(host name)"
+    ::= { twLogEyeTrapObjects 1 }
+
+twLogEyeTrapLevel OBJECT-TYPE
+    SYNTAX     DisplayString
+    MAX-ACCESS accessible-for-notify
+    STATUS     current
+    DESCRIPTION "rule level"
+    ::= { twLogEyeTrapObjects 2 }
+
+twLogEyeTrapID OBJECT-TYPE
+    SYNTAX     DisplayString
+    MAX-ACCESS accessible-for-notify
+    STATUS     current
+    DESCRIPTION "rule id"
+    ::= { twLogEyeTrapObjects 3 }
+
+twLogEyeTrapTag OBJECT-TYPE
+    SYNTAX     DisplayString
+    MAX-ACCESS accessible-for-notify
+    STATUS     current
+    DESCRIPTION "rule TAG"
+    ::= { twLogEyeTrapObjects 4 }
+
+twLogEyeTrapTitle OBJECT-TYPE
+    SYNTAX     DisplayString
+    MAX-ACCESS accessible-for-notify
+    STATUS     current
+    DESCRIPTION "rule title"
+    ::= { twLogEyeTrapObjects 5 }
+
+
+-- twLogEyeTrap  Traps
+
+twLogEyeNotifyTrap  NOTIFICATION-TYPE
+    OBJECTS { twLogEyeTrapHrName,twLogEyeTrapThresold, twLogEyeTrapCurrentValue }
+    STATUS  current
+    DESCRIPTION "Trap of CPU Usage thresold over."
+    ::= { twLogEyeTrapTraps 1 }
+
+
+END
