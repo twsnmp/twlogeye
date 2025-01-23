@@ -81,6 +81,8 @@ func start() {
 	go notify.Start(ctx, &wg)
 	wg.Add(1)
 	go logger.StartSyslogd(ctx, &wg)
+	wg.Add(1)
+	go logger.StartSnmpTrapd(ctx, &wg)
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGTSTP)
 	<-sigterm

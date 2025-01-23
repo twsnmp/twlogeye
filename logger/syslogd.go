@@ -60,7 +60,7 @@ func StartSyslogd(ctx context.Context, wg *sync.WaitGroup) {
 			if len(list) > 0 {
 				st := time.Now()
 				datastore.SaveLogs("syslog", list)
-				log.Printf("save logs len=%d dur=%v", len(list), time.Since(st))
+				log.Printf("save syslog len=%d dur=%v", len(list), time.Since(st))
 				list = []*datastore.LogEnt{}
 			}
 		}

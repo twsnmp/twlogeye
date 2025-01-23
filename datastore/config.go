@@ -24,6 +24,8 @@ type ConfigEnt struct {
 	// Sigma
 	SigmaConfig string `yaml:"sigmaConfig"`
 	SigmaRules  string `yaml:"sigmaRules"`
+	// SNMP MIB
+	MIBPath string `yaml:"mibPath"`
 }
 
 var Config ConfigEnt
