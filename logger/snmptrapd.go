@@ -15,6 +15,8 @@ import (
 	"github.com/twsnmp/twlogeye/datastore"
 )
 
+var trapCh = make(chan *datastore.LogEnt, 20000)
+
 func StartSnmpTrapd(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	if datastore.Config.SNMPTrapPort == 0 {
@@ -22,7 +24,6 @@ func StartSnmpTrapd(ctx context.Context, wg *sync.WaitGroup) {
 	}
 	log.Printf("start snmp trapd")
 	datastore.LoadMIBDB()
-	trapCh := make(chan *datastore.LogEnt, 20000)
 
 	tl := gosnmp.NewTrapListener()
 	tl.Params = &gosnmp.GoSNMP{}

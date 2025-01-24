@@ -10,6 +10,7 @@ require (
 	github.com/sleepinggenius2/gosmi v0.4.4
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
+	github.com/tehmaze/netflow v0.0.0-20240303214733-8c13bb004068
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
 	golang.org/x/text v0.20.0
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
