@@ -7,8 +7,13 @@ type ConfigEnt struct {
 	NetFlowPort              int    `yaml:"netflowPort"`
 	SFlowPort                int    `yaml:"sflowPort"`
 	SNMPTrapPort             int    `yaml:"snmpTrapPort"`
-	WinEventLogType          string `yaml:"winEventLogType"`
+	WinEventLogChannel       string `yaml:"winEventLogChannel"`
 	WinEventLogCheckInterval int    `yaml:"winEventLogCheckInterval"`
+	WinEventLogCheckStart    int    `yaml:"winEventLogCheckStart"`
+	WinRemote                string `yaml:"winRemote"`
+	WinUser                  string `yaml:"winUser"`
+	WinPassword              string `yaml:"winPassword"`
+	WinAuth                  string `yaml:"winAuth"`
 	// Dst
 	SyslogDst     []string `yaml:"syslogDst"`
 	TrapDst       []string `yaml:"trapDst"`

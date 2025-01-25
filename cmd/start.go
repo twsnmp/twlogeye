@@ -49,6 +49,7 @@ func init() {
 	startCmd.Flags().IntVar(&datastore.Config.NetFlowPort, "netflowPort", 0, "netflow port 0=disable")
 	startCmd.Flags().IntVar(&datastore.Config.SFlowPort, "slowPort", 0, "sFlow port 0=disable")
 	startCmd.Flags().IntVar(&datastore.Config.SNMPTrapPort, "trapPort", 0, "SNMP TRAP recive port 0=disable")
+	startCmd.Flags().StringVar(&datastore.Config.MIBPath, "mibPath", "", "SNMP Ext MIB Path")
 	startCmd.Flags().IntVar(&datastore.Config.LogRetention, "logRetention", 48, "log retention(hours)")
 	startCmd.Flags().IntVar(&datastore.Config.NotifyRetention, "notifyRetention", 30, "notify retention(days)")
 	var syslogDst string
@@ -64,8 +65,12 @@ func init() {
 	startCmd.Flags().StringVar(&datastore.Config.GrokDef, "grokDef", "", "GROK define file")
 	startCmd.Flags().StringVar(&datastore.Config.GrokPat, "grokPat", "", "GROK pattern")
 
-	startCmd.Flags().StringVarP(&datastore.Config.WinEventLogType, "winEventLogType", "w", "", "Windows eventlog type")
-	startCmd.Flags().IntVarP(&datastore.Config.WinEventLogCheckInterval, "winEventLogCheckInterval", "i", 30, "Windows evnetlog check interval")
+	startCmd.Flags().StringVar(&datastore.Config.WinEventLogChannel, "winEventLogChannel", "", "Windows eventlog channel")
+	startCmd.Flags().IntVarP(&datastore.Config.WinEventLogCheckInterval, "winEventLogCheckInterval", "i", 0, "Windows evnetlog check interval")
+	startCmd.Flags().IntVarP(&datastore.Config.WinEventLogCheckStart, "winEventLogCheckStart", "s", 0, "Windows evnetlog check start time (hours)")
+	startCmd.Flags().StringVar(&datastore.Config.WinUser, "winUser", "", "Windows eventlog user")
+	startCmd.Flags().StringVar(&datastore.Config.WinPassword, "winPassword", "", "Windows eventlog password")
+	startCmd.Flags().StringVar(&datastore.Config.WinAuth, "winAuth", "", "Windows eventlog auth")
 }
 
 func start() {
@@ -85,8 +90,10 @@ func start() {
 	go logger.StartSnmpTrapd(ctx, &wg)
 	wg.Add(1)
 	go logger.StartNetFlowd(ctx, &wg)
+	wg.Add(1)
+	go logger.StartWinEventLogd(ctx, &wg)
 	sigterm := make(chan os.Signal, 1)
-	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGTSTP)
+	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	<-sigterm
 	cancel()
 	wg.Wait()

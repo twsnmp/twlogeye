@@ -13,7 +13,6 @@ import (
 	"github.com/bradleyjkemp/sigma-go"
 	"github.com/bradleyjkemp/sigma-go/evaluator"
 	"github.com/elastic/go-grok"
-
 	"github.com/twsnmp/twlogeye/datastore"
 	"github.com/twsnmp/twlogeye/notify"
 )
@@ -63,7 +62,7 @@ func Audit(l *datastore.LogEnt) {
 func getSigmaConfig() *sigma.Config {
 	c, err := datastore.GetSigmaConfig()
 	if err != nil {
-		log.Fatalln("sigma config not found")
+		log.Fatalf("sigma config err=%v", err)
 	}
 	if c == nil {
 		return nil
@@ -109,6 +108,7 @@ func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 	for _, ev := range evaluators {
 		r, err := ev.Matches(context.Background(), data)
 		if err != nil {
+			log.Printf("sigma matches err=%+v", err)
 			return nil
 		}
 		if r.Match {

@@ -1,0 +1,20 @@
+title: windows test rule time changed
+id: 2320ab71-d690-41e5-998e-428af26a63d4
+status: test
+description: windows test rule time changed
+author: Masayuki Yamai(twsnmp@gmail.com)
+date: 2025-01-25
+modified: 2025-01-25
+tags:
+    - attack.discovery
+    - attack.t1083
+logsource:
+    category: test
+    product: windows
+detection:
+    selection:
+        EventID: 1
+    condition: selection
+falsepositives:
+    - Unknown
+level: medium

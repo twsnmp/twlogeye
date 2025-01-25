@@ -17,28 +17,28 @@ tasks:
   mac_amd64:
     cmds:
       - task: mkdir
-      - GOOS=darwin GOARCH=amd64 go build -o dist/twslogeye.darwin_amd64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+      - GOOS=darwin GOARCH=amd64 go build -o dist/twlogeye.darwin_amd64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
   mac_arm64:
     cmds:
       - task: mkdir
-      - GOOS=darwin GOARCH=arm64 go build -o dist/twslogeye.darwin_arm64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+      - GOOS=darwin GOARCH=arm64 go build -o dist/twlogeye.darwin_arm64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
   windows:
     cmds:
       - task: mkdir
-      - GOOS=windows GOARCH=amd64 go build -o dist/twslogeye.exe -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+      - GOOS=windows GOARCH=amd64 go build -o dist/twlogeye.exe -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
   linux_amd64:
     cmds:
       - task: mkdir
-      - GOOS=linux GOARCH=amd64 go build -o dist/twslogeye.linux_amd64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+      - GOOS=linux GOARCH=amd64 go build -o dist/twlogeye.linux_amd64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
   linux_arm64:
     cmds:
       - task: mkdir
-      - GOOS=linux GOARCH=arm64 go build -o dist/twslogeye.linux_arm64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+      - GOOS=linux GOARCH=arm64 go build -o dist/twlogeye.linux_arm64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
   zip:
     cmds:
-      - (cd dist;zip twslogeye.darwin.zip twslogeye.darwin*)
-      - (cd dist;zip twslogeye.windows.zip twslogeye.exe)
-      - (cd dist;zip twslogeye.linux.zip twslogeye.linux*) 
+      - (cd dist;zip twlogeye.darwin.zip twlogeye.darwin*)
+      - (cd dist;zip twlogeye.windows.zip twlogeye.exe)
+      - (cd dist;zip twlogeye.linux.zip twlogeye.linux*) 
   mkdir:
     - mkdir -p dist
   clean:
