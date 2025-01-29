@@ -14,6 +14,8 @@ require (
 	github.com/tehmaze/netflow v0.0.0-20240303214733-8c13bb004068
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
 	golang.org/x/text v0.21.0
+	google.golang.org/grpc v1.65.0
+	google.golang.org/protobuf v1.36.4
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
 )
 
@@ -49,7 +51,7 @@ require (
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240604185151-ef581f913117 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

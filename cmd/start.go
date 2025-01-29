@@ -25,6 +25,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"github.com/twsnmp/twlogeye/api"
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
 	"github.com/twsnmp/twlogeye/logger"
@@ -94,6 +95,8 @@ func start() {
 	go logger.StartWinEventLogd(ctx, &wg)
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	wg.Add(1)
+	go api.StartAPIServer(ctx, &wg, apiServerPort, apiServerCert, apiPrivateKey, apiCACert)
 	<-sigterm
 	cancel()
 	wg.Wait()

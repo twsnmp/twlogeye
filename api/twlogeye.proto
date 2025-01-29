@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+option go_package = "github.com/twsnmp/twlogeye/api";
+
+package twlogeye;
+
+service TWLogEyeService {
+	// Stop
+	rpc Stop (Empty) returns (ControlResponse); 
+	// Reload sigma rules
+	rpc Reload (Empty) returns (ControlResponse); 
+	// Watch Notify
+	rpc WatchNotify (Empty) returns (stream NotifyResponse);
+	// Search Notify
+	rpc SearchNotify (NofifyRequest) returns (stream NotifyResponse);
+  // Search Log
+	rpc SearchLog (LogRequest) returns (stream LogResponse);
+}
+
+message NofifyRequest {
+	int64 start = 1;
+	int64 end = 2;
+	string level = 3;
+}
+
+message NotifyResponse {
+	int64 time = 1;
+	string id = 2;
+	string level = 3;
+	string title = 4;
+	string tags = 5;
+  string src = 6;
+  string log = 7;
+}
+
+message LogRequest {
+	int64 start = 1;
+	int64 end = 2;
+  string logtype = 3;
+	string search = 4;
+}
+
+message LogResponse {
+	int64 time = 1;
+  string src = 3;
+	string log = 4;
+}
+
+message ControlResponse {
+  bool   ok   = 1;
+	string message = 2;
+}
+
+message Empty {}
+
+/*
+protoc --go_out=. --go_opt=paths=source_relative \
+	--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+	twlogeye.proto
+*/

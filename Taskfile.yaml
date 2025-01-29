@@ -34,6 +34,9 @@ tasks:
     cmds:
       - task: mkdir
       - GOOS=linux GOARCH=arm64 go build -o dist/twlogeye.linux_arm64 -ldflags "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}}" .
+  api:
+    cmds:
+      - (cd api;protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative twlogeye.proto)
   zip:
     cmds:
       - (cd dist;zip twlogeye.darwin.zip twlogeye.darwin*)

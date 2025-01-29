@@ -26,7 +26,11 @@ import (
 )
 
 var cfgFile string
-var apiURL string
+var apiServer string
+var apiServerPort int
+var apiServerCert string
+var apiCACert string
+var apiPrivateKey string
 
 var rootCmd = &cobra.Command{
 	Use:   "twlogeye",
@@ -50,7 +54,11 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./twlogeye.yaml)")
-	rootCmd.PersistentFlags().StringVar(&apiURL, "api", "http://localhost:8081", "gRPC URL")
+	rootCmd.PersistentFlags().IntVarP(&apiServerPort, "apiPort", "p", 8081, "API Server port")
+	rootCmd.PersistentFlags().StringVar(&apiServer, "apiServer", "localhost", "server IP or host name")
+	rootCmd.PersistentFlags().StringVar(&apiServerCert, "cert", "", "server cert")
+	rootCmd.PersistentFlags().StringVar(&apiPrivateKey, "key", "", "API server/clinet private key")
+	rootCmd.PersistentFlags().StringVar(&apiCACert, "caCert", "", "API CA cert")
 
 }
 

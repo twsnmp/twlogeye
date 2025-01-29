@@ -20,11 +20,14 @@ import (
 var evaluators []*evaluator.RuleEvaluator
 var gr *grok.Grok
 var auditorCh chan *datastore.LogEnt
+var reloadCh chan bool
+var watchChMap sync.Map
 
 func Init() bool {
 	loadSigmaRules()
 	setGrok()
 	auditorCh = make(chan *datastore.LogEnt, 20000)
+	reloadCh = make(chan bool)
 	return len(evaluators) > 0
 }
 
@@ -36,6 +39,9 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 		case <-ctx.Done():
 			log.Printf("stop auditor")
 			return
+		case <-reloadCh:
+			evaluators = []*evaluator.RuleEvaluator{}
+			loadSigmaRules()
 		case l := <-auditorCh:
 			if ev := matchSigmaRule(l); ev != nil {
 				n := &datastore.NotifyEnt{
@@ -49,6 +55,12 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 				}
 				notify.Norify(n)
 				datastore.SaveNotify(n)
+				watchChMap.Range(func(k, v any) bool {
+					if ch, ok := v.(chan *datastore.NotifyEnt); ok {
+						ch <- n
+					}
+					return true
+				})
 				log.Printf("notify %+v", n)
 			}
 		}
@@ -57,6 +69,24 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 
 func Audit(l *datastore.LogEnt) {
 	auditorCh <- l
+}
+
+func Reload() {
+	reloadCh <- true
+}
+
+func AddWatch(id string) chan *datastore.NotifyEnt {
+	ch := make(chan *datastore.NotifyEnt, 100)
+	watchChMap.Store(id, ch)
+	return ch
+}
+
+func DelWatch(id string) {
+	if v, ok := watchChMap.LoadAndDelete(id); ok {
+		if ch, ok := v.(chan *datastore.NotifyEnt); ok {
+			close(ch)
+		}
+	}
 }
 
 func getSigmaConfig() *sigma.Config {

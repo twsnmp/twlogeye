@@ -85,7 +85,6 @@ func StartNetFlowd(ctx context.Context, wg *sync.WaitGroup) {
 		case l := <-netflowCh:
 			list = append(list, l)
 			auditor.Audit(l)
-			log.Printf("netflow log %+v", l)
 		case <-timer.C:
 			if len(list) > 0 {
 				st := time.Now()

@@ -57,25 +57,36 @@ func SaveLogs(t string, logs []*LogEnt) {
 }
 
 // ForEachLogs : for each logs
-func ForEachLog(t string, callBack func(log *LogEnt) bool) {
+func ForEachLog(t string, st, et int64, callBack func(log *LogEnt) bool) {
+	if et == 0 {
+		et = time.Now().UnixNano()
+	}
 	db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 		prefix := []byte(t + ":")
-		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+		stPrefix := []byte(fmt.Sprintf("%s:%016x", t, st))
+		for it.Seek(stPrefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
 			k := item.Key()
 			a := strings.SplitN(string(k), ":", 3)
 			if len(a) == 3 {
-				item.Value(func(v []byte) error {
-					if t, err := strconv.ParseInt(a[1], 16, 64); err == nil {
-						callBack(&LogEnt{
-							Time: t,
-							Log:  strings.Clone(string(v)),
-						})
+				if ts, err := strconv.ParseInt(a[1], 16, 64); err == nil {
+					if ts > et {
+						break
 					}
-					return nil
-				})
+					var l string
+					item.Value(func(v []byte) error {
+						l = strings.Clone(string(v))
+						return nil
+					})
+					if !callBack(&LogEnt{
+						Time: ts,
+						Log:  l,
+					}) {
+						break
+					}
+				}
 			}
 		}
 		return nil
@@ -104,6 +115,37 @@ func SaveNotify(n *NotifyEnt) {
 			}
 		} else {
 			return err
+		}
+		return nil
+	})
+}
+
+func ForEachNotify(st, et int64, callBack func(n *NotifyEnt) bool) {
+	if et == 0 {
+		et = time.Now().UnixNano()
+	}
+	db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		for it.Seek([]byte(fmt.Sprintf("notify:%016x", st))); it.ValidForPrefix([]byte("notify:")); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			a := strings.SplitN(string(k), ":", 3)
+			if len(a) == 3 {
+				if t, err := strconv.ParseInt(a[1], 16, 64); err == nil {
+					if t > et {
+						break
+					}
+					var n NotifyEnt
+					if err := item.Value(func(v []byte) error {
+						return json.Unmarshal(v, &n)
+					}); err == nil {
+						if !callBack(&n) {
+							break
+						}
+					}
+				}
+			}
 		}
 		return nil
 	})
