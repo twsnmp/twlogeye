@@ -34,6 +34,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 		host = "localhost"
 	}
 	for _, d := range datastore.Config.TrapDst {
+		log.Printf("trap dst %s", d)
 		trapDst = append(trapDst, getTrapDst(d))
 	}
 	defer func() {
@@ -53,7 +54,6 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 		case n := <-notifyCh:
 			s := fmt.Sprintf("<%d>%s %s twlogeye: src=%s,id=%s,tags=%s,title=%s",
 				getSyslogLevel(n.Level), time.Now().Format("2006-01-02T15:04:05-07:00"), host, n.Src, n.ID, n.Tags, n.Title)
-			log.Printf("send syslog %s", s)
 			for _, d := range syslogDst {
 				d.Write([]byte(s))
 			}
@@ -150,7 +150,6 @@ func sendTrap(dst *gosnmp.GoSNMP, n *datastore.NotifyEnt) {
 	trap := gosnmp.SnmpTrap{
 		Variables: vbs,
 	}
-	log.Printf("send trap %+v", trap)
 	_, err := dst.SendTrap(trap)
 	if err != nil {
 		log.Println("send trap err=", err)

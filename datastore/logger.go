@@ -44,7 +44,7 @@ func SaveLogs(t string, logs []*LogEnt) {
 	txn := db.NewTransaction(true)
 	for i, l := range logs {
 		k := fmt.Sprintf("%s:%016x:%04x", t, l.Time, i)
-		e := badger.NewEntry([]byte(k), []byte(l.Log)).WithTTL(time.Hour * time.Duration(Config.LogRetention))
+		e := badger.NewEntry([]byte(k), []byte(l.Src+"\t"+l.Log)).WithTTL(time.Hour * time.Duration(Config.LogRetention))
 		if err := txn.SetEntry(e); err != nil {
 			if err == badger.ErrTxnTooBig {
 				txn.Commit()
@@ -75,16 +75,20 @@ func ForEachLog(t string, st, et int64, callBack func(log *LogEnt) bool) {
 					if ts > et {
 						break
 					}
-					var l string
+					var s string
 					item.Value(func(v []byte) error {
-						l = strings.Clone(string(v))
+						s = strings.Clone(string(v))
 						return nil
 					})
-					if !callBack(&LogEnt{
-						Time: ts,
-						Log:  l,
-					}) {
-						break
+					a = strings.SplitN(s, "\t", 2)
+					if len(a) == 2 {
+						if !callBack(&LogEnt{
+							Time: ts,
+							Src:  a[0],
+							Log:  a[1],
+						}) {
+							break
+						}
 					}
 				}
 			}

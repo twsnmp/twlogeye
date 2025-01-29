@@ -61,7 +61,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 					}
 					return true
 				})
-				log.Printf("notify %+v", n)
+				log.Printf("notify %s %s %s", n.Src, n.ID, n.Level)
 			}
 		}
 	}
@@ -78,12 +78,14 @@ func Reload() {
 func AddWatch(id string) chan *datastore.NotifyEnt {
 	ch := make(chan *datastore.NotifyEnt, 100)
 	watchChMap.Store(id, ch)
+	log.Printf("add watch id=%s", id)
 	return ch
 }
 
 func DelWatch(id string) {
 	if v, ok := watchChMap.LoadAndDelete(id); ok {
 		if ch, ok := v.(chan *datastore.NotifyEnt); ok {
+			log.Printf("delete watch id=%s", id)
 			close(ch)
 		}
 	}

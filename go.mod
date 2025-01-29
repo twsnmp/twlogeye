@@ -3,6 +3,7 @@ module github.com/twsnmp/twlogeye
 go 1.22.7
 
 require (
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/basgys/goxml2json v1.1.1-0.20231018121955-e66ee54ceaad
 	github.com/bradleyjkemp/sigma-go v0.6.6
 	github.com/dgraph-io/badger/v4 v4.5.0

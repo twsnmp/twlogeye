@@ -41,8 +41,6 @@ func StartAPIServer(ctx context.Context, wg *sync.WaitGroup, port int, cert, key
 
 	<-ctx.Done()
 	log.Println("stopping API server")
-	go s.GracefulStop()
-	time.Sleep(time.Second * 2)
 	s.Stop()
 	log.Println("stop API server")
 
@@ -84,6 +82,7 @@ func (s *apiServer) WatchNotify(req *Empty, stream TWLogEyeService_WatchNotifySe
 			Tags:  n.Tags,
 			Log:   n.Log,
 			Level: n.Level,
+			Src:   n.Src,
 		}); err != nil {
 			log.Printf("watch notify err=%v", err)
 			break
@@ -106,6 +105,7 @@ func (s *apiServer) SearchNotify(req *NofifyRequest, stream TWLogEyeService_Sear
 			Tags:  n.Tags,
 			Log:   n.Log,
 			Level: n.Level,
+			Src:   n.Src,
 		}); err != nil {
 			log.Printf("search notify err=%v", err)
 			return false
@@ -124,6 +124,7 @@ func (s *apiServer) SearchLog(req *LogRequest, stream TWLogEyeService_SearchLogS
 		if err := stream.Send(&LogResponse{
 			Time: l.Time,
 			Log:  l.Log,
+			Src:  l.Src,
 		}); err != nil {
 			log.Printf("search log err=%v", err)
 			return false
