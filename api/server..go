@@ -13,6 +13,8 @@ import (
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -33,6 +35,9 @@ func StartAPIServer(ctx context.Context, wg *sync.WaitGroup, port int, cert, key
 	s := grpc.NewServer()
 	RegisterTWLogEyeServiceServer(s, NewAPIServer())
 	reflection.Register(s)
+	healthSrv := health.NewServer()
+	healthpb.RegisterHealthServer(s, healthSrv)
+	healthSrv.SetServingStatus("twlogeye", healthpb.HealthCheckResponse_SERVING)
 
 	go func() {
 		log.Printf("start API server port: %v", port)
