@@ -26,7 +26,7 @@ var stopCmd = &cobra.Command{
 	Short: "Stop twLogEye",
 	Long:  `Stop twLogEye`,
 	Run: func(cmd *cobra.Command, args []string) {
-		api.SetClient(apiServer, apiServerCert, apiServerPort)
+		api.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
 		api.Stop()
 	},
 }

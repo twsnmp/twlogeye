@@ -16,21 +16,36 @@ limitations under the License.
 package cmd
 
 import (
+	"log"
+
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/api"
+	"github.com/twsnmp/twlogeye/datastore"
 )
 
-// watchCmd represents the watch command
-var watchCmd = &cobra.Command{
-	Use:   "watch",
-	Short: "watch notify",
-	Long:  `watch notify`,
+var cn string
+
+// gencertCmd represents the gencert command
+var gencertCmd = &cobra.Command{
+	Use:   "gencert",
+	Short: "genatate TLS paravate key and cert",
+	Long:  `genatate TLS paravate key and cert`,
 	Run: func(cmd *cobra.Command, args []string) {
-		api.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
-		api.WatchNotify()
+		hit := false
+		if apiServerCert != "" && apiServerKey != "" {
+			datastore.GenServerCert(apiServerCert, apiServerKey, cn)
+			hit = true
+		}
+		if apiClientCert != "" && apiClientKey != "" {
+			datastore.GenClientCert(apiClientCert, apiClientKey, cn)
+			hit = true
+		}
+		if !hit {
+			log.Fatalln("please set server or client cert")
+		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(watchCmd)
+	rootCmd.AddCommand(gencertCmd)
+	gencertCmd.Flags().StringVar(&cn, "cn", "twsnmp", "CN for clinet cert")
 }

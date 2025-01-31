@@ -33,7 +33,7 @@ var logCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		st := getTime(startTime, 0)
 		et := getTime(endTime, time.Now().UnixNano())
-		api.SetClient(apiServer, apiServerCert, apiServerPort)
+		api.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
 		api.SearchLog(st, et, logtype, search)
 	},
 }

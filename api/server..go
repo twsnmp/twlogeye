@@ -2,9 +2,12 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"syscall"
@@ -13,6 +16,7 @@ import (
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
@@ -26,13 +30,47 @@ func NewAPIServer() *apiServer {
 	return &apiServer{}
 }
 
-func StartAPIServer(ctx context.Context, wg *sync.WaitGroup, port int, cert, key, ca string) {
+func StartAPIServer(ctx context.Context, wg *sync.WaitGroup, port int, cert, key, caCert string) {
 	defer wg.Done()
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatalf("start API server err=%v", err)
 	}
-	s := grpc.NewServer()
+	var s *grpc.Server
+	if cert == "" || key == "" {
+		// not TLS
+		log.Println("not TLS server")
+		s = grpc.NewServer()
+	} else if caCert != "" {
+		// mTLS
+		log.Println("mTLS server")
+		cert, err := tls.LoadX509KeyPair(cert, key)
+		if err != nil {
+			log.Fatalf("failed to load key pair  err=%v", err)
+		}
+		ca := x509.NewCertPool()
+		caBytes, err := os.ReadFile(caCert)
+		if err != nil {
+			log.Fatalf("failed to read ca cert  err=%v", err)
+		}
+		if ok := ca.AppendCertsFromPEM(caBytes); !ok {
+			log.Fatalf("failed to parse %q", caCert)
+		}
+		tlsConfig := &tls.Config{
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			Certificates: []tls.Certificate{cert},
+			ClientCAs:    ca,
+		}
+		s = grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsConfig)))
+	} else {
+		// TLS
+		log.Println("TLS server")
+		creds, err := credentials.NewServerTLSFromFile(cert, key)
+		if err != nil {
+			log.Fatalf("failed to create credentials err=%v", err)
+		}
+		s = grpc.NewServer(grpc.Creds(creds))
+	}
 	RegisterTWLogEyeServiceServer(s, NewAPIServer())
 	reflection.Register(s)
 	healthSrv := health.NewServer()

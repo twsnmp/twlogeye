@@ -29,8 +29,10 @@ var cfgFile string
 var apiServer string
 var apiServerPort int
 var apiServerCert string
+var apiClientCert string
 var apiCACert string
-var apiPrivateKey string
+var apiServerKey string
+var apiClientKey string
 
 var rootCmd = &cobra.Command{
 	Use:   "twlogeye",
@@ -56,8 +58,10 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./twlogeye.yaml)")
 	rootCmd.PersistentFlags().IntVarP(&apiServerPort, "apiPort", "p", 8081, "API Server port")
 	rootCmd.PersistentFlags().StringVar(&apiServer, "apiServer", "localhost", "server IP or host name")
-	rootCmd.PersistentFlags().StringVar(&apiServerCert, "cert", "", "server cert")
-	rootCmd.PersistentFlags().StringVar(&apiPrivateKey, "key", "", "API server/clinet private key")
+	rootCmd.PersistentFlags().StringVar(&apiServerCert, "serverCert", "", "API server cert")
+	rootCmd.PersistentFlags().StringVar(&apiClientCert, "clientCert", "", "API client cert")
+	rootCmd.PersistentFlags().StringVar(&apiServerKey, "serverKey", "", "API server private key")
+	rootCmd.PersistentFlags().StringVar(&apiClientKey, "clientKey", "", "API client private key")
 	rootCmd.PersistentFlags().StringVar(&apiCACert, "caCert", "", "API CA cert")
 
 }
@@ -74,11 +78,40 @@ func initConfig() {
 	}
 
 	viper.AutomaticEnv()
+	viper.SetEnvPrefix("twlogeye")
+	viper.BindEnv("apiport")
+	viper.BindEnv("apiserver")
+	viper.BindEnv("servercert")
+	viper.BindEnv("serverkey")
+	viper.BindEnv("clientcert")
+	viper.BindEnv("clinetkey")
+	viper.BindEnv("cacert")
 
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 		if err := viper.Unmarshal(&datastore.Config); err != nil {
 			log.Fatalln(err)
 		}
+	}
+	if v := viper.GetInt("apiport"); v != 0 {
+		apiServerPort = v
+	}
+	if v := viper.GetString("apiserver"); v != "" {
+		apiServer = v
+	}
+	if v := viper.GetString("servercert"); v != "" {
+		apiServerCert = v
+	}
+	if v := viper.GetString("serverkey"); v != "" {
+		apiServerKey = v
+	}
+	if v := viper.GetString("clientcert"); v != "" {
+		apiClientCert = v
+	}
+	if v := viper.GetString("clientkey"); v != "" {
+		apiClientKey = v
+	}
+	if v := viper.GetString("cacert"); v != "" {
+		apiCACert = v
 	}
 }

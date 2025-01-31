@@ -2,30 +2,67 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 var client TWLogEyeServiceClient
 
-func SetClient(ip, cert string, port int) error {
+func SetClient(ip, caCert, cert, key string, port int) error {
 	var conn *grpc.ClientConn
 	var err error
 	address := fmt.Sprintf("%s:%d", ip, port)
-	if cert == "" {
+	if caCert == "" {
+		// not TLS
 		conn, err = grpc.NewClient(
 			address,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 	} else {
-		// TLS
-		log.Fatalln("not supported now")
+		if cert != "" && key != "" {
+			// mTLS
+			cert, err := tls.LoadX509KeyPair(cert, key)
+			if err != nil {
+				log.Fatalf("failed to load client cert: %v", err)
+			}
+			ca := x509.NewCertPool()
+			caBytes, err := os.ReadFile(caCert)
+			if err != nil {
+				log.Fatalf("failed to read ca cert  err=%v", err)
+			}
+			if ok := ca.AppendCertsFromPEM(caBytes); !ok {
+				log.Fatalf("failed to parse %q", caCert)
+			}
+			tlsConfig := &tls.Config{
+				ServerName:   "",
+				Certificates: []tls.Certificate{cert},
+				RootCAs:      ca,
+			}
+			conn, err = grpc.NewClient(address, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
+			if err != nil {
+				log.Fatalf("failed to connect  err=%v", err)
+			}
+		} else {
+			// TLS
+			creds, err := credentials.NewClientTLSFromFile(caCert, "")
+			if err != nil {
+				log.Fatalf("failed to load credentials: %v", err)
+			}
+			conn, err = grpc.NewClient(address, grpc.WithTransportCredentials(creds))
+			if err != nil {
+				log.Fatalf("did not connect: %v", err)
+			}
+		}
 	}
 	if err != nil {
 		return err

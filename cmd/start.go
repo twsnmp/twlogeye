@@ -96,7 +96,7 @@ func start() {
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	wg.Add(1)
-	go api.StartAPIServer(ctx, &wg, apiServerPort, apiServerCert, apiPrivateKey, apiCACert)
+	go api.StartAPIServer(ctx, &wg, apiServerPort, apiServerCert, apiServerKey, apiCACert)
 	<-sigterm
 	cancel()
 	wg.Wait()
