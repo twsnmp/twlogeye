@@ -30,7 +30,10 @@ func NewAPIServer() *apiServer {
 	return &apiServer{}
 }
 
-func StartAPIServer(ctx context.Context, wg *sync.WaitGroup, port int, cert, key, caCert string) {
+var _sigTerm chan os.Signal
+
+func StartAPIServer(ctx context.Context, wg *sync.WaitGroup, port int, cert, key, caCert string, sigTerm chan os.Signal) {
+	_sigTerm = sigTerm
 	defer wg.Done()
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -94,7 +97,7 @@ func StartAPIServer(ctx context.Context, wg *sync.WaitGroup, port int, cert, key
 func (s *apiServer) Stop(ctx context.Context, req *Empty) (*ControlResponse, error) {
 	go func() {
 		time.Sleep(time.Second)
-		syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		_sigTerm <- syscall.SIGINT
 	}()
 	return &ControlResponse{
 		Ok:      true,
