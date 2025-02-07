@@ -33,8 +33,18 @@ func CloseLogDB() {
 	}
 }
 
+type LogType int
+
+const (
+	Syslog LogType = iota
+	NetFlow
+	SnmpTrap
+	WindowsEventLog
+)
+
 type LogEnt struct {
 	Time int64
+	Type LogType
 	Src  string
 	Log  string
 }
@@ -100,6 +110,7 @@ func ForEachLog(t string, st, et int64, callBack func(log *LogEnt) bool) {
 type NotifyEnt struct {
 	// Log
 	Time int64
+	Type LogType
 	Log  string
 	Src  string
 	// Sigma rule

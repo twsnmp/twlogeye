@@ -48,6 +48,7 @@ func StartSyslogd(ctx context.Context, wg *sync.WaitGroup) {
 			if s, err := json.Marshal(sl); err == nil {
 				l := &datastore.LogEnt{
 					Time: time.Now().UnixNano(),
+					Type: datastore.Syslog,
 					Log:  string(s),
 					Src:  src,
 				}

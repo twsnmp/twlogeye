@@ -32,12 +32,25 @@ import (
 	"github.com/twsnmp/twlogeye/notify"
 )
 
+var syslogDst string
+var trapDst string
+var grokPat string
+
 // startCmd represents the start command
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "start twLogEye",
 	Long:  `start twLogEye`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if syslogDst != "" {
+			datastore.Config.SyslogDst = strings.Split(syslogDst, ",")
+		}
+		if trapDst != "" {
+			datastore.Config.TrapDst = strings.Split(trapDst, ",")
+		}
+		if grokPat != "" {
+			datastore.Config.GrokPat = strings.Split(grokPat, ",")
+		}
 		start()
 	},
 }
@@ -53,25 +66,21 @@ func init() {
 	startCmd.Flags().StringVar(&datastore.Config.MIBPath, "mibPath", "", "SNMP Ext MIB Path")
 	startCmd.Flags().IntVar(&datastore.Config.LogRetention, "logRetention", 48, "log retention(hours)")
 	startCmd.Flags().IntVar(&datastore.Config.NotifyRetention, "notifyRetention", 30, "notify retention(days)")
-	var syslogDst string
 	startCmd.Flags().StringVar(&syslogDst, "syslogDst", "", "syslog dst")
-	datastore.Config.SyslogDst = strings.Split(syslogDst, ",")
-	var trapDst string
 	startCmd.Flags().StringVar(&syslogDst, "trapDst", "", "SNMP TRAP dst")
-	datastore.Config.TrapDst = strings.Split(trapDst, ",")
 	startCmd.Flags().StringVar(&datastore.Config.TrapCommunity, "trapCommunity", "", "SNMP TRAP Community")
-
-	startCmd.Flags().StringVar(&datastore.Config.SigmaConfig, "sigmaConfig", "", "SIGMA Config file")
 	startCmd.Flags().StringVar(&datastore.Config.SigmaRules, "sigmaRules", "", "SIGMA rule path")
+	startCmd.Flags().StringVar(&datastore.Config.SigmaConfigs, "sigmaConfigs", "", "SIGMA config path")
+	startCmd.Flags().StringVar(&datastore.Config.NamedCaptures, "namedCap", "", "Named capture defs path")
 	startCmd.Flags().StringVar(&datastore.Config.GrokDef, "grokDef", "", "GROK define file")
-	startCmd.Flags().StringVar(&datastore.Config.GrokPat, "grokPat", "", "GROK pattern")
-
+	startCmd.Flags().StringVar(&grokPat, "grokPat", "", "GROK patterns")
 	startCmd.Flags().StringVar(&datastore.Config.WinEventLogChannel, "winEventLogChannel", "", "Windows eventlog channel")
 	startCmd.Flags().IntVarP(&datastore.Config.WinEventLogCheckInterval, "winEventLogCheckInterval", "i", 0, "Windows evnetlog check interval")
 	startCmd.Flags().IntVarP(&datastore.Config.WinEventLogCheckStart, "winEventLogCheckStart", "s", 0, "Windows evnetlog check start time (hours)")
 	startCmd.Flags().StringVar(&datastore.Config.WinUser, "winUser", "", "Windows eventlog user")
 	startCmd.Flags().StringVar(&datastore.Config.WinPassword, "winPassword", "", "Windows eventlog password")
 	startCmd.Flags().StringVar(&datastore.Config.WinAuth, "winAuth", "", "Windows eventlog auth")
+	startCmd.Flags().BoolVar(&datastore.Config.KeyValParse, "keyValParse", false, "Splunk Key value parse")
 }
 
 func start() {

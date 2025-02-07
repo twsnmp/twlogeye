@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -15,17 +17,20 @@ import (
 	"github.com/elastic/go-grok"
 	"github.com/twsnmp/twlogeye/datastore"
 	"github.com/twsnmp/twlogeye/notify"
+	"gopkg.in/yaml.v3"
 )
 
 var evaluators []*evaluator.RuleEvaluator
-var gr *grok.Grok
+var grs []*grok.Grok
 var auditorCh chan *datastore.LogEnt
 var reloadCh chan bool
 var watchChMap sync.Map
 
 func Init() bool {
-	loadSigmaRules()
+	loadSigmaConfigs(false)
+	loadSigmaRules(false)
 	setGrok()
+	loadNamedCaptures()
 	auditorCh = make(chan *datastore.LogEnt, 20000)
 	reloadCh = make(chan bool)
 	return len(evaluators) > 0
@@ -41,12 +46,13 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 			return
 		case <-reloadCh:
 			evaluators = []*evaluator.RuleEvaluator{}
-			loadSigmaRules()
+			loadSigmaRules(true)
 		case l := <-auditorCh:
 			if ev := matchSigmaRule(l); ev != nil {
 				n := &datastore.NotifyEnt{
 					Time:  l.Time,
 					Src:   l.Src,
+					Type:  l.Type,
 					Log:   l.Log,
 					ID:    ev.ID,
 					Level: ev.Level,
@@ -91,50 +97,138 @@ func DelWatch(id string) {
 	}
 }
 
-func getSigmaConfig() *sigma.Config {
-	c, err := datastore.GetSigmaConfig()
-	if err != nil {
-		log.Fatalf("sigma config err=%v", err)
+var sigmaConfigMap = make(map[string]*sigma.Config)
+
+func getSigmaConfig(r *sigma.Rule) *sigma.Config {
+	c := r.Logsource.Product
+	if conf, ok := sigmaConfigMap[c]; ok {
+		return conf
 	}
-	if c == nil {
-		return nil
+	c += "_" + r.Logsource.Category
+	if conf, ok := sigmaConfigMap[c]; ok {
+		return conf
 	}
-	ret, err := sigma.ParseConfig(c)
-	if err != nil {
-		log.Fatalf("sigma config parrse err=%v", err)
+	c += "_" + r.Logsource.Service
+	if conf, ok := sigmaConfigMap[c]; ok {
+		return conf
 	}
-	return &ret
+	return nil
 }
 
-func loadSigmaRules() {
-	config := getSigmaConfig()
+func loadSigmaRules(skipErr bool) {
+	total := 0
+	skip := 0
+	fix := 0
 	datastore.ForEachSigmaRules(func(c []byte, path string) {
+		total++
 		rule, err := sigma.ParseRule(c)
+		if err != nil && strings.Contains(err.Error(), "'*'") {
+			rule, err = autoFixSigmaRule(c, rule)
+			if err == nil {
+				fix++
+			}
+		}
 		if err != nil {
-			log.Fatalf("invalid rule %s %s", path, err)
+			skip++
+			if skipErr {
+				log.Printf("invalid rule %s %v", path, err)
+				return
+			} else {
+				log.Fatalf("invalid rule %s %v", path, err)
+			}
 		}
 		if rule.ID == "" {
 			rule.ID = path
 		}
+		config := getSigmaConfig(&rule)
 		if config != nil {
 			evaluators = append(evaluators, evaluator.ForRule(rule, evaluator.WithConfig(*config), evaluator.CaseSensitive))
 		} else {
 			evaluators = append(evaluators, evaluator.ForRule(rule, evaluator.CaseSensitive))
 		}
 	})
+	log.Printf("load sigma rules total=%d skip=%d fix=%d", total, skip, fix)
 }
 
-func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
-	var data interface{}
-	if gr != nil {
-		var err error
-		data, err = gr.ParseString(l.Log)
+func loadSigmaConfigs(skipErr bool) {
+	sigmaConfigMap = make(map[string]*sigma.Config)
+	datastore.ForEachSigmaConfig(func(k string, d []byte) {
+		c, err := sigma.ParseConfig(d)
 		if err != nil {
-			return nil
+			if skipErr {
+				log.Printf("sigma config parrse err=%v", err)
+				return
+			} else {
+				log.Fatalf("sigma config parrse err=%v", err)
+			}
 		}
-	} else {
-		if err := json.Unmarshal([]byte(l.Log), &data); err != nil {
-			return nil
+		log.Printf("load sigma config %s", k)
+		sigmaConfigMap[k] = &c
+	})
+}
+
+var regJSON = regexp.MustCompile(`^\s*{.+}\s*$`)
+var regSplunk = regexp.MustCompile(`\s*([a-zA-Z_]+[a-zA-Z0-9_]+)=([^ ,;]+)`)
+var namedCaptureRegList = []*regexp.Regexp{}
+
+func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(l.Log), &data); err != nil {
+		return nil
+	}
+	if l.Type == datastore.Syslog {
+		if data == nil {
+			data = make(map[string]interface{})
+		}
+		if v, ok := data["content"]; ok {
+			if c, ok := v.(string); ok {
+				// JSON
+				notJSON := true
+				if regJSON.MatchString(c) {
+					var tmpData map[string]interface{}
+					if err := json.Unmarshal([]byte(c), &tmpData); err == nil {
+						notJSON = false
+						for k, v := range tmpData {
+							// use in content
+							data[k] = v
+						}
+					}
+				}
+				if notJSON {
+					if datastore.Config.KeyValParse {
+						// Splunk key=val
+						for _, m := range regSplunk.FindAllStringSubmatch(c, -1) {
+							if len(m) > 2 {
+								if f, err := strconv.ParseFloat(m[1], 64); err == nil {
+									data[m[0]] = f
+								} else {
+									data[m[0]] = m[1]
+								}
+							}
+						}
+					}
+					for _, r := range namedCaptureRegList {
+						if match := r.FindStringSubmatch(c); match != nil {
+							for i, k := range r.SubexpNames() {
+								if i != 0 && k != "" {
+									if f, err := strconv.ParseFloat(match[i], 64); err == nil {
+										data[k] = f
+									} else {
+										data[k] = match[i]
+									}
+								}
+							}
+						}
+					}
+					for _, gr := range grs {
+						if tmpData, err := gr.ParseString(c); err == nil {
+							for k, v := range tmpData {
+								data[k] = v
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 	for _, ev := range evaluators {
@@ -150,41 +244,126 @@ func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 	return nil
 }
 
+func GetSigmaRuleEvaluators() []*evaluator.RuleEvaluator {
+	loadSigmaConfigs(true)
+	loadSigmaRules(true)
+	return evaluators
+}
+
 var regexpGrok = regexp.MustCompile(`%\{.+\}`)
 
 func setGrok() {
-	if datastore.Config.GrokPat == "" {
+	if len(datastore.Config.GrokPat) < 1 {
 		return
 	}
-	var err error
-	switch datastore.Config.GrokDef {
-	case "full":
-		gr, err = grok.NewComplete()
+	grokPatternDef := make(map[string]string)
+	if datastore.Config.GrokDef != "" {
+		c, err := os.ReadFile(datastore.Config.GrokDef)
 		if err != nil {
 			log.Fatalln(err)
 		}
-	case "":
-		gr = grok.New()
-	default:
-		if c, err := os.ReadFile(datastore.Config.GrokDef); err != nil {
+		for _, l := range strings.Split(string(c), "\n") {
+			a := strings.SplitN(l, " ", 2)
+			if len(a) != 2 {
+				continue
+			}
+			grokPatternDef[a[0]] = a[1]
+		}
+	}
+	for _, pat := range datastore.Config.GrokPat {
+		gr, err := grok.NewComplete()
+		if err != nil {
 			log.Fatalln(err)
-		} else {
-			gr = grok.New()
-			for _, l := range strings.Split(string(c), "\n") {
-				a := strings.SplitN(l, " ", 2)
-				if len(a) != 2 {
-					continue
+		}
+		if !regexpGrok.MatchString(pat) {
+			pat = fmt.Sprintf("%%{%s}", pat)
+		}
+		err = gr.Compile(pat, false)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		grs = append(grs, gr)
+	}
+}
+
+func loadNamedCaptures() {
+	if datastore.Config.NamedCaptures == "" {
+		return
+	}
+	c, err := os.ReadFile(datastore.Config.NamedCaptures)
+	if err != nil {
+		log.Fatalf("laodNameCaptures err=%v", err)
+	}
+	for _, l := range strings.Split(string(c), "\n") {
+		namedCaptureRegList = append(namedCaptureRegList, regexp.MustCompile(l))
+	}
+}
+
+func autoFixSigmaRule(c []byte, r sigma.Rule) (sigma.Rule, error) {
+	var rule map[string]interface{}
+	if err := yaml.Unmarshal(c, &rule); err != nil {
+		return r, err
+	}
+	numReg := regexp.MustCompile(`\d+`)
+	replaceMap := make(map[string]string)
+	keys := []string{}
+	for k, v := range rule {
+		if k == "detection" {
+			if m, ok := v.(map[string]interface{}); ok {
+				for dk, dv := range m {
+					if dk == "condition" {
+						if cs, ok := dv.(string); ok {
+							a := []string{}
+							for _, f := range strings.Fields(cs) {
+								if f != "1" && numReg.MatchString(f) {
+									f = convertNumberToAlpha(f)
+								}
+								a = append(a, f)
+							}
+							replaceMap[cs] = strings.Join(a, " ")
+							keys = append(keys, cs)
+						}
+					} else if numReg.MatchString(dk) {
+						replaceMap[dk] = convertNumberToAlpha(dk)
+						keys = append(keys, dk)
+					}
 				}
-				gr.AddPattern(strings.TrimSpace(a[0]), strings.TrimSpace(a[1]))
 			}
 		}
 	}
-	pat := datastore.Config.GrokPat
-	if !regexpGrok.MatchString(pat) {
-		pat = fmt.Sprintf("%%{%s}", pat)
+	// sort length asc
+	sort.Slice(keys, func(i, j int) bool {
+		return len(keys[i]) > len(keys[j])
+	})
+	s := string(c)
+	for _, k := range keys {
+		s = strings.ReplaceAll(s, k, replaceMap[k])
 	}
-	err = gr.Compile(pat, false)
-	if err != nil {
-		log.Fatalln(err)
+	return sigma.ParseRule([]byte(s))
+}
+
+func convertNumberToAlpha(input string) string {
+	numToAlpha := map[rune]rune{
+		'0': 'a',
+		'1': 'b',
+		'2': 'c',
+		'3': 'd',
+		'4': 'e',
+		'5': 'f',
+		'6': 'g',
+		'7': 'h',
+		'8': 'i',
+		'9': 'j',
 	}
+
+	var builder strings.Builder
+
+	for _, ch := range input {
+		if replacement, exists := numToAlpha[ch]; exists {
+			builder.WriteRune(replacement)
+		} else {
+			builder.WriteRune(ch)
+		}
+	}
+	return builder.String()
 }

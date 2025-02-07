@@ -18,17 +18,20 @@ type ConfigEnt struct {
 	SyslogDst     []string `yaml:"syslogDst"`
 	TrapDst       []string `yaml:"trapDst"`
 	TrapCommunity string   `yaml:"trapCommunity"`
-	// gRPC Setting
 	// Log retention period (hours)
 	LogRetention int `yaml:"logRetention"`
 	// Notify retention period (days)
 	NotifyRetention int `yaml:"notifyRetention"`
 	// GROK
-	GrokPat string `yaml:"grockPat"`
-	GrokDef string `yaml:"grokDef"`
+	GrokPat []string `yaml:"grockPat"`
+	GrokDef string   `yaml:"grokDef"`
+	// Named capture
+	NamedCaptures string `yaml:"nameCaps"`
+	// Key/Vaue parse
+	KeyValParse bool `yaml:"keyValParse"`
 	// Sigma
-	SigmaConfig string `yaml:"sigmaConfig"`
-	SigmaRules  string `yaml:"sigmaRules"`
+	SigmaRules   string `yaml:"sigmaRules"`
+	SigmaConfigs string `yaml:"sigmaConfigs"`
 	// SNMP MIB
 	MIBPath string `yaml:"mibPath"`
 }

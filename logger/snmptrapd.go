@@ -45,6 +45,7 @@ func StartSnmpTrapd(ctx context.Context, wg *sync.WaitGroup) {
 		if err == nil {
 			trapCh <- &datastore.LogEnt{
 				Src:  u.IP.String(),
+				Type: datastore.SnmpTrap,
 				Time: time.Now().UnixNano(),
 				Log:  string(js),
 			}

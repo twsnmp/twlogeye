@@ -134,6 +134,7 @@ func logIPFIX(p *ipfix.Message, src string) {
 			}
 			netflowCh <- &datastore.LogEnt{
 				Time: time.Now().UnixNano(),
+				Type: datastore.NetFlow,
 				Src:  src,
 				Log:  string(s),
 			}
@@ -170,6 +171,7 @@ func logNetflow(p *netflow5.Packet, src string) {
 		netflowCh <- &datastore.LogEnt{
 			Time: time.Now().UnixNano(),
 			Src:  src,
+			Type: datastore.NetFlow,
 			Log:  string(s),
 		}
 	}
@@ -212,6 +214,7 @@ func logNetflow9(p *netflow9.Packet, src string) {
 			netflowCh <- &datastore.LogEnt{
 				Time: time.Now().UnixNano(),
 				Src:  src,
+				Type: datastore.NetFlow,
 				Log:  string(s),
 			}
 		}

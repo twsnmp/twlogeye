@@ -13,17 +13,34 @@ import (
 //go:embed all:sigma
 var sigmaFS embed.FS
 
-// GetSigmaConfig : return sigma config data
-func GetSigmaConfig() ([]byte, error) {
-	if Config.SigmaConfig == "" {
-		return nil, nil
+// ForEachSigmaConfig : for each sigma config data
+func ForEachSigmaConfig(callBack func(c string, d []byte)) {
+	for _, c := range []string{"windows"} {
+		p := path.Join("sigma", "config", c+".yaml")
+		if d, err := sigmaFS.ReadFile(p); err == nil {
+			callBack(c, d)
+		}
 	}
-	if strings.HasPrefix(Config.SigmaConfig, "embed:") {
-		p := path.Join("sigma", "config", Config.SigmaConfig[6:]+".yaml")
-		log.Printf("user sigma config %s", p)
-		return sigmaFS.ReadFile(p)
+	if Config.SigmaConfigs == "" {
+		return
 	}
-	return os.ReadFile(Config.SigmaConfig)
+	filepath.WalkDir(Config.SigmaConfigs, func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(path))
+		if ext != ".yaml" && ext != ".yml" {
+			return nil
+		}
+		c := strings.Replace(filepath.Base(path), filepath.Ext(path), "", 1)
+		if d, err := os.ReadFile(path); err == nil {
+			callBack(c, d)
+		}
+		return nil
+	})
 }
 
 // ForEachSigmaRules : call back with sigma rule data
@@ -49,22 +66,34 @@ func ForEachSigmaRules(callBack func(c []byte, path string)) {
 			callBack(c, p)
 		}
 	}
-	filepath.WalkDir(Config.SigmaRules, func(path string, info fs.DirEntry, err error) error {
+	for _, path := range getRulePath(Config.SigmaRules) {
+		c, err := os.ReadFile(path)
+		if err != nil {
+			log.Fatalf("invalid rule %s %s", path, err)
+		}
+		callBack(c, path)
+	}
+}
+
+// getRulePath : get rule path list
+func getRulePath(root string) []string {
+	ret := []string{}
+	filepath.WalkDir(root, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if info.IsDir() {
+			if path != root && path != "." {
+				ret = append(ret, getRulePath(path)...)
+			}
 			return nil
 		}
 		ext := strings.ToLower(filepath.Ext(path))
 		if ext != ".yaml" && ext != ".yml" {
 			return nil
 		}
-		c, err := os.ReadFile(path)
-		if err != nil {
-			log.Fatalf("invalid rule %s %s", path, err)
-		}
-		callBack(c, path)
+		ret = append(ret, path)
 		return nil
 	})
+	return ret
 }

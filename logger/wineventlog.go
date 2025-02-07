@@ -107,6 +107,7 @@ func getWindowsEventLogs() []*datastore.LogEnt {
 		}
 		al := &datastore.LogEnt{
 			Time: t.UnixNano(),
+			Type: datastore.WindowsEventLog,
 			Src:  src,
 			Log:  j.String(),
 		}
