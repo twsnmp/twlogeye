@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -28,8 +29,15 @@ import (
 // sigmaCmd represents the sigma command
 var sigmaCmd = &cobra.Command{
 	Use:   "sigma",
-	Short: "Check sigma rules (list/stat/logsrc/field)",
-	Long:  `Check sigma rules (list/stat/logsrc/field)`,
+	Short: "Check sigma rules (list|stat|logsrc|field|check|test)",
+	Long: `Check sigma rules (list|stat|logsrc|field|check|test)
+	list: list rules
+	stat: stat rules
+	logsrc: list log srourcese
+	field: list fields
+	check: check rule
+	test: test rule args
+	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		switch {
 		case len(args) > 0 && args[0] == "stat":
@@ -40,6 +48,8 @@ var sigmaCmd = &cobra.Command{
 			sigmaField()
 		case len(args) > 0 && args[0] == "check":
 			sigmaCheck()
+		case len(args) > 0 && args[0] == "test":
+			sigmaTest(args)
 		default:
 			sigmaRuleList()
 		}
@@ -56,7 +66,12 @@ func sigmaStat() {
 	list := auditor.GetSigmaRuleEvaluators()
 	logSrcMap := make(map[string]int)
 	fieldMap := make(map[string]int)
+	titleMap := make(map[string]int)
 	for _, e := range list {
+		if _, ok := titleMap[e.Title]; !ok {
+			titleMap[e.Title] = 0
+		}
+		titleMap[e.Title]++
 		lsk := fmt.Sprintf("%s:%s:%s", e.Logsource.Product, e.Logsource.Category, e.Logsource.Service)
 		if _, ok := logSrcMap[lsk]; !ok {
 			logSrcMap[lsk] = 0
@@ -74,7 +89,13 @@ func sigmaStat() {
 			}
 		}
 	}
-	fmt.Printf("rules=%d logsrc=%d field=%d\n", len(list), len(logSrcMap), len(fieldMap))
+	dupTitle := 0
+	for _, c := range titleMap {
+		if c > 1 {
+			dupTitle++
+		}
+	}
+	fmt.Printf("rules=%d logsrc=%d field=%d dupTitle=%d\n", len(list), len(logSrcMap), len(fieldMap), dupTitle)
 }
 
 func sigmaLogSrc() {
@@ -127,7 +148,7 @@ var regCheck2 = regexp.MustCompile(`[0-9]+`)
 
 func sigmaCheck() {
 	total := 0
-	skip := 0
+	hits := 0
 	datastore.ForEachSigmaRules(func(c []byte, path string) {
 		total++
 		m := regCheck1.FindStringSubmatch(string(c))
@@ -143,10 +164,16 @@ func sigmaCheck() {
 				}
 			}
 			if hit {
-				skip++
+				hits++
 			}
 		}
-
 	})
-	fmt.Printf("total=%d skip=%d\n", total, skip)
+	fmt.Printf("total=%d hit=%d\n", total, hits)
+}
+
+func sigmaTest(args []string) {
+	if len(args) < 2 {
+		log.Fatalln("test data missing")
+	}
+	auditor.TestRule(args[1:])
 }

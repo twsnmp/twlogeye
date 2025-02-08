@@ -30,8 +30,9 @@ type ConfigEnt struct {
 	// Key/Vaue parse
 	KeyValParse bool `yaml:"keyValParse"`
 	// Sigma
-	SigmaRules   string `yaml:"sigmaRules"`
-	SigmaConfigs string `yaml:"sigmaConfigs"`
+	SigmaRules     string `yaml:"sigmaRules"`
+	SigmaConfigs   string `yaml:"sigmaConfigs"`
+	SigmaSkipError bool   `yaml:"sigmaSkipError"`
 	// SNMP MIB
 	MIBPath string `yaml:"mibPath"`
 }

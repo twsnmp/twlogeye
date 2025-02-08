@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/bradleyjkemp/sigma-go"
 	"github.com/bradleyjkemp/sigma-go/evaluator"
@@ -26,9 +27,9 @@ var auditorCh chan *datastore.LogEnt
 var reloadCh chan bool
 var watchChMap sync.Map
 
-func Init() bool {
-	loadSigmaConfigs(false)
-	loadSigmaRules(false)
+func Init(skipErr bool) bool {
+	loadSigmaConfigs(skipErr)
+	loadSigmaRules(skipErr)
 	setGrok()
 	loadNamedCaptures()
 	auditorCh = make(chan *datastore.LogEnt, 20000)
@@ -119,6 +120,8 @@ func loadSigmaRules(skipErr bool) {
 	total := 0
 	skip := 0
 	fix := 0
+	dup := 0
+	idMap := make(map[string]bool)
 	datastore.ForEachSigmaRules(func(c []byte, path string) {
 		total++
 		rule, err := sigma.ParseRule(c)
@@ -126,6 +129,13 @@ func loadSigmaRules(skipErr bool) {
 			rule, err = autoFixSigmaRule(c, rule)
 			if err == nil {
 				fix++
+			}
+		}
+		// check keywords not support
+		for _, s := range rule.Detection.Searches {
+			if len(s.Keywords) > 0 {
+				err = fmt.Errorf("keywords not support")
+				break
 			}
 		}
 		if err != nil {
@@ -140,6 +150,11 @@ func loadSigmaRules(skipErr bool) {
 		if rule.ID == "" {
 			rule.ID = path
 		}
+		if _, ok := idMap[rule.ID]; ok {
+			dup++
+			return
+		}
+		idMap[rule.ID] = true
 		config := getSigmaConfig(&rule)
 		if config != nil {
 			evaluators = append(evaluators, evaluator.ForRule(rule, evaluator.WithConfig(*config), evaluator.CaseSensitive))
@@ -147,7 +162,7 @@ func loadSigmaRules(skipErr bool) {
 			evaluators = append(evaluators, evaluator.ForRule(rule, evaluator.CaseSensitive))
 		}
 	})
-	log.Printf("load sigma rules total=%d skip=%d fix=%d", total, skip, fix)
+	log.Printf("load sigma rules total=%d skip=%d fix=%d dup=%d", total, skip, fix, dup)
 }
 
 func loadSigmaConfigs(skipErr bool) {
@@ -234,7 +249,7 @@ func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 	for _, ev := range evaluators {
 		r, err := ev.Matches(context.Background(), data)
 		if err != nil {
-			log.Printf("sigma matches err=%+v", err)
+			log.Printf("sigma matches rule id=%s err=%+v", ev.Rule.ID, err)
 			return nil
 		}
 		if r.Match {
@@ -248,6 +263,28 @@ func GetSigmaRuleEvaluators() []*evaluator.RuleEvaluator {
 	loadSigmaConfigs(true)
 	loadSigmaRules(true)
 	return evaluators
+}
+
+func TestRule(args []string) {
+	loadSigmaConfigs(true)
+	loadSigmaRules(true)
+	if len(evaluators) < 1 {
+		log.Fatalln("no rule to test")
+	}
+	hit := false
+	for _, l := range args {
+		if e := matchSigmaRule(&datastore.LogEnt{
+			Time: time.Now().UnixNano(),
+			Log:  l,
+		}); e != nil {
+			lsk := fmt.Sprintf("%s:%s:%s", e.Logsource.Product, e.Logsource.Category, e.Logsource.Service)
+			fmt.Printf("===\n%s\n%s\t%s\t%s\t%s\n", l, e.ID, e.Level, lsk, e.Title)
+			hit = true
+		}
+	}
+	if !hit {
+		fmt.Println("===\nno rule maatch")
+	}
 }
 
 var regexpGrok = regexp.MustCompile(`%\{.+\}`)
