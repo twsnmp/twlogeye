@@ -82,13 +82,15 @@ func init() {
 	startCmd.Flags().StringVar(&datastore.Config.WinAuth, "winAuth", "", "Windows eventlog auth")
 	startCmd.Flags().BoolVar(&datastore.Config.KeyValParse, "keyValParse", false, "Splunk Key value parse")
 	startCmd.Flags().BoolVar(&datastore.Config.SigmaSkipError, "sigmaSkipError", false, "Skip sigma rule error")
+	startCmd.Flags().BoolVar(&datastore.Config.Debug, "debug", false, "debug mode")
+	startCmd.Flags().BoolVar(&datastore.Config.WinLogSJIS, "sjis", false, "Windows eventlog SHIT-JIS mode")
 }
 
 func start() {
 	log.Printf("start confg=%+v", datastore.Config)
 	var wg sync.WaitGroup
 	datastore.OpenLogDB()
-	auditor.Init(datastore.Config.SigmaSkipError)
+	auditor.Init()
 	notify.Init()
 	ctx, cancel := context.WithCancel(context.Background())
 	wg.Add(1)

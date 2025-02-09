@@ -1,12 +1,13 @@
 package datastore
 
 type ConfigEnt struct {
-	LogPath                  string `yaml:"logPath"`
-	SyslogUDPPort            int    `yaml:"syslogUDPPort"`
-	SyslogTCPPort            int    `yaml:"syslogTCPPort"`
-	NetFlowPort              int    `yaml:"netflowPort"`
-	SFlowPort                int    `yaml:"sflowPort"`
-	SNMPTrapPort             int    `yaml:"snmpTrapPort"`
+	LogPath       string `yaml:"logPath"`
+	SyslogUDPPort int    `yaml:"syslogUDPPort"`
+	SyslogTCPPort int    `yaml:"syslogTCPPort"`
+	NetFlowPort   int    `yaml:"netflowPort"`
+	SFlowPort     int    `yaml:"sflowPort"`
+	SNMPTrapPort  int    `yaml:"snmpTrapPort"`
+	// Windows log
 	WinEventLogChannel       string `yaml:"winEventLogChannel"`
 	WinEventLogCheckInterval int    `yaml:"winEventLogCheckInterval"`
 	WinEventLogCheckStart    int    `yaml:"winEventLogCheckStart"`
@@ -14,6 +15,7 @@ type ConfigEnt struct {
 	WinUser                  string `yaml:"winUser"`
 	WinPassword              string `yaml:"winPassword"`
 	WinAuth                  string `yaml:"winAuth"`
+	WinLogSJIS               bool   `yaml:"winSJIS"`
 	// Dst
 	SyslogDst     []string `yaml:"syslogDst"`
 	TrapDst       []string `yaml:"trapDst"`
@@ -35,6 +37,8 @@ type ConfigEnt struct {
 	SigmaSkipError bool   `yaml:"sigmaSkipError"`
 	// SNMP MIB
 	MIBPath string `yaml:"mibPath"`
+	// Debug
+	Debug bool `yaml:"debug"`
 }
 
 var Config ConfigEnt

@@ -39,6 +39,8 @@ var sigmaCmd = &cobra.Command{
 	test: test rule args
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// no error  for sigma config and rule load
+		datastore.Config.SigmaSkipError = true
 		switch {
 		case len(args) > 0 && args[0] == "stat":
 			sigmaStat()

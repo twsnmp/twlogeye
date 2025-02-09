@@ -27,9 +27,9 @@ var auditorCh chan *datastore.LogEnt
 var reloadCh chan bool
 var watchChMap sync.Map
 
-func Init(skipErr bool) bool {
-	loadSigmaConfigs(skipErr)
-	loadSigmaRules(skipErr)
+func Init() bool {
+	loadSigmaConfigs()
+	loadSigmaRules()
 	setGrok()
 	loadNamedCaptures()
 	auditorCh = make(chan *datastore.LogEnt, 20000)
@@ -47,7 +47,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 			return
 		case <-reloadCh:
 			evaluators = []*evaluator.RuleEvaluator{}
-			loadSigmaRules(true)
+			loadSigmaRules()
 		case l := <-auditorCh:
 			if ev := matchSigmaRule(l); ev != nil {
 				n := &datastore.NotifyEnt{
@@ -116,7 +116,7 @@ func getSigmaConfig(r *sigma.Rule) *sigma.Config {
 	return nil
 }
 
-func loadSigmaRules(skipErr bool) {
+func loadSigmaRules() {
 	total := 0
 	skip := 0
 	fix := 0
@@ -140,7 +140,7 @@ func loadSigmaRules(skipErr bool) {
 		}
 		if err != nil {
 			skip++
-			if skipErr {
+			if datastore.Config.SigmaSkipError {
 				log.Printf("invalid rule %s %v", path, err)
 				return
 			} else {
@@ -165,12 +165,12 @@ func loadSigmaRules(skipErr bool) {
 	log.Printf("load sigma rules total=%d skip=%d fix=%d dup=%d", total, skip, fix, dup)
 }
 
-func loadSigmaConfigs(skipErr bool) {
+func loadSigmaConfigs() {
 	sigmaConfigMap = make(map[string]*sigma.Config)
 	datastore.ForEachSigmaConfig(func(k string, d []byte) {
 		c, err := sigma.ParseConfig(d)
 		if err != nil {
-			if skipErr {
+			if datastore.Config.SigmaSkipError {
 				log.Printf("sigma config parrse err=%v", err)
 				return
 			} else {
@@ -250,7 +250,10 @@ func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 		r, err := ev.Matches(context.Background(), data)
 		if err != nil {
 			log.Printf("sigma matches rule id=%s err=%+v", ev.Rule.ID, err)
-			return nil
+			if datastore.Config.Debug {
+				log.Printf("log=%+v", data)
+			}
+			continue
 		}
 		if r.Match {
 			return ev
@@ -260,14 +263,14 @@ func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 }
 
 func GetSigmaRuleEvaluators() []*evaluator.RuleEvaluator {
-	loadSigmaConfigs(true)
-	loadSigmaRules(true)
+	loadSigmaConfigs()
+	loadSigmaRules()
 	return evaluators
 }
 
 func TestRule(args []string) {
-	loadSigmaConfigs(true)
-	loadSigmaRules(true)
+	loadSigmaConfigs()
+	loadSigmaRules()
 	if len(evaluators) < 1 {
 		log.Fatalln("no rule to test")
 	}

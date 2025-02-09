@@ -2,40 +2,66 @@ package logger
 
 import (
 	"context"
+	"encoding/json"
 	"encoding/xml"
 	"log"
 	"os/exec"
-	"regexp"
 	"strings"
 	"sync"
 
 	"fmt"
 	"time"
 
-	xj "github.com/basgys/goxml2json"
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
+	"golang.org/x/text/encoding/japanese"
+	"golang.org/x/text/transform"
 )
 
-// Windows Event Log XML format
-type System struct {
-	Provider struct {
-		Name string `xml:"Name,attr"`
-	}
-	EventID       int    `xml:"EventID"`
-	Level         int    `xml:"Level"`
-	EventRecordID int64  `xml:"EventRecordID"`
-	Channel       string `xml:"Channel"`
-	Computer      string `xml:"Computer"`
-	Security      struct {
-		UserID string `xml:"UserID,attr"`
-	}
-	TimeCreated struct {
-		SystemTime string `xml:"SystemTime,attr"`
-	}
+type Event struct {
+	XMLName xml.Name `xml:"Event"`
+	Text    string   `xml:",chardata"`
+	Xmlns   string   `xml:"xmlns,attr"`
+	System  struct {
+		Text     string `xml:",chardata"`
+		Provider struct {
+			Text string `xml:",chardata"`
+			Name string `xml:"Name,attr"`
+			Guid string `xml:"Guid,attr"`
+		} `xml:"Provider"`
+		EventID     int64  `xml:"EventID"`
+		Version     string `xml:"Version"`
+		Level       int64  `xml:"Level"`
+		Task        string `xml:"Task"`
+		Opcode      string `xml:"Opcode"`
+		Keywords    string `xml:"Keywords"`
+		TimeCreated struct {
+			Text       string `xml:",chardata"`
+			SystemTime string `xml:"SystemTime,attr"`
+		} `xml:"TimeCreated"`
+		EventRecordID int64  `xml:"EventRecordID"`
+		Correlation   string `xml:"Correlation"`
+		Execution     struct {
+			Text      string `xml:",chardata"`
+			ProcessID int64  `xml:"ProcessID,attr"`
+			ThreadID  int64  `xml:"ThreadID,attr"`
+		} `xml:"Execution"`
+		Channel  string `xml:"Channel"`
+		Computer string `xml:"Computer"`
+		Security struct {
+			Text   string `xml:",chardata"`
+			UserID string `xml:"UserID,attr"`
+		} `xml:"Security"`
+	} `xml:"System"`
+	EventData struct {
+		Text string `xml:",chardata"`
+		Data []struct {
+			Text string `xml:",chardata"`
+			Name string `xml:"Name,attr"`
+		} `xml:"Data"`
+	} `xml:"EventData"`
 }
 
-var reSystem = regexp.MustCompile(`<System.+System>`)
 var lastTime time.Time
 
 func StartWinEventLogd(ctx context.Context, wg *sync.WaitGroup) {
@@ -86,30 +112,36 @@ func getWindowsEventLogs() []*datastore.LogEnt {
 	if len(out) < 5 {
 		return ret
 	}
-	s := new(System)
+	e := new(Event)
 	for _, l := range strings.Split(strings.ReplaceAll(string(out), "\n", ""), "</Event>") {
 		l := strings.TrimSpace(l) + "</Event>"
 		if len(l) < 10 {
 			continue
 		}
-		lsys := reSystem.FindString(l)
-		err := xml.Unmarshal([]byte(lsys), s)
+		if datastore.Config.WinLogSJIS {
+			if str, _, err := transform.String(japanese.ShiftJIS.NewDecoder(), l); err == nil {
+				l = str
+			}
+		}
+		err := xml.Unmarshal([]byte(l), e)
 		if err != nil {
 			log.Printf("xml err=%v", err)
+			if datastore.Config.Debug {
+				log.Printf("log=%s", l)
+			}
 			continue
 		}
-		t := getEventTime(s.TimeCreated.SystemTime)
-		xml := strings.NewReader(l)
-		j, err := xj.Convert(xml, xj.WithTypeConverter(xj.Int))
+		t := getEventTime(e.System.TimeCreated.SystemTime)
+		j, err := evtlogXML2JSON(e)
 		if err != nil {
-			log.Printf("xml2json err=%v", err)
+			log.Printf("evtlogXML2JSON err=%v", err)
 			continue
 		}
 		al := &datastore.LogEnt{
 			Time: t.UnixNano(),
 			Type: datastore.WindowsEventLog,
 			Src:  src,
-			Log:  j.String(),
+			Log:  j,
 		}
 		auditor.Audit(al)
 		ret = append(ret, al)
@@ -125,4 +157,47 @@ func getEventTime(s string) time.Time {
 		return time.Now()
 	}
 	return t.Local()
+}
+
+func evtlogXML2JSON(x *Event) (string, error) {
+	edmap := make(map[string]interface{})
+	for _, d := range x.EventData.Data {
+		edmap[d.Name] = d.Text
+	}
+	m := map[string]interface{}{
+		"Event": map[string]interface{}{
+			"System": map[string]interface{}{
+				"Channel":       x.System.Channel,
+				"Computer":      x.System.Computer,
+				"Correlation":   x.System.Correlation,
+				"EventID":       x.System.EventID,
+				"EventRecordID": x.System.EventRecordID,
+				"Execution": map[string]interface{}{
+					"ProcessID": x.System.Execution.ProcessID,
+					"ThreadID":  x.System.Execution.ThreadID,
+				},
+				"Keywords": x.System.Keywords,
+				"Level":    x.System.Level,
+				"Opcode":   x.System.Opcode,
+				"Provider": map[string]interface{}{
+					"Guid": x.System.Provider.Guid,
+					"Name": x.System.Provider.Name,
+				},
+				"Security": map[string]interface{}{
+					"UserID": x.System.Security.UserID,
+				},
+				"Task": x.System.Task,
+				"TimeCreated": map[string]interface{}{
+					"SystemTime": x.System.TimeCreated.SystemTime,
+				},
+				"Version": x.System.Version,
+			},
+			"EventData": edmap,
+		},
+	}
+	j, err := json.Marshal(&m)
+	if err != nil {
+		return "", err
+	}
+	return string(j), nil
 }
