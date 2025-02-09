@@ -23,8 +23,8 @@ import (
 // watchCmd represents the watch command
 var watchCmd = &cobra.Command{
 	Use:   "watch",
-	Short: "watch notify",
-	Long:  `watch notify`,
+	Short: "Watch notify",
+	Long:  `Watch notify via api`,
 	Run: func(cmd *cobra.Command, args []string) {
 		api.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
 		api.WatchNotify()

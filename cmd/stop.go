@@ -23,8 +23,8 @@ import (
 // stopCmd represents the stop command
 var stopCmd = &cobra.Command{
 	Use:   "stop",
-	Short: "Stop twLogEye",
-	Long:  `Stop twLogEye`,
+	Short: "Stop twlogeye",
+	Long:  `Stop twlogeye via api`,
 	Run: func(cmd *cobra.Command, args []string) {
 		api.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
 		api.Stop()

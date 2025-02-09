@@ -39,8 +39,8 @@ var grokPat string
 // startCmd represents the start command
 var startCmd = &cobra.Command{
 	Use:   "start",
-	Short: "start twLogEye",
-	Long:  `start twLogEye`,
+	Short: "Start twlogeye",
+	Long:  `Start twlogeye`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if syslogDst != "" {
 			datastore.Config.SyslogDst = strings.Split(syslogDst, ",")

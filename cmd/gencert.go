@@ -27,8 +27,8 @@ var cn string
 // gencertCmd represents the gencert command
 var gencertCmd = &cobra.Command{
 	Use:   "gencert",
-	Short: "genatate TLS paravate key and cert",
-	Long:  `genatate TLS paravate key and cert`,
+	Short: "Generate TLS private key and cert",
+	Long:  `Generate TLS private key and cert for gRPC server/client`,
 	Run: func(cmd *cobra.Command, args []string) {
 		hit := false
 		if apiServerCert != "" && apiServerKey != "" {

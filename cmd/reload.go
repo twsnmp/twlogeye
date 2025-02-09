@@ -23,8 +23,8 @@ import (
 // reloadCmd represents the reload command
 var reloadCmd = &cobra.Command{
 	Use:   "reload",
-	Short: "reload rules",
-	Long:  `reload rules`,
+	Short: "Reload rules",
+	Long:  `Reload rules via api`,
 	Run: func(cmd *cobra.Command, args []string) {
 		api.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
 		api.Reload()

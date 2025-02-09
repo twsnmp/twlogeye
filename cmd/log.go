@@ -28,8 +28,8 @@ var search string
 // logCmd represents the log command
 var logCmd = &cobra.Command{
 	Use:   "log",
-	Short: "search log",
-	Long:  `search log`,
+	Short: "Search log",
+	Long:  `Search log via api`,
 	Run: func(cmd *cobra.Command, args []string) {
 		st := getTime(startTime, 0)
 		et := getTime(endTime, time.Now().UnixNano())
