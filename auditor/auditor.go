@@ -249,9 +249,8 @@ func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 	for _, ev := range evaluators {
 		r, err := ev.Matches(context.Background(), data)
 		if err != nil {
-			log.Printf("sigma matches rule id=%s err=%+v", ev.Rule.ID, err)
 			if datastore.Config.Debug {
-				log.Printf("log=%+v", data)
+				log.Printf("sigma matches rule id=%s err=%+v", ev.Rule.ID, err)
 			}
 			continue
 		}
