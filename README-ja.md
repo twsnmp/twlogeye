@@ -110,7 +110,7 @@ Flags:
   -l, --logPath string                 Log DB Path default: memory
       --logRetention int               log retention(hours) (default 48)
       --mibPath string                 SNMP Ext MIB Path
-      --namedCap string                Named capture defs path
+      --namedCaptures string           Named capture defs path
       --netflowPort int                netflow port 0=disable
       --notifyRetention int            notify retention(days) (default 30)
       --sigmaConfigs string            SIGMA config path
@@ -371,7 +371,7 @@ Global Flags:
 |notifyRetention|通知の保存日数|
 |grockPat|GROKパターン定義|
 |grokDef|GROK定義ファイルのパス|
-|namedCaps|正規表現の定義ファイルパス|
+|namedCaptures|正規表現の定義ファイルパス|
 |keyValParse|Splunkのようなキーバリューの取得を行う|
 |sigmaRules|sigmaルールのパス|
 |sigmaConfigs|sigma設定のパス|

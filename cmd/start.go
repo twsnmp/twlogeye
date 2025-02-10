@@ -70,7 +70,7 @@ func init() {
 	startCmd.Flags().StringVar(&datastore.Config.TrapCommunity, "trapCommunity", "", "SNMP TRAP Community")
 	startCmd.Flags().StringVar(&datastore.Config.SigmaRules, "sigmaRules", "", "SIGMA rule path")
 	startCmd.Flags().StringVar(&datastore.Config.SigmaConfigs, "sigmaConfigs", "", "SIGMA config path")
-	startCmd.Flags().StringVar(&datastore.Config.NamedCaptures, "namedCap", "", "Named capture defs path")
+	startCmd.Flags().StringVar(&datastore.Config.NamedCaptures, "namedCaptures", "", "Named capture defs path")
 	startCmd.Flags().StringVar(&datastore.Config.GrokDef, "grokDef", "", "GROK define file")
 	startCmd.Flags().StringVar(&grokPat, "grokPat", "", "GROK patterns")
 	startCmd.Flags().StringVar(&datastore.Config.WinEventLogChannel, "winEventLogChannel", "", "Windows eventlog channel")

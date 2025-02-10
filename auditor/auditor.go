@@ -214,10 +214,10 @@ func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 						// Splunk key=val
 						for _, m := range regSplunk.FindAllStringSubmatch(c, -1) {
 							if len(m) > 2 {
-								if f, err := strconv.ParseFloat(m[1], 64); err == nil {
-									data[m[0]] = f
+								if f, err := strconv.ParseFloat(m[2], 64); err == nil {
+									data[m[1]] = f
 								} else {
-									data[m[0]] = m[1]
+									data[m[1]] = m[2]
 								}
 							}
 						}
@@ -313,6 +313,9 @@ func setGrok() {
 		gr, err := grok.NewComplete()
 		if err != nil {
 			log.Fatalln(err)
+		}
+		if len(grokPatternDef) > 0 {
+			gr.AddPatterns(grokPatternDef)
 		}
 		if !regexpGrok.MatchString(pat) {
 			pat = fmt.Sprintf("%%{%s}", pat)

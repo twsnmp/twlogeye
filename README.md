@@ -107,7 +107,7 @@ Flags:
   -l, --logPath string                 Log DB Path default: memory
       --logRetention int               log retention(hours) (default 48)
       --mibPath string                 SNMP Ext MIB Path
-      --namedCap string                Named capture defs path
+      --namedCaptures string           Named capture defs path
       --netflowPort int                netflow port 0=disable
       --notifyRetention int            notify retention(days) (default 30)
       --sigmaConfigs string            SIGMA config path
@@ -350,7 +350,7 @@ YAML format.It corresponds to the following keys.
 |notifyRetention|Notify retention(days)|
 |grockPat|GROK pattern|
 |grokDef|GROK Def file path|
-|namedCaps|Name Captures def file path|
+|namedCaptures|Name Captures def file path|
 |keyValParse|Splunk syle key value parser|
 |sigmaRules|sigma rules path|
 |sigmaConfigs|sigma config path|

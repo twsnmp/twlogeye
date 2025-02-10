@@ -27,7 +27,7 @@ type ConfigEnt struct {
 	GrokPat []string `yaml:"grockPat"`
 	GrokDef string   `yaml:"grokDef"`
 	// Named capture
-	NamedCaptures string `yaml:"namedCaps"`
+	NamedCaptures string `yaml:"namedCaptures"`
 	// Key/Vaue parse
 	KeyValParse bool `yaml:"keyValParse"`
 	// Sigma
