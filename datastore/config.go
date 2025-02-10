@@ -5,7 +5,6 @@ type ConfigEnt struct {
 	SyslogUDPPort int    `yaml:"syslogUDPPort"`
 	SyslogTCPPort int    `yaml:"syslogTCPPort"`
 	NetFlowPort   int    `yaml:"netflowPort"`
-	SFlowPort     int    `yaml:"sflowPort"`
 	SNMPTrapPort  int    `yaml:"snmpTrapPort"`
 	// Windows log
 	WinEventLogChannel       string `yaml:"winEventLogChannel"`
@@ -28,7 +27,7 @@ type ConfigEnt struct {
 	GrokPat []string `yaml:"grockPat"`
 	GrokDef string   `yaml:"grokDef"`
 	// Named capture
-	NamedCaptures string `yaml:"nameCaps"`
+	NamedCaptures string `yaml:"namedCaps"`
 	// Key/Vaue parse
 	KeyValParse bool `yaml:"keyValParse"`
 	// Sigma

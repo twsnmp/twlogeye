@@ -47,5 +47,5 @@ var gencertCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(gencertCmd)
-	gencertCmd.Flags().StringVar(&cn, "cn", "twsnmp", "CN for clinet cert")
+	gencertCmd.Flags().StringVar(&cn, "cn", "twsnmp", "CN for client cert")
 }

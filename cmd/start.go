@@ -61,7 +61,6 @@ func init() {
 	startCmd.Flags().IntVar(&datastore.Config.SyslogUDPPort, "syslogUDPPort", 0, "syslog UDP port 0=disable")
 	startCmd.Flags().IntVar(&datastore.Config.SyslogUDPPort, "syslogTCPPort", 0, "syslog TCP port 0=disable")
 	startCmd.Flags().IntVar(&datastore.Config.NetFlowPort, "netflowPort", 0, "netflow port 0=disable")
-	startCmd.Flags().IntVar(&datastore.Config.SFlowPort, "slowPort", 0, "sFlow port 0=disable")
 	startCmd.Flags().IntVar(&datastore.Config.SNMPTrapPort, "trapPort", 0, "SNMP TRAP recive port 0=disable")
 	startCmd.Flags().StringVar(&datastore.Config.MIBPath, "mibPath", "", "SNMP Ext MIB Path")
 	startCmd.Flags().IntVar(&datastore.Config.LogRetention, "logRetention", 48, "log retention(hours)")

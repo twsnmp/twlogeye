@@ -30,8 +30,8 @@ var endTime string
 // notifyCmd represents the notify command
 var notifyCmd = &cobra.Command{
 	Use:   "notify",
-	Short: "Serach notify",
-	Long:  `Serach notify via api`,
+	Short: "Search notify",
+	Long:  `Search notify via api`,
 	Run: func(cmd *cobra.Command, args []string) {
 		st := getTime(startTime, 0)
 		et := getTime(endTime, time.Now().UnixNano())

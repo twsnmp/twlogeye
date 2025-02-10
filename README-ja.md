@@ -1,41 +1,42 @@
 # twlogeye
-Eye-like log server to monitor threats in logs
+twlogeyeは目のようなログ監視サーバーです。
 
-Import sigma rules.
+SIGMAルール
 
 https://github.com/SigmaHQ/sigma
 
 
-[日本語のREADME](README-ja.md)
+を直接読み込み脅威の検知をすることができます。
+
 
 ## Install
 
-It is recommended to install the Linux/Mac OS with a shell script.
+Linux/Mac OSの環境では、シェルスクリプトでインストールすることができます。
 
 ```terminal
 $curl -sS https://lhx98.linkclub.jp/twise.co.jp/download/install_twlogeye.sh | sh
 ```
 
-Linux/Mac OS can be installed on Homebrew.
+Linux/Mac OSではHomebrewでもインストールできます。
 
 ```terminal
 $brew install twsnmp/tap/twlogeye
 ```
 
-Winddows downloads zip files from the release or scoop
-Install in.
+Winddowsは、リリースのzipファイルをダウンロードするかscoopでインストールできます。
+
 
 ```terminal
 >scoop bucket add twsnmp https://github.com/twsnmp/scoop-bucket
 >scoop install twlogeye
 ```
 
-## Basic usage
+## 基本的な使い方
 
-- Create log and sigma rule directory.
-- Create config file.
-- Copy or create sigma rules to sigma rule directory
-- Start server.
+- ログを保存するディレクトリとSgmaルールを保存するディレクトリを作成
+- 設定ファイルを作成
+- Sigmaルールをコピーまたは、作成
+- サーバーを開始
 
 ```
 ~$mkdir logs
@@ -45,9 +46,9 @@ Install in.
 ~$twlogeye start
 ```
 
-## Command explanation
+## コマンドの説明
 
-You can check the commands that support the Help command.
+helpコマンドで確認できます。
 
 ```terminal
 Eye-like log server to monitor threats in logs with signa rules
@@ -87,8 +88,10 @@ Flags:
 Use "twlogeye [command] --help" for more information about a command.
 ```
 
-### Server
-#### start command
+### ロウサーバー
+#### start コマンド
+
+サーバーを起動するコマンドです。
 
 ```terminal
 $twlogeye help start
@@ -139,8 +142,10 @@ Global Flags:
 ```
 
 
-### Client
-#### log command
+### クライアント
+#### log コマンド
+
+サーバーに保存されたログを検索するためのコマンドです。
 
 ```terminal
 $twlogeye help log
@@ -168,7 +173,10 @@ Global Flags:
       --serverKey string    API server private key
 ```
 
-#### notify command
+#### notify コマンド
+
+サーバーに保存された通知を検索するコマンドです。
+
 ```terminal
 $twlogeye help notify
 Serach notify via api
@@ -194,7 +202,11 @@ Global Flags:
 
 ```
 
-#### watch command
+#### watch コマンド
+
+サーバーで発生する通知をリアルタイムで監視するコマンドです。
+
+
 ```
 $twlogeye help watch 
 Watch notify via api
@@ -216,7 +228,10 @@ Global Flags:
       --serverKey string    API server private key
 ```
 
-#### stop command
+#### stop コマンド
+
+サーバーを停止するコマンドです。
+
 ```
 $twlogeye help stop
 Stop twlogeye via api
@@ -238,7 +253,9 @@ Global Flags:
       --serverKey string    API server private key
 ```
 
-#### reload command
+#### reload コマンド
+
+サーバーにSigmaルールの再読み込みを指示するコマンドです。
 
 ```
 $twlogeye help reload
@@ -260,7 +277,9 @@ Global Flags:
 
 
 ### Util
-#### gencert command
+#### gencert コマンド
+
+サーバーとクライアントのgRPC通信を暗号化するための証明書、秘密鍵を作成するコマンドです。
 
 ```
 ＄twlogeye  help gencert
@@ -285,16 +304,19 @@ Global Flags:
 
 ```
 
-Generate client cert and key.
+クライアントは
 ```terminal
 $twlogeye gencert --clientCert c.crt --clientKey k.key
 ```
-Generate sercer cert and key.
+サーバーは
 ```terminal
 $twlogeye gencert --serverCert s.crt --serverKey s.key
 ```
+で作成します。
 
-#### sigma command
+#### sigma コマンド
+
+sigmaルールを確認するためのコマンドです。
 
 ```terminal
 Check sigma rules (list|stat|logsrc|field|check|test)
@@ -323,54 +345,54 @@ Global Flags:
       --serverKey string    API server private key
 ```
 
-## Setting file
+## 設定ファイル
 
-Use the file specified in --config or the current directory ./twlogeye.yaml as the configuration file.
-YAML format.It corresponds to the following keys.
+--config パラメータで指定するか、カレントディレクトリの ./twlogeye.yamlを設定ファイルとして使用します。YAML形式です。
 
-| Key | Descr |
+| キー | 説明 |
 | --- | --- |
-|logPath| Log DB path|
-|syslogUDPPort| syslog UDP port|
-|syslogTCPPort| syslog TCP port|
-|netflowPort| NetFlow port|
-|snmpTrapPort|SNMP Trap port|
-|winEventLogChannel|Windows Event Log Channel|
-|winEventLogCheckInterval|Windows check interval (sec)
-|winEventLogCheckStart|Windows Event Log check start time(hour)|
-|winRemote|Windows Event log remote host|
-|winUser|Windows Event log user|
-|winPassword|Windows Event log password|
-|winAuth|Windows Event log auth mode| 
-|winSJIS|Windows Event log is SHIF-JIS|
-|syslogDst| syslog notify dst|
-|trapDst|SNMP TRAP notify dst|
-|trapCommunity|SNMP TRAP Community|
-|logRetention|Log retention(hour)|
-|notifyRetention|Notify retention(days)|
-|grockPat|GROK pattern|
-|grokDef|GROK Def file path|
-|namedCaps|Name Captures def file path|
-|keyValParse|Splunk syle key value parser|
-|sigmaRules|sigma rules path|
-|sigmaConfigs|sigma config path|
-|sigmaSkipError|Skip sigma rule and config error|
-|mibPath|SNMP MIB path|
-|debug|Debug mod sigma rule match|
+|logPath| Log DBのパス|
+|syslogUDPPort| syslog UDP 受信ポート|
+|syslogTCPPort| syslog TCP 受信ポート|
+|netflowPort| NetFlow 受信ポート|
+|snmpTrapPort|SNMP Trap 受信ポート|
+|winEventLogChannel|Windowsイベントログの監視チャネル|
+|winEventLogCheckInterval|Windowsイベントログの監視周期(秒単位)|
+|winEventLogCheckStart|Windowsイベントログの監視開始時間|
+|winRemote|Windowsイベントログを監視するリモートホスト|
+|winUser|Windowsイベントログを監視するリモートホストのユーザー|
+|winPassword|Windowsイベントログを監視するリモートホストのユーザーのパスワード|
+|winAuth|Windowsイベントログを監視するリモートホストへの認証方式| 
+|winSJIS|Windowsイベントログの文字コードがSHIF-JIS|
+|syslogDst| syslog通知の宛先|
+|trapDst|SNMP TRAP通知の宛先|
+|trapCommunity|SNMP TRAP通知のCommunity名|
+|logRetention|ログの保存時間|
+|notifyRetention|通知の保存日数|
+|grockPat|GROKパターン定義|
+|grokDef|GROK定義ファイルのパス|
+|namedCaps|正規表現の定義ファイルパス|
+|keyValParse|Splunkのようなキーバリューの取得を行う|
+|sigmaRules|sigmaルールのパス|
+|sigmaConfigs|sigma設定のパス|
+|sigmaSkipError|Sigmaルール、設定の読み込みエラーを無視する|
+|mibPath|SNMP MIBのパス|
+|debug|デバックモード|
 
 
-## environmental variables
+## 環境変数
 
 The following environment variables are available.
 
 | Key | Descr |
 | --- | ---- |
-| TWLOGEYE_APIPORT | API port number |
-| TWLOGEYE_APISERVER | API server ip or host name |
-| TWLOGEYE_SERVERCERT | Server cert file path |
-| TWLOGEYE_SERVERKEY | Server private key path |
-| TWLOGEYE_CLIENTCERT | Client cert file path |
-| TWLOGEYE_CLIENTKEY | Client private key path |
+| TWLOGEYE_APIPORT | API ポート番号 |
+| TWLOGEYE_APISERVER | API サーバーアドレス|
+| TWLOGEYE_SERVERCERT | サーバー証明書のパス |
+| TWLOGEYE_SERVERKEY | サーバーの秘密鍵のパス |
+| TWLOGEYE_CLIENTCERT | クライアント証明書のパス |
+| TWLOGEYE_CLIENTKEY | クライアントの秘密鍵のパス |
+| TWLOGEYE_CACERT | CA証明書のパス|
 
 ## Copyright
 
