@@ -372,6 +372,16 @@ The following environment variables are available.
 | TWLOGEYE_CLIENTCERT | Client cert file path |
 | TWLOGEYE_CLIENTKEY | Client private key path |
 
+## Build
+
+Use go-task for builds.
+https://taskfile.dev/
+
+```terminal
+$task
+```
+
+
 ## Copyright
 
 see [LICENSE](./LICENSE)

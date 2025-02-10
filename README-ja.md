@@ -394,6 +394,19 @@ The following environment variables are available.
 | TWLOGEYE_CLIENTKEY | クライアントの秘密鍵のパス |
 | TWLOGEYE_CACERT | CA証明書のパス|
 
+## ビルド方法
+
+ビルドには
+
+https://taskfile.dev/
+
+を利用します。
+
+```terminal
+$task
+```
+
+
 ## Copyright
 
 [LICENSE](./LICENSE)を参照してください。
