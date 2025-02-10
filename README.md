@@ -374,7 +374,7 @@ The following environment variables are available.
 
 ## Copyright
 
-see ./LICENSE
+see [LICENSE](./LICENSE)
 
 ```
 Copyright 2025 Masayuki Yamai
