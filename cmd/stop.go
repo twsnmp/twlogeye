@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/api"
+	"github.com/twsnmp/twlogeye/client"
 )
 
 // stopCmd represents the stop command
@@ -26,8 +26,8 @@ var stopCmd = &cobra.Command{
 	Short: "Stop twlogeye",
 	Long:  `Stop twlogeye via api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		api.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
-		api.Stop()
+		client.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
+		client.Stop()
 	},
 }
 

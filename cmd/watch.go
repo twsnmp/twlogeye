@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/api"
+	"github.com/twsnmp/twlogeye/client"
 )
 
 // watchCmd represents the watch command
@@ -26,8 +26,8 @@ var watchCmd = &cobra.Command{
 	Short: "Watch notify",
 	Long:  `Watch notify via api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		api.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
-		api.WatchNotify()
+		client.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
+		client.WatchNotify()
 	},
 }
 

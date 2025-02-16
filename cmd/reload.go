@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/api"
+	"github.com/twsnmp/twlogeye/client"
 )
 
 // reloadCmd represents the reload command
@@ -26,8 +26,8 @@ var reloadCmd = &cobra.Command{
 	Short: "Reload rules",
 	Long:  `Reload rules via api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		api.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
-		api.Reload()
+		client.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
+		client.Reload()
 	},
 }
 

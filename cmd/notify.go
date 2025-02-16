@@ -20,7 +20,7 @@ import (
 
 	"github.com/araddon/dateparse"
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/api"
+	"github.com/twsnmp/twlogeye/client"
 )
 
 var level string
@@ -35,8 +35,8 @@ var notifyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		st := getTime(startTime, 0)
 		et := getTime(endTime, time.Now().UnixNano())
-		api.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
-		api.SearchNotify(st, et, level)
+		client.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
+		client.SearchNotify(st, et, level)
 	},
 }
 

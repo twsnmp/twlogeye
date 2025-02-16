@@ -25,11 +25,11 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/api"
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
 	"github.com/twsnmp/twlogeye/logger"
 	"github.com/twsnmp/twlogeye/notify"
+	"github.com/twsnmp/twlogeye/server"
 )
 
 var syslogDst string
@@ -107,7 +107,7 @@ func start() {
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	wg.Add(1)
-	go api.StartAPIServer(ctx, &wg, apiServerPort, apiServerCert, apiServerKey, apiCACert, sigterm)
+	go server.StartAPIServer(ctx, &wg, apiServerPort, apiServerCert, apiServerKey, apiCACert, sigterm)
 	<-sigterm
 	cancel()
 	wg.Wait()

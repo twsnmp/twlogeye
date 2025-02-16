@@ -15,9 +15,9 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
+	github.com/twsnmp/twlogeye/api v0.0.0-00010101000000-000000000000
 	golang.org/x/text v0.21.0
 	google.golang.org/grpc v1.65.0
-	google.golang.org/protobuf v1.36.4
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -55,5 +55,8 @@ require (
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240604185151-ef581f913117 // indirect
+	google.golang.org/protobuf v1.36.4 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
+
+replace github.com/twsnmp/twlogeye/api => ./api

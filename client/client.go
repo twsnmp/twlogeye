@@ -1,4 +1,4 @@
-package api
+package client
 
 import (
 	"context"
@@ -11,12 +11,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/twsnmp/twlogeye/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var client TWLogEyeServiceClient
+var client api.TWLogEyeServiceClient
 
 func SetClient(ip, caCert, cert, key string, port int) error {
 	var conn *grpc.ClientConn
@@ -67,12 +68,12 @@ func SetClient(ip, caCert, cert, key string, port int) error {
 	if err != nil {
 		return err
 	}
-	client = NewTWLogEyeServiceClient(conn)
+	client = api.NewTWLogEyeServiceClient(conn)
 	return nil
 }
 
 func Stop() {
-	ret, err := client.Stop(context.Background(), &Empty{})
+	ret, err := client.Stop(context.Background(), &api.Empty{})
 	if err != nil {
 		log.Fatalf("stop err=%v", err)
 	}
@@ -80,7 +81,7 @@ func Stop() {
 }
 
 func Reload() {
-	ret, err := client.Reload(context.Background(), &Empty{})
+	ret, err := client.Reload(context.Background(), &api.Empty{})
 	if err != nil {
 		log.Fatalf("reload rules err=%v", err)
 	}
@@ -88,7 +89,7 @@ func Reload() {
 }
 
 func WatchNotify() {
-	s, err := client.WatchNotify(context.Background(), &Empty{})
+	s, err := client.WatchNotify(context.Background(), &api.Empty{})
 	if err != nil {
 		log.Fatalf("watch notify err=%v", err)
 	}
@@ -105,7 +106,7 @@ func WatchNotify() {
 }
 
 func SearchNotify(st, et int64, level string) {
-	s, err := client.SearchNotify(context.Background(), &NofifyRequest{
+	s, err := client.SearchNotify(context.Background(), &api.NofifyRequest{
 		Start: st,
 		End:   et,
 		Level: level,
@@ -126,7 +127,7 @@ func SearchNotify(st, et int64, level string) {
 }
 
 func SearchLog(st, et int64, logtype, search string) {
-	s, err := client.SearchLog(context.Background(), &LogRequest{
+	s, err := client.SearchLog(context.Background(), &api.LogRequest{
 		Logtype: logtype,
 		Start:   st,
 		End:     et,

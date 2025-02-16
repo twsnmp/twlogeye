@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/twsnmp/twlogeye/api"
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
 	"google.golang.org/grpc"
@@ -23,7 +24,7 @@ import (
 )
 
 type apiServer struct {
-	UnimplementedTWLogEyeServiceServer
+	api.UnimplementedTWLogEyeServiceServer
 }
 
 func NewAPIServer() *apiServer {
@@ -74,7 +75,7 @@ func StartAPIServer(ctx context.Context, wg *sync.WaitGroup, port int, cert, key
 		}
 		s = grpc.NewServer(grpc.Creds(creds))
 	}
-	RegisterTWLogEyeServiceServer(s, NewAPIServer())
+	api.RegisterTWLogEyeServiceServer(s, NewAPIServer())
 	reflection.Register(s)
 	healthSrv := health.NewServer()
 	healthpb.RegisterHealthServer(s, healthSrv)
@@ -94,34 +95,34 @@ func StartAPIServer(ctx context.Context, wg *sync.WaitGroup, port int, cert, key
 
 // RPC
 
-func (s *apiServer) Stop(ctx context.Context, req *Empty) (*ControlResponse, error) {
+func (s *apiServer) Stop(ctx context.Context, req *api.Empty) (*api.ControlResponse, error) {
 	go func() {
 		time.Sleep(time.Second)
 		_sigTerm <- syscall.SIGINT
 	}()
-	return &ControlResponse{
+	return &api.ControlResponse{
 		Ok:      true,
 		Message: "twLogEye stopping",
 	}, nil
 }
 
-func (s *apiServer) Reload(ctx context.Context, req *Empty) (*ControlResponse, error) {
+func (s *apiServer) Reload(ctx context.Context, req *api.Empty) (*api.ControlResponse, error) {
 	go func() {
 		time.Sleep(time.Second)
 		auditor.Reload()
 	}()
-	return &ControlResponse{
+	return &api.ControlResponse{
 		Ok:      true,
 		Message: "twLogEye reloading",
 	}, nil
 }
 
-func (s *apiServer) WatchNotify(req *Empty, stream TWLogEyeService_WatchNotifyServer) error {
+func (s *apiServer) WatchNotify(req *api.Empty, stream api.TWLogEyeService_WatchNotifyServer) error {
 	id := fmt.Sprintf("%16x", time.Now().UnixNano())
 	ch := auditor.AddWatch(id)
 	defer auditor.DelWatch(id)
 	for n := range ch {
-		if err := stream.Send(&NotifyResponse{
+		if err := stream.Send(&api.NotifyResponse{
 			Time:  n.Time,
 			Id:    n.ID,
 			Title: n.Title,
@@ -137,14 +138,14 @@ func (s *apiServer) WatchNotify(req *Empty, stream TWLogEyeService_WatchNotifySe
 	return nil
 }
 
-func (s *apiServer) SearchNotify(req *NofifyRequest, stream TWLogEyeService_SearchNotifyServer) error {
+func (s *apiServer) SearchNotify(req *api.NofifyRequest, stream api.TWLogEyeService_SearchNotifyServer) error {
 	level := req.GetLevel()
 	datastore.ForEachNotify(req.GetStart(), req.GetEnd(), func(n *datastore.NotifyEnt) bool {
 		if level != "" && level != n.Level {
 			//Skip
 			return true
 		}
-		if err := stream.Send(&NotifyResponse{
+		if err := stream.Send(&api.NotifyResponse{
 			Time:  n.Time,
 			Id:    n.ID,
 			Title: n.Title,
@@ -161,13 +162,13 @@ func (s *apiServer) SearchNotify(req *NofifyRequest, stream TWLogEyeService_Sear
 	return nil
 }
 
-func (s *apiServer) SearchLog(req *LogRequest, stream TWLogEyeService_SearchLogServer) error {
+func (s *apiServer) SearchLog(req *api.LogRequest, stream api.TWLogEyeService_SearchLogServer) error {
 	search := req.GetSearch()
 	datastore.ForEachLog(req.GetLogtype(), req.GetStart(), req.GetEnd(), func(l *datastore.LogEnt) bool {
 		if search != "" && !strings.Contains(l.Log, search) {
 			return true
 		}
-		if err := stream.Send(&LogResponse{
+		if err := stream.Send(&api.LogResponse{
 			Time: l.Time,
 			Log:  l.Log,
 			Src:  l.Src,
