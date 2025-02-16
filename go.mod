@@ -1,6 +1,8 @@
 module github.com/twsnmp/twlogeye
 
-go 1.22.7
+go 1.24
+
+toolchain go1.24.0
 
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
@@ -11,7 +13,7 @@ require (
 	github.com/sleepinggenius2/gosmi v0.4.4
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/tehmaze/netflow v0.0.0-20240303214733-8c13bb004068
+	github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
 	golang.org/x/text v0.21.0
 	google.golang.org/grpc v1.65.0
