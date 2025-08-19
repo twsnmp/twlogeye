@@ -57,7 +57,8 @@ var startCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(startCmd)
-	startCmd.Flags().StringVarP(&datastore.Config.LogPath, "logPath", "l", "", "Log DB Path default: memory")
+	startCmd.Flags().StringVarP(&datastore.Config.LogPath, "logPath", "l", "", "Log DB Path default: memory old option")
+	startCmd.Flags().StringVarP(&datastore.Config.DBPath, "dbPath", "d", "", "DB Path default: memory")
 	startCmd.Flags().IntVar(&datastore.Config.SyslogUDPPort, "syslogUDPPort", 0, "syslog UDP port 0=disable")
 	startCmd.Flags().IntVar(&datastore.Config.SyslogUDPPort, "syslogTCPPort", 0, "syslog TCP port 0=disable")
 	startCmd.Flags().IntVar(&datastore.Config.NetFlowPort, "netflowPort", 0, "netflow port 0=disable")
@@ -88,7 +89,7 @@ func init() {
 func start() {
 	log.Printf("start confg=%+v", datastore.Config)
 	var wg sync.WaitGroup
-	datastore.OpenLogDB()
+	datastore.OpenDB()
 	auditor.Init()
 	notify.Init()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -111,4 +112,5 @@ func start() {
 	<-sigterm
 	cancel()
 	wg.Wait()
+	datastore.CloseDB()
 }

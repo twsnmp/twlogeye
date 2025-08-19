@@ -1,6 +1,7 @@
 package datastore
 
 type ConfigEnt struct {
+	DBPath        string `yaml:"dbPath"`
 	LogPath       string `yaml:"logPath"`
 	SyslogUDPPort int    `yaml:"syslogUDPPort"`
 	SyslogTCPPort int    `yaml:"syslogTCPPort"`
