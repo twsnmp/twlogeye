@@ -14,53 +14,10 @@ import (
 
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
+	"github.com/twsnmp/twlogeye/reporter"
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
 )
-
-type Event struct {
-	XMLName xml.Name `xml:"Event"`
-	Text    string   `xml:",chardata"`
-	Xmlns   string   `xml:"xmlns,attr"`
-	System  struct {
-		Text     string `xml:",chardata"`
-		Provider struct {
-			Text string `xml:",chardata"`
-			Name string `xml:"Name,attr"`
-			Guid string `xml:"Guid,attr"`
-		} `xml:"Provider"`
-		EventID     int64  `xml:"EventID"`
-		Version     string `xml:"Version"`
-		Level       int64  `xml:"Level"`
-		Task        string `xml:"Task"`
-		Opcode      string `xml:"Opcode"`
-		Keywords    string `xml:"Keywords"`
-		TimeCreated struct {
-			Text       string `xml:",chardata"`
-			SystemTime string `xml:"SystemTime,attr"`
-		} `xml:"TimeCreated"`
-		EventRecordID int64  `xml:"EventRecordID"`
-		Correlation   string `xml:"Correlation"`
-		Execution     struct {
-			Text      string `xml:",chardata"`
-			ProcessID int64  `xml:"ProcessID,attr"`
-			ThreadID  int64  `xml:"ThreadID,attr"`
-		} `xml:"Execution"`
-		Channel  string `xml:"Channel"`
-		Computer string `xml:"Computer"`
-		Security struct {
-			Text   string `xml:",chardata"`
-			UserID string `xml:"UserID,attr"`
-		} `xml:"Security"`
-	} `xml:"System"`
-	EventData struct {
-		Text string `xml:",chardata"`
-		Data []struct {
-			Text string `xml:",chardata"`
-			Name string `xml:"Name,attr"`
-		} `xml:"Data"`
-	} `xml:"EventData"`
-}
 
 var lastTime time.Time
 
@@ -112,7 +69,7 @@ func getWindowsEventLogs() []*datastore.LogEnt {
 	if len(out) < 5 {
 		return ret
 	}
-	e := new(Event)
+	e := new(datastore.WindowsEvent)
 	for _, l := range strings.Split(strings.ReplaceAll(string(out), "\n", ""), "</Event>") {
 		l := strings.TrimSpace(l) + "</Event>"
 		if len(l) < 10 {
@@ -145,6 +102,10 @@ func getWindowsEventLogs() []*datastore.LogEnt {
 		}
 		auditor.Audit(al)
 		ret = append(ret, al)
+		reporter.SendWindowsEvent(&datastore.WindowsEventEnt{
+			Time: t.UnixNano(),
+			Log:  e,
+		})
 	}
 	return ret
 }
@@ -159,7 +120,7 @@ func getEventTime(s string) time.Time {
 	return t.Local()
 }
 
-func evtlogXML2JSON(x *Event) (string, error) {
+func evtlogXML2JSON(x *datastore.WindowsEvent) (string, error) {
 	edmap := make(map[string]interface{})
 	for _, d := range x.EventData.Data {
 		edmap[d.Name] = d.Text

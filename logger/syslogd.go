@@ -10,6 +10,7 @@ import (
 
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
+	"github.com/twsnmp/twlogeye/reporter"
 	syslog "gopkg.in/mcuadros/go-syslog.v2"
 )
 
@@ -54,6 +55,10 @@ func StartSyslogd(ctx context.Context, wg *sync.WaitGroup) {
 				}
 				list = append(list, l)
 				auditor.Audit(l)
+				reporter.SendSyslog(&datastore.SyslogEnt{
+					Time: l.Time,
+					Log:  sl,
+				})
 			} else {
 				log.Printf("syslogd err=%v", err)
 			}

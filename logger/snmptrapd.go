@@ -13,6 +13,7 @@ import (
 	gosnmp "github.com/gosnmp/gosnmp"
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
+	"github.com/twsnmp/twlogeye/reporter"
 )
 
 var trapCh = make(chan *datastore.LogEnt, 20000)
@@ -50,6 +51,10 @@ func StartSnmpTrapd(ctx context.Context, wg *sync.WaitGroup) {
 				Log:  string(js),
 			}
 		}
+		reporter.SendTrap(&datastore.TrapLogEnt{
+			Time: time.Now().UnixNano(),
+			Log:  record,
+		})
 	}
 	defer tl.Close()
 	go func() {

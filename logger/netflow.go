@@ -19,6 +19,7 @@ import (
 	"github.com/tehmaze/netflow/session"
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
+	"github.com/twsnmp/twlogeye/reporter"
 )
 
 var netflowCh = make(chan *datastore.LogEnt, 20000)
@@ -138,6 +139,10 @@ func logIPFIX(p *ipfix.Message, src string) {
 				Src:  src,
 				Log:  string(s),
 			}
+			reporter.SendNetflow(&datastore.NetflowLogEnt{
+				Time: time.Now().UnixNano(),
+				Log:  record,
+			})
 		}
 	}
 }

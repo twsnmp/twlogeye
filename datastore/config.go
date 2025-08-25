@@ -24,6 +24,10 @@ type ConfigEnt struct {
 	LogRetention int `yaml:"logRetention"`
 	// Notify retention period (days)
 	NotifyRetention int `yaml:"notifyRetention"`
+	// Report retention period (days)
+	ReportRetention int `yaml:"reportRetention"`
+	// Report Top N
+	ReportTopN int `yaml:"reportTopN"`
 	// GROK
 	GrokPat []string `yaml:"grockPat"`
 	GrokDef string   `yaml:"grokDef"`

@@ -1,6 +1,7 @@
 package datastore
 
 import (
+	"encoding/xml"
 	"fmt"
 	"strconv"
 	"strings"
@@ -81,4 +82,48 @@ func ForEachLog(t string, st, et int64, callBack func(log *LogEnt) bool) {
 		}
 		return nil
 	})
+}
+
+type WindowsEvent struct {
+	XMLName xml.Name `xml:"Event"`
+	Text    string   `xml:",chardata"`
+	Xmlns   string   `xml:"xmlns,attr"`
+	System  struct {
+		Text     string `xml:",chardata"`
+		Provider struct {
+			Text string `xml:",chardata"`
+			Name string `xml:"Name,attr"`
+			Guid string `xml:"Guid,attr"`
+		} `xml:"Provider"`
+		EventID     int64  `xml:"EventID"`
+		Version     string `xml:"Version"`
+		Level       int64  `xml:"Level"`
+		Task        string `xml:"Task"`
+		Opcode      string `xml:"Opcode"`
+		Keywords    string `xml:"Keywords"`
+		TimeCreated struct {
+			Text       string `xml:",chardata"`
+			SystemTime string `xml:"SystemTime,attr"`
+		} `xml:"TimeCreated"`
+		EventRecordID int64  `xml:"EventRecordID"`
+		Correlation   string `xml:"Correlation"`
+		Execution     struct {
+			Text      string `xml:",chardata"`
+			ProcessID int64  `xml:"ProcessID,attr"`
+			ThreadID  int64  `xml:"ThreadID,attr"`
+		} `xml:"Execution"`
+		Channel  string `xml:"Channel"`
+		Computer string `xml:"Computer"`
+		Security struct {
+			Text   string `xml:",chardata"`
+			UserID string `xml:"UserID,attr"`
+		} `xml:"Security"`
+	} `xml:"System"`
+	EventData struct {
+		Text string `xml:",chardata"`
+		Data []struct {
+			Text string `xml:",chardata"`
+			Name string `xml:"Name,attr"`
+		} `xml:"Data"`
+	} `xml:"EventData"`
 }

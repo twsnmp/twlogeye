@@ -29,6 +29,7 @@ import (
 	"github.com/twsnmp/twlogeye/datastore"
 	"github.com/twsnmp/twlogeye/logger"
 	"github.com/twsnmp/twlogeye/notify"
+	"github.com/twsnmp/twlogeye/reporter"
 	"github.com/twsnmp/twlogeye/server"
 )
 
@@ -92,6 +93,7 @@ func start() {
 	datastore.OpenDB()
 	auditor.Init()
 	notify.Init()
+	reporter.Init()
 	ctx, cancel := context.WithCancel(context.Background())
 	wg.Add(1)
 	go auditor.Start(ctx, &wg)
