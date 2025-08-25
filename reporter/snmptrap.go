@@ -16,7 +16,7 @@ var trapReporterCh chan *datastore.TrapLogEnt
 var trapReport *datastore.TrapReportEnt
 var trapTypeMap map[string]int
 
-func StartTrap(ctx context.Context, wg *sync.WaitGroup) {
+func startTrap(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start trap reporter")
 	defer wg.Done()
 	timer := time.NewTicker(time.Second * 1)

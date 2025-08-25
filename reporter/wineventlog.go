@@ -17,7 +17,7 @@ var wineventReport *datastore.WindowsEventReportEnt
 var wineventTypeMap map[string]int
 var wineventTypeErrorMap map[string]int
 
-func StartWindowsEvent(ctx context.Context, wg *sync.WaitGroup) {
+func startWindowsEvent(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start winevent reporter")
 	defer wg.Done()
 	timer := time.NewTicker(time.Second * 1)

@@ -95,6 +95,7 @@ func start() {
 	notify.Init()
 	reporter.Init()
 	ctx, cancel := context.WithCancel(context.Background())
+	reporter.Start(ctx, &wg)
 	wg.Add(1)
 	go auditor.Start(ctx, &wg)
 	wg.Add(1)

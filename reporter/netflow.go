@@ -30,7 +30,7 @@ var netflowFlowMap map[string]*netflowSummaryEnt
 var netflowProtocolMap map[string]int64
 var netflowTCPFlagMap map[string]int64
 
-func StartNetflow(ctx context.Context, wg *sync.WaitGroup) {
+func startNetflow(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start netflow reporter")
 	defer wg.Done()
 	timer := time.NewTicker(time.Second * 1)

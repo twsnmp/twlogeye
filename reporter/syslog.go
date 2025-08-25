@@ -17,7 +17,7 @@ var syslogReport *datastore.SyslogReportEnt
 var syslogNormalizeMap map[string]int
 var syslogNormalizeErrorMap map[string]int
 
-func StartSyslog(ctx context.Context, wg *sync.WaitGroup) {
+func startSyslog(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start syslog reporter")
 	defer wg.Done()
 	timer := time.NewTicker(time.Second * 1)
