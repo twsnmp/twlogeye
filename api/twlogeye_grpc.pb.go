@@ -19,15 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TWLogEyeService_Stop_FullMethodName                 = "/twlogeye.TWLogEyeService/Stop"
-	TWLogEyeService_Reload_FullMethodName               = "/twlogeye.TWLogEyeService/Reload"
-	TWLogEyeService_WatchNotify_FullMethodName          = "/twlogeye.TWLogEyeService/WatchNotify"
-	TWLogEyeService_SearchNotify_FullMethodName         = "/twlogeye.TWLogEyeService/SearchNotify"
-	TWLogEyeService_SearchLog_FullMethodName            = "/twlogeye.TWLogEyeService/SearchLog"
-	TWLogEyeService_GetSyslogReport_FullMethodName      = "/twlogeye.TWLogEyeService/GetSyslogReport"
-	TWLogEyeService_GetTrapReport_FullMethodName        = "/twlogeye.TWLogEyeService/GetTrapReport"
-	TWLogEyeService_GetNetflowReport_FullMethodName     = "/twlogeye.TWLogEyeService/GetNetflowReport"
-	TWLogEyeService_GetWindowEventReport_FullMethodName = "/twlogeye.TWLogEyeService/GetWindowEventReport"
+	TWLogEyeService_Stop_FullMethodName                  = "/twlogeye.TWLogEyeService/Stop"
+	TWLogEyeService_Reload_FullMethodName                = "/twlogeye.TWLogEyeService/Reload"
+	TWLogEyeService_WatchNotify_FullMethodName           = "/twlogeye.TWLogEyeService/WatchNotify"
+	TWLogEyeService_SearchNotify_FullMethodName          = "/twlogeye.TWLogEyeService/SearchNotify"
+	TWLogEyeService_SearchLog_FullMethodName             = "/twlogeye.TWLogEyeService/SearchLog"
+	TWLogEyeService_GetSyslogReport_FullMethodName       = "/twlogeye.TWLogEyeService/GetSyslogReport"
+	TWLogEyeService_GetTrapReport_FullMethodName         = "/twlogeye.TWLogEyeService/GetTrapReport"
+	TWLogEyeService_GetNetflowReport_FullMethodName      = "/twlogeye.TWLogEyeService/GetNetflowReport"
+	TWLogEyeService_GetWindowsEventReport_FullMethodName = "/twlogeye.TWLogEyeService/GetWindowsEventReport"
 )
 
 // TWLogEyeServiceClient is the client API for TWLogEyeService service.
@@ -49,9 +49,9 @@ type TWLogEyeServiceClient interface {
 	// Get Trap Report
 	GetTrapReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TrapReportEnt], error)
 	// Get Netflow Report
-	GetNetflowReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[WindowsEventReportEnt], error)
+	GetNetflowReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[NetFlowReportEnt], error)
 	// Get Windows Event Report
-	GetWindowEventReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[WindowsEventReportEnt], error)
+	GetWindowsEventReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[WindowsEventReportEnt], error)
 }
 
 type tWLogEyeServiceClient struct {
@@ -177,13 +177,13 @@ func (c *tWLogEyeServiceClient) GetTrapReport(ctx context.Context, in *ReportReq
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type TWLogEyeService_GetTrapReportClient = grpc.ServerStreamingClient[TrapReportEnt]
 
-func (c *tWLogEyeServiceClient) GetNetflowReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[WindowsEventReportEnt], error) {
+func (c *tWLogEyeServiceClient) GetNetflowReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[NetFlowReportEnt], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[5], TWLogEyeService_GetNetflowReport_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[ReportRequest, WindowsEventReportEnt]{ClientStream: stream}
+	x := &grpc.GenericClientStream[ReportRequest, NetFlowReportEnt]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -194,11 +194,11 @@ func (c *tWLogEyeServiceClient) GetNetflowReport(ctx context.Context, in *Report
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type TWLogEyeService_GetNetflowReportClient = grpc.ServerStreamingClient[WindowsEventReportEnt]
+type TWLogEyeService_GetNetflowReportClient = grpc.ServerStreamingClient[NetFlowReportEnt]
 
-func (c *tWLogEyeServiceClient) GetWindowEventReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[WindowsEventReportEnt], error) {
+func (c *tWLogEyeServiceClient) GetWindowsEventReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[WindowsEventReportEnt], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[6], TWLogEyeService_GetWindowEventReport_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[6], TWLogEyeService_GetWindowsEventReport_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (c *tWLogEyeServiceClient) GetWindowEventReport(ctx context.Context, in *Re
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type TWLogEyeService_GetWindowEventReportClient = grpc.ServerStreamingClient[WindowsEventReportEnt]
+type TWLogEyeService_GetWindowsEventReportClient = grpc.ServerStreamingClient[WindowsEventReportEnt]
 
 // TWLogEyeServiceServer is the server API for TWLogEyeService service.
 // All implementations must embed UnimplementedTWLogEyeServiceServer
@@ -234,9 +234,9 @@ type TWLogEyeServiceServer interface {
 	// Get Trap Report
 	GetTrapReport(*ReportRequest, grpc.ServerStreamingServer[TrapReportEnt]) error
 	// Get Netflow Report
-	GetNetflowReport(*ReportRequest, grpc.ServerStreamingServer[WindowsEventReportEnt]) error
+	GetNetflowReport(*ReportRequest, grpc.ServerStreamingServer[NetFlowReportEnt]) error
 	// Get Windows Event Report
-	GetWindowEventReport(*ReportRequest, grpc.ServerStreamingServer[WindowsEventReportEnt]) error
+	GetWindowsEventReport(*ReportRequest, grpc.ServerStreamingServer[WindowsEventReportEnt]) error
 	mustEmbedUnimplementedTWLogEyeServiceServer()
 }
 
@@ -268,11 +268,11 @@ func (UnimplementedTWLogEyeServiceServer) GetSyslogReport(*ReportRequest, grpc.S
 func (UnimplementedTWLogEyeServiceServer) GetTrapReport(*ReportRequest, grpc.ServerStreamingServer[TrapReportEnt]) error {
 	return status.Errorf(codes.Unimplemented, "method GetTrapReport not implemented")
 }
-func (UnimplementedTWLogEyeServiceServer) GetNetflowReport(*ReportRequest, grpc.ServerStreamingServer[WindowsEventReportEnt]) error {
+func (UnimplementedTWLogEyeServiceServer) GetNetflowReport(*ReportRequest, grpc.ServerStreamingServer[NetFlowReportEnt]) error {
 	return status.Errorf(codes.Unimplemented, "method GetNetflowReport not implemented")
 }
-func (UnimplementedTWLogEyeServiceServer) GetWindowEventReport(*ReportRequest, grpc.ServerStreamingServer[WindowsEventReportEnt]) error {
-	return status.Errorf(codes.Unimplemented, "method GetWindowEventReport not implemented")
+func (UnimplementedTWLogEyeServiceServer) GetWindowsEventReport(*ReportRequest, grpc.ServerStreamingServer[WindowsEventReportEnt]) error {
+	return status.Errorf(codes.Unimplemented, "method GetWindowsEventReport not implemented")
 }
 func (UnimplementedTWLogEyeServiceServer) mustEmbedUnimplementedTWLogEyeServiceServer() {}
 func (UnimplementedTWLogEyeServiceServer) testEmbeddedByValue()                         {}
@@ -391,22 +391,22 @@ func _TWLogEyeService_GetNetflowReport_Handler(srv interface{}, stream grpc.Serv
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(TWLogEyeServiceServer).GetNetflowReport(m, &grpc.GenericServerStream[ReportRequest, WindowsEventReportEnt]{ServerStream: stream})
+	return srv.(TWLogEyeServiceServer).GetNetflowReport(m, &grpc.GenericServerStream[ReportRequest, NetFlowReportEnt]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type TWLogEyeService_GetNetflowReportServer = grpc.ServerStreamingServer[WindowsEventReportEnt]
+type TWLogEyeService_GetNetflowReportServer = grpc.ServerStreamingServer[NetFlowReportEnt]
 
-func _TWLogEyeService_GetWindowEventReport_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _TWLogEyeService_GetWindowsEventReport_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(ReportRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(TWLogEyeServiceServer).GetWindowEventReport(m, &grpc.GenericServerStream[ReportRequest, WindowsEventReportEnt]{ServerStream: stream})
+	return srv.(TWLogEyeServiceServer).GetWindowsEventReport(m, &grpc.GenericServerStream[ReportRequest, WindowsEventReportEnt]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type TWLogEyeService_GetWindowEventReportServer = grpc.ServerStreamingServer[WindowsEventReportEnt]
+type TWLogEyeService_GetWindowsEventReportServer = grpc.ServerStreamingServer[WindowsEventReportEnt]
 
 // TWLogEyeService_ServiceDesc is the grpc.ServiceDesc for TWLogEyeService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -456,8 +456,8 @@ var TWLogEyeService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "GetWindowEventReport",
-			Handler:       _TWLogEyeService_GetWindowEventReport_Handler,
+			StreamName:    "GetWindowsEventReport",
+			Handler:       _TWLogEyeService_GetWindowsEventReport_Handler,
 			ServerStreams: true,
 		},
 	},

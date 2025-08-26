@@ -20,9 +20,9 @@ service TWLogEyeService {
   // Get Trap Report
 	rpc GetTrapReport (ReportRequest) returns (stream TrapReportEnt);
   // Get Netflow Report
-	rpc GetNetflowReport (ReportRequest) returns (stream WindowsEventReportEnt);
+	rpc GetNetflowReport (ReportRequest) returns (stream NetFlowReportEnt);
   // Get Windows Event Report
-	rpc GetWindowEventReport (ReportRequest) returns (stream WindowsEventReportEnt);
+	rpc GetWindowsEventReport (ReportRequest) returns (stream WindowsEventReportEnt);
 }
 
 message NofifyRequest {
