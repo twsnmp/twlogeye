@@ -16,11 +16,15 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log"
 	"time"
 
-	"github.com/araddon/dateparse"
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/client"
+	"github.com/twsnmp/twlogeye/api"
 )
 
 var level string
@@ -33,10 +37,7 @@ var notifyCmd = &cobra.Command{
 	Short: "Search notify",
 	Long:  `Search notify via api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		st := getTime(startTime, 0)
-		et := getTime(endTime, time.Now().UnixNano())
-		client.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
-		client.SearchNotify(st, et, level)
+		searchNotify()
 	},
 }
 
@@ -47,9 +48,26 @@ func init() {
 	notifyCmd.Flags().StringVar(&endTime, "end", "", "notify level")
 }
 
-func getTime(s string, dt int64) int64 {
-	if t, err := dateparse.ParseLocal(s); err == nil {
-		return t.UnixNano()
+func searchNotify() {
+	st := getTime(startTime, 0)
+	et := getTime(endTime, time.Now().UnixNano())
+	client := getClient()
+	s, err := client.SearchNotify(context.Background(), &api.NofifyRequest{
+		Start: st,
+		End:   et,
+		Level: level,
+	})
+	if err != nil {
+		log.Fatalf("search notify err=%v", err)
 	}
-	return dt
+	for {
+		r, err := s.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			log.Fatalf("search notify err=%v", err)
+		}
+		fmt.Printf("---\n%s %s %s %s\n%s\n%s\n", getTimeStr(r.GetTime()), r.GetSrc(), r.GetLevel(), r.GetId(), r.GetTags(), r.GetTitle())
+	}
 }

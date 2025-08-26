@@ -16,8 +16,12 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
+	"fmt"
+	"log"
+
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/client"
+	"github.com/twsnmp/twlogeye/api"
 )
 
 // reloadCmd represents the reload command
@@ -26,11 +30,19 @@ var reloadCmd = &cobra.Command{
 	Short: "Reload rules",
 	Long:  `Reload rules via api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
-		client.Reload()
+		reload()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(reloadCmd)
+}
+
+func reload() {
+	client := getClient()
+	ret, err := client.Reload(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("reload rules err=%v", err)
+	}
+	fmt.Printf("reload rules ret=%+v", ret)
 }

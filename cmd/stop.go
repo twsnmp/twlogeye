@@ -16,8 +16,12 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
+	"fmt"
+	"log"
+
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/client"
+	"github.com/twsnmp/twlogeye/api"
 )
 
 // stopCmd represents the stop command
@@ -26,11 +30,19 @@ var stopCmd = &cobra.Command{
 	Short: "Stop twlogeye",
 	Long:  `Stop twlogeye via api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
-		client.Stop()
+		stop()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(stopCmd)
+}
+
+func stop() {
+	client := getClient()
+	ret, err := client.Stop(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("stop err=%v", err)
+	}
+	fmt.Printf("stop ret=%+v", ret)
 }

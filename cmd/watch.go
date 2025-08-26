@@ -16,8 +16,14 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log"
+
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/client"
+	"github.com/twsnmp/twlogeye/api"
 )
 
 // watchCmd represents the watch command
@@ -26,11 +32,28 @@ var watchCmd = &cobra.Command{
 	Short: "Watch notify",
 	Long:  `Watch notify via api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
-		client.WatchNotify()
+		watchNotify()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(watchCmd)
+}
+
+func watchNotify() {
+	client := getClient()
+	s, err := client.WatchNotify(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("watch notify err=%v", err)
+	}
+	for {
+		r, err := s.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			log.Fatalf("watch notify err=%v", err)
+		}
+		fmt.Printf("---\n%s %s %s %s\n%s\n%s\n", getTimeStr(r.GetTime()), r.GetSrc(), r.GetLevel(), r.GetId(), r.GetTags(), r.GetTitle())
+	}
 }

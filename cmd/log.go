@@ -16,10 +16,15 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log"
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/twsnmp/twlogeye/client"
+	"github.com/twsnmp/twlogeye/api"
 )
 
 var logtype string
@@ -31,10 +36,7 @@ var logCmd = &cobra.Command{
 	Short: "Search log",
 	Long:  `Search log via api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		st := getTime(startTime, 0)
-		et := getTime(endTime, time.Now().UnixNano())
-		client.SetClient(apiServer, apiCACert, apiClientCert, apiClientKey, apiServerPort)
-		client.SearchLog(st, et, logtype, search)
+		searchLog()
 	},
 }
 
@@ -44,4 +46,29 @@ func init() {
 	logCmd.Flags().StringVar(&startTime, "start", "", "start date and time")
 	logCmd.Flags().StringVar(&endTime, "end", "", "end date and time")
 	logCmd.Flags().StringVar(&search, "search", "", "search text")
+}
+
+func searchLog() {
+	st := getTime(startTime, 0)
+	et := getTime(endTime, time.Now().UnixNano())
+	client := getClient()
+	s, err := client.SearchLog(context.Background(), &api.LogRequest{
+		Logtype: logtype,
+		Start:   st,
+		End:     et,
+		Search:  search,
+	})
+	if err != nil {
+		log.Fatalf("search log err=%v", err)
+	}
+	for {
+		r, err := s.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			log.Fatalf("search log err=%v", err)
+		}
+		fmt.Printf("%s %s %s\n", getTimeStr(r.GetTime()), r.GetSrc(), r.GetLog())
+	}
 }
