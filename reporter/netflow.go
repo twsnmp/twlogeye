@@ -20,15 +20,15 @@ var netflowReport *datastore.NetFlowReportEnt
 type netflowSummaryEnt struct {
 	Key     string
 	Count   int
-	Packets int64
+	Packets int
 	Bytes   int64
 }
 
 var netflowMACMap map[string]*netflowSummaryEnt
 var netflowIPMap map[string]*netflowSummaryEnt
 var netflowFlowMap map[string]*netflowSummaryEnt
-var netflowProtocolMap map[string]int64
-var netflowTCPFlagMap map[string]int64
+var netflowProtocolMap map[string]int
+var netflowTCPFlagMap map[string]int
 
 func startNetflow(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start netflow reporter")
@@ -194,7 +194,7 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 		}
 		netflowMACMap[srcMAC].Count++
 		netflowMACMap[srcMAC].Bytes += int64(bytes)
-		netflowMACMap[srcMAC].Packets += int64(packets)
+		netflowMACMap[srcMAC].Packets += int(packets)
 	}
 	if srcIP == "" {
 		return
@@ -204,7 +204,7 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 	}
 	netflowIPMap[srcIP].Count++
 	netflowIPMap[srcIP].Bytes += int64(bytes)
-	netflowIPMap[srcIP].Packets += int64(packets)
+	netflowIPMap[srcIP].Packets += int(packets)
 	if dstIP == "" {
 		return
 	}
@@ -217,8 +217,9 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 	if _, ok := netflowFlowMap[flow]; !ok {
 		netflowFlowMap[flow] = &netflowSummaryEnt{}
 	}
+	netflowFlowMap[flow].Count++
 	netflowFlowMap[flow].Bytes = int64(bytes)
-	netflowFlowMap[flow].Packets = int64(packets)
+	netflowFlowMap[flow].Packets = int(packets)
 	protocol = getProtocolName(protocol, int(sp), int(dp))
 	netflowProtocolMap[protocol]++
 	if tcpFlags != "" {
@@ -228,20 +229,20 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 
 func saveNetflowReport() {
 	// make topList
-	topMACPacketsList := []datastore.NetflowSummaryEnt{}
-	topMACBytesList := []datastore.NetflowSummaryEnt{}
+	topMACPacketsList := []datastore.NetflowPacketsSummaryEnt{}
+	topMACBytesList := []datastore.NetflowBytesSummaryEnt{}
 	for k, v := range netflowMACMap {
-		topMACPacketsList = append(topMACPacketsList, datastore.NetflowSummaryEnt{Key: k, Value: v.Packets})
-		topMACBytesList = append(topMACBytesList, datastore.NetflowSummaryEnt{Key: k, Value: v.Bytes})
+		topMACPacketsList = append(topMACPacketsList, datastore.NetflowPacketsSummaryEnt{Key: k, Packets: v.Packets})
+		topMACBytesList = append(topMACBytesList, datastore.NetflowBytesSummaryEnt{Key: k, Bytes: v.Bytes})
 	}
 	sort.Slice(topMACPacketsList, func(i, j int) bool {
-		return topMACPacketsList[i].Value > topMACPacketsList[j].Value
+		return topMACPacketsList[i].Packets > topMACPacketsList[j].Packets
 	})
-	if len(topMACBytesList) > datastore.Config.ReportTopN {
-		topMACBytesList = topMACBytesList[:datastore.Config.ReportTopN]
+	if len(topMACPacketsList) > datastore.Config.ReportTopN {
+		topMACPacketsList = topMACPacketsList[:datastore.Config.ReportTopN]
 	}
 	sort.Slice(topMACBytesList, func(i, j int) bool {
-		return topMACBytesList[i].Value > topMACBytesList[j].Value
+		return topMACBytesList[i].Bytes > topMACBytesList[j].Bytes
 	})
 	if len(topMACBytesList) > datastore.Config.ReportTopN {
 		topMACBytesList = topMACBytesList[:datastore.Config.ReportTopN]
@@ -249,20 +250,20 @@ func saveNetflowReport() {
 	netflowReport.TopMACPacketsList = topMACPacketsList
 	netflowReport.TopMACBytesList = topMACBytesList
 
-	topIPPacketsList := []datastore.NetflowSummaryEnt{}
-	topIPBytesList := []datastore.NetflowSummaryEnt{}
+	topIPPacketsList := []datastore.NetflowPacketsSummaryEnt{}
+	topIPBytesList := []datastore.NetflowBytesSummaryEnt{}
 	for k, v := range netflowIPMap {
-		topIPPacketsList = append(topIPPacketsList, datastore.NetflowSummaryEnt{Key: k, Value: v.Packets})
-		topIPBytesList = append(topIPBytesList, datastore.NetflowSummaryEnt{Key: k, Value: v.Bytes})
+		topIPPacketsList = append(topIPPacketsList, datastore.NetflowPacketsSummaryEnt{Key: k, Packets: v.Packets})
+		topIPBytesList = append(topIPBytesList, datastore.NetflowBytesSummaryEnt{Key: k, Bytes: v.Bytes})
 	}
 	sort.Slice(topIPPacketsList, func(i, j int) bool {
-		return topIPPacketsList[i].Value > topIPPacketsList[j].Value
+		return topIPPacketsList[i].Packets > topIPPacketsList[j].Packets
 	})
 	if len(topIPPacketsList) > datastore.Config.ReportTopN {
 		topIPPacketsList = topIPPacketsList[:datastore.Config.ReportTopN]
 	}
 	sort.Slice(topIPBytesList, func(i, j int) bool {
-		return topIPBytesList[i].Value > topIPBytesList[j].Value
+		return topIPBytesList[i].Bytes > topIPBytesList[j].Bytes
 	})
 	if len(topIPBytesList) > datastore.Config.ReportTopN {
 		topIPBytesList = topIPBytesList[:datastore.Config.ReportTopN]
@@ -270,20 +271,20 @@ func saveNetflowReport() {
 	netflowReport.TopIPPacketsList = topIPPacketsList
 	netflowReport.TopIPBytesList = topIPBytesList
 
-	topFlowPacketsList := []datastore.NetflowSummaryEnt{}
-	topFlowBytesList := []datastore.NetflowSummaryEnt{}
+	topFlowPacketsList := []datastore.NetflowPacketsSummaryEnt{}
+	topFlowBytesList := []datastore.NetflowBytesSummaryEnt{}
 	for k, v := range netflowFlowMap {
-		topFlowPacketsList = append(topFlowPacketsList, datastore.NetflowSummaryEnt{Key: k, Value: v.Packets})
-		topFlowBytesList = append(topFlowBytesList, datastore.NetflowSummaryEnt{Key: k, Value: v.Bytes})
+		topFlowPacketsList = append(topFlowPacketsList, datastore.NetflowPacketsSummaryEnt{Key: k, Packets: v.Packets})
+		topFlowBytesList = append(topFlowBytesList, datastore.NetflowBytesSummaryEnt{Key: k, Bytes: v.Bytes})
 	}
 	sort.Slice(topFlowPacketsList, func(i, j int) bool {
-		return topFlowPacketsList[i].Value > topFlowPacketsList[j].Value
+		return topFlowPacketsList[i].Packets > topFlowPacketsList[j].Packets
 	})
 	if len(topFlowPacketsList) > datastore.Config.ReportTopN {
 		topFlowPacketsList = topFlowPacketsList[:datastore.Config.ReportTopN]
 	}
 	sort.Slice(topFlowBytesList, func(i, j int) bool {
-		return topFlowBytesList[i].Value > topFlowBytesList[j].Value
+		return topFlowBytesList[i].Bytes > topFlowBytesList[j].Bytes
 	})
 	if len(topFlowBytesList) > datastore.Config.ReportTopN {
 		topFlowBytesList = topFlowBytesList[:datastore.Config.ReportTopN]
@@ -291,24 +292,24 @@ func saveNetflowReport() {
 	netflowReport.TopFlowPacketsList = topFlowPacketsList
 	netflowReport.TopFlowBytesList = topFlowBytesList
 
-	topProtocolList := []datastore.NetflowSummaryEnt{}
+	topProtocolList := []datastore.NetflowCountSummaryEnt{}
 	for k, v := range netflowProtocolMap {
-		topProtocolList = append(topProtocolList, datastore.NetflowSummaryEnt{Key: k, Value: int64(v)})
+		topProtocolList = append(topProtocolList, datastore.NetflowCountSummaryEnt{Key: k, Count: v})
 	}
 	sort.Slice(topProtocolList, func(i, j int) bool {
-		return topProtocolList[i].Value > topProtocolList[j].Value
+		return topProtocolList[i].Count > topProtocolList[j].Count
 	})
 	if len(topProtocolList) > datastore.Config.ReportTopN {
 		topProtocolList = topProtocolList[:datastore.Config.ReportTopN]
 	}
 	netflowReport.TopProtocolList = topProtocolList
 
-	topTCPFlagList := []datastore.NetflowSummaryEnt{}
+	topTCPFlagList := []datastore.NetflowCountSummaryEnt{}
 	for k, v := range netflowTCPFlagMap {
-		topTCPFlagList = append(topTCPFlagList, datastore.NetflowSummaryEnt{Key: k, Value: int64(v)})
+		topTCPFlagList = append(topTCPFlagList, datastore.NetflowCountSummaryEnt{Key: k, Count: v})
 	}
 	sort.Slice(topTCPFlagList, func(i, j int) bool {
-		return topTCPFlagList[i].Value > topTCPFlagList[j].Value
+		return topTCPFlagList[i].Count > topTCPFlagList[j].Count
 	})
 	if len(topTCPFlagList) > datastore.Config.ReportTopN {
 		topTCPFlagList = topTCPFlagList[:datastore.Config.ReportTopN]
@@ -320,8 +321,8 @@ func saveNetflowReport() {
 	// Clear report
 	netflowMACMap = make(map[string]*netflowSummaryEnt)
 	netflowIPMap = make(map[string]*netflowSummaryEnt)
-	netflowProtocolMap = make(map[string]int64)
-	netflowTCPFlagMap = make(map[string]int64)
+	netflowProtocolMap = make(map[string]int)
+	netflowTCPFlagMap = make(map[string]int)
 	netflowFlowMap = make(map[string]*netflowSummaryEnt)
 	netflowReport = &datastore.NetFlowReportEnt{}
 }

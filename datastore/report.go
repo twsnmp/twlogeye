@@ -184,23 +184,33 @@ type NetflowLogEnt struct {
 	Log  map[string]any
 }
 
-type NetflowSummaryEnt struct {
+type NetflowPacketsSummaryEnt struct {
+	Key     string
+	Packets int
+}
+
+type NetflowBytesSummaryEnt struct {
 	Key   string
-	Value int64
+	Bytes int64
+}
+
+type NetflowCountSummaryEnt struct {
+	Key   string
+	Count int
 }
 
 type NetFlowReportEnt struct {
 	Time               int64
 	Packets            int64
 	Bytes              int64
-	TopMACPacketsList  []NetflowSummaryEnt
-	TopMACBytesList    []NetflowSummaryEnt
-	TopIPPacketsList   []NetflowSummaryEnt
-	TopIPBytesList     []NetflowSummaryEnt
-	TopFlowPacketsList []NetflowSummaryEnt
-	TopFlowBytesList   []NetflowSummaryEnt
-	TopProtocolList    []NetflowSummaryEnt
-	TopTCPFlagList     []NetflowSummaryEnt
+	TopMACPacketsList  []NetflowPacketsSummaryEnt
+	TopMACBytesList    []NetflowBytesSummaryEnt
+	TopIPPacketsList   []NetflowPacketsSummaryEnt
+	TopIPBytesList     []NetflowBytesSummaryEnt
+	TopFlowPacketsList []NetflowPacketsSummaryEnt
+	TopFlowBytesList   []NetflowBytesSummaryEnt
+	TopProtocolList    []NetflowCountSummaryEnt
+	TopTCPFlagList     []NetflowCountSummaryEnt
 }
 
 func SaveNetflowReport(r *NetFlowReportEnt) {

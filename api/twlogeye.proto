@@ -15,6 +15,14 @@ service TWLogEyeService {
 	rpc SearchNotify (NofifyRequest) returns (stream NotifyResponse);
   // Search Log
 	rpc SearchLog (LogRequest) returns (stream LogResponse);
+  // Get Syslog Report
+	rpc GetSyslogReport (ReportRequest) returns (stream SyslogReportEnt);
+  // Get Trap Report
+	rpc GetTrapReport (ReportRequest) returns (stream TrapReportEnt);
+  // Get Netflow Report
+	rpc GetNetflowReport (ReportRequest) returns (stream WindowsEventReportEnt);
+  // Get Windows Event Report
+	rpc GetWindowEventReport (ReportRequest) returns (stream WindowsEventReportEnt);
 }
 
 message NofifyRequest {
@@ -52,6 +60,85 @@ message ControlResponse {
 }
 
 message Empty {}
+
+// Report
+
+message ReportRequest {
+	int64 start = 1;
+	int64 end = 2;
+}
+
+message LogSummaryEnt {
+  string log_pattern = 1;
+  int32 count = 2;
+}
+
+message SyslogReportEnt {
+  int64 time = 1;
+  int32 normal = 2;
+  int32 warn = 3;
+  int32 error = 4;
+  repeated LogSummaryEnt top_list = 5;
+  repeated LogSummaryEnt top_error_list = 6;
+}
+
+message TrapSummaryEnt {
+  string sender = 1;
+  string trap_type = 2;
+  int32 count = 3;
+}
+
+message TrapReportEnt {
+  int64 time = 1;
+  int32 count = 2;
+  repeated TrapSummaryEnt top_list = 3;
+}
+
+message NetflowPacketsSummaryEnt {
+  string key = 1;
+  int32 packets = 2;
+}
+
+message NetflowBytesSummaryEnt {
+  string key = 1;
+  int64 bytes = 2;
+}
+
+message NetflowCountSummaryEnt {
+  string key = 1;
+  int32 count = 2;
+}
+
+message NetFlowReportEnt {
+  int64 time = 1;
+  int64 packets = 2;
+  int64 bytes = 3;
+  repeated NetflowPacketsSummaryEnt top_mac_packets_list = 4;
+  repeated NetflowBytesSummaryEnt top_mac_bytes_list = 5;
+  repeated NetflowPacketsSummaryEnt top_ip_packets_list = 6;
+  repeated NetflowBytesSummaryEnt top_ip_bytes_list = 7;
+  repeated NetflowPacketsSummaryEnt top_flow_packets_list = 8;
+  repeated NetflowBytesSummaryEnt top_flow_bytes_list = 9;
+  repeated NetflowCountSummaryEnt top_protocol_list = 10;
+  repeated NetflowCountSummaryEnt top_tcp_flag_list = 11;
+}
+
+
+message WindowsEventSummary {
+  string computer = 1;
+  string provider = 2;
+  string event_id = 3;
+  int32 count = 4;
+}
+
+message WindowsEventReportEnt {
+  int64 time = 1;
+  int32 normal = 2;
+  int32 warn = 3;
+  int32 error = 4;
+  repeated WindowsEventSummary top_list = 5;
+  repeated WindowsEventSummary top_error_list = 6;
+}
 
 /*
 protoc --go_out=. --go_opt=paths=source_relative \
