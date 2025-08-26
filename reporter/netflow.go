@@ -28,7 +28,7 @@ var netflowMACMap map[string]*netflowSummaryEnt
 var netflowIPMap map[string]*netflowSummaryEnt
 var netflowFlowMap map[string]*netflowSummaryEnt
 var netflowProtocolMap map[string]int
-var netflowTCPFlagMap map[string]int
+var netflowFumbleSrcMap map[string]int
 
 func startNetflow(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start netflow reporter")
@@ -56,6 +56,8 @@ func startNetflow(ctx context.Context, wg *sync.WaitGroup) {
 func SendNetflow(l *datastore.NetflowLogEnt) {
 	netflowReporterCh <- l
 }
+
+const tcpFlagData = "NCEUAPRSF"
 
 func processNetflowReport(l *datastore.NetflowLogEnt) {
 	var ok bool
@@ -115,7 +117,7 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 						flags := []byte{}
 						for i := uint8(0); i < 8; i++ {
 							if f&0x01 > 0 {
-								flags = append(flags, tcpFlags[8-i])
+								flags = append(flags, tcpFlagData[8-i])
 							} else {
 								flags = append(flags, '.')
 							}
@@ -222,8 +224,8 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 	netflowFlowMap[flow].Packets = int(packets)
 	protocol = getProtocolName(protocol, int(sp), int(dp))
 	netflowProtocolMap[protocol]++
-	if tcpFlags != "" {
-		netflowTCPFlagMap[tcpFlags]++
+	if src, p := isFumble(srcIP, dstIP, protocol, tcpFlags); p > 0 {
+		netflowFumbleSrcMap[src]++
 	}
 }
 
@@ -292,9 +294,9 @@ func saveNetflowReport() {
 	netflowReport.TopFlowPacketsList = topFlowPacketsList
 	netflowReport.TopFlowBytesList = topFlowBytesList
 
-	topProtocolList := []datastore.NetflowCountSummaryEnt{}
+	topProtocolList := []datastore.NetflowProtocolCountEnt{}
 	for k, v := range netflowProtocolMap {
-		topProtocolList = append(topProtocolList, datastore.NetflowCountSummaryEnt{Key: k, Count: v})
+		topProtocolList = append(topProtocolList, datastore.NetflowProtocolCountEnt{Protocol: k, Count: v})
 	}
 	sort.Slice(topProtocolList, func(i, j int) bool {
 		return topProtocolList[i].Count > topProtocolList[j].Count
@@ -304,17 +306,17 @@ func saveNetflowReport() {
 	}
 	netflowReport.TopProtocolList = topProtocolList
 
-	topTCPFlagList := []datastore.NetflowCountSummaryEnt{}
-	for k, v := range netflowTCPFlagMap {
-		topTCPFlagList = append(topTCPFlagList, datastore.NetflowCountSummaryEnt{Key: k, Count: v})
+	topFumbleSrcList := []datastore.NetflowIPCountEnt{}
+	for k, v := range netflowFumbleSrcMap {
+		topFumbleSrcList = append(topFumbleSrcList, datastore.NetflowIPCountEnt{IP: k, Count: v})
 	}
-	sort.Slice(topTCPFlagList, func(i, j int) bool {
-		return topTCPFlagList[i].Count > topTCPFlagList[j].Count
+	sort.Slice(topFumbleSrcList, func(i, j int) bool {
+		return topFumbleSrcList[i].Count > topFumbleSrcList[j].Count
 	})
-	if len(topTCPFlagList) > datastore.Config.ReportTopN {
-		topTCPFlagList = topTCPFlagList[:datastore.Config.ReportTopN]
+	if len(topFumbleSrcList) > datastore.Config.ReportTopN {
+		topFumbleSrcList = topFumbleSrcList[:datastore.Config.ReportTopN]
 	}
-	netflowReport.TopTCPFlagList = topTCPFlagList
+	netflowReport.TopFumbleSrcList = topFumbleSrcList
 
 	// Save trap Report
 	datastore.SaveNetflowReport(netflowReport)
@@ -322,7 +324,7 @@ func saveNetflowReport() {
 	netflowMACMap = make(map[string]*netflowSummaryEnt)
 	netflowIPMap = make(map[string]*netflowSummaryEnt)
 	netflowProtocolMap = make(map[string]int)
-	netflowTCPFlagMap = make(map[string]int)
+	netflowFumbleSrcMap = make(map[string]int)
 	netflowFlowMap = make(map[string]*netflowSummaryEnt)
 	netflowReport = &datastore.NetFlowReportEnt{}
 }
@@ -375,4 +377,19 @@ func lessIP(ip1s, ip2s string) bool {
 		return false
 	}
 	return true
+}
+
+func isFumble(src, dst, prot, tcpFlag string) (string, int) {
+	// SYN && FIN
+	if strings.Contains(tcpFlag, "SF") {
+		if strings.Contains(tcpFlag, "UAPR") {
+			return src, 2
+		}
+		return src, 1
+	}
+	// ICMP 3
+	if strings.HasPrefix(prot, "3/icmp") {
+		return dst, 1
+	}
+	return "", 0
 }
