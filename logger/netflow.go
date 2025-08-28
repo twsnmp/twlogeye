@@ -179,6 +179,11 @@ func logNetflow(p *netflow5.Packet, src string) {
 			Type: datastore.NetFlow,
 			Log:  string(s),
 		}
+		reporter.SendNetflow(&datastore.NetflowLogEnt{
+			Time: time.Now().UnixNano(),
+			Log:  record,
+		})
+
 	}
 }
 
@@ -222,6 +227,10 @@ func logNetflow9(p *netflow9.Packet, src string) {
 				Type: datastore.NetFlow,
 				Log:  string(s),
 			}
+			reporter.SendNetflow(&datastore.NetflowLogEnt{
+				Time: time.Now().UnixNano(),
+				Log:  record,
+			})
 		}
 	}
 }

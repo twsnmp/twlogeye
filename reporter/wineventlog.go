@@ -21,7 +21,7 @@ func startWindowsEvent(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start winevent reporter")
 	defer wg.Done()
 	timer := time.NewTicker(time.Second * 1)
-	lastH := time.Now().Hour()
+	lastT := getIntervalTime()
 	wineventReport = &datastore.WindowsEventReportEnt{}
 	wineventTypeMap = make(map[string]int)
 	wineventTypeErrorMap = make(map[string]int)
@@ -33,11 +33,13 @@ func startWindowsEvent(ctx context.Context, wg *sync.WaitGroup) {
 		case l := <-wineventReporterCh:
 			processWindowsEventReport(l)
 		case <-timer.C:
-			h := time.Now().Hour()
-			if lastH != h {
+			t := getIntervalTime()
+			if lastT != t {
+				lastT = t
+				st := time.Now()
 				saveWindowsEventReport()
+				log.Printf("save windows event report dur=%v", time.Since(st))
 			}
-
 		}
 	}
 }
@@ -61,6 +63,7 @@ func processWindowsEventReport(l *datastore.WindowsEventEnt) {
 }
 
 func saveWindowsEventReport() {
+	wineventReport.Time = time.Now().UnixNano()
 	// make topList
 	topList := []datastore.WindowsEventSummary{}
 	for k, v := range wineventTypeMap {
@@ -91,6 +94,7 @@ func saveWindowsEventReport() {
 		topErrorList = topErrorList[:datastore.Config.ReportTopN]
 	}
 	wineventReport.TopErrorList = topErrorList
+
 	// Save trap Report
 	datastore.SaveWindowsEventReport(wineventReport)
 	// Clear report

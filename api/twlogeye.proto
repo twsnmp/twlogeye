@@ -20,7 +20,7 @@ service TWLogEyeService {
   // Get Trap Report
 	rpc GetTrapReport (ReportRequest) returns (stream TrapReportEnt);
   // Get Netflow Report
-	rpc GetNetflowReport (ReportRequest) returns (stream NetFlowReportEnt);
+	rpc GetNetflowReport (ReportRequest) returns (stream NetflowReportEnt);
   // Get Windows Event Report
 	rpc GetWindowsEventReport (ReportRequest) returns (stream WindowsEventReportEnt);
 }
@@ -114,7 +114,7 @@ message NetflowIPCountEnt {
   int32 count = 2;
 }
 
-message NetFlowReportEnt {
+message NetflowReportEnt {
   int64 time = 1;
   int64 packets = 2;
   int64 bytes = 3;

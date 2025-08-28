@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -20,7 +20,7 @@ func startTrap(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start trap reporter")
 	defer wg.Done()
 	timer := time.NewTicker(time.Second * 1)
-	lastH := time.Now().Hour()
+	lastT := getIntervalTime()
 	trapReport = &datastore.TrapReportEnt{}
 	trapTypeMap = make(map[string]int)
 	for {
@@ -31,11 +31,13 @@ func startTrap(ctx context.Context, wg *sync.WaitGroup) {
 		case l := <-trapReporterCh:
 			processTrapReport(l)
 		case <-timer.C:
-			h := time.Now().Hour()
-			if lastH != h {
+			t := getIntervalTime()
+			if lastT != t {
+				lastT = t
+				st := time.Now()
 				saveTrapReport()
+				log.Printf("save trap report dur=%v", time.Since(st))
 			}
-
 		}
 	}
 }
@@ -43,8 +45,6 @@ func startTrap(ctx context.Context, wg *sync.WaitGroup) {
 func SendTrap(l *datastore.TrapLogEnt) {
 	trapReporterCh <- l
 }
-
-var trapOidRegexp = regexp.MustCompile(`snmpTrapOID.0=(\S+)`)
 
 func processTrapReport(l *datastore.TrapLogEnt) {
 	var ok bool
@@ -55,23 +55,16 @@ func processTrapReport(l *datastore.TrapLogEnt) {
 	}
 	var ent string
 	if ent, ok = l.Log["Enterprise"].(string); !ok || ent == "" {
-		var v string
-		if v, ok = l.Log["Variables"].(string); !ok {
+		if trapType, ok = l.Log["snmpTrapOID.0"].(string); !ok {
 			return
-		}
-		a := trapOidRegexp.FindStringSubmatch(v)
-		if len(a) > 1 {
-			trapType = a[1]
-		} else {
-			trapType = ""
 		}
 	} else {
-		var gen float64
-		if gen, ok = l.Log["GenericTrap"].(float64); !ok {
+		var gen int
+		if gen, ok = l.Log["GenericTrap"].(int); !ok {
 			return
 		}
-		var spe float64
-		if spe, ok = l.Log["SpecificTrap"].(float64); !ok {
+		var spe int
+		if spe, ok = l.Log["SpecificTrap"].(int); !ok {
 			return
 		}
 		trapType = fmt.Sprintf("%s:%d:%d", ent, int(gen), int(spe))
@@ -82,10 +75,14 @@ func processTrapReport(l *datastore.TrapLogEnt) {
 }
 
 func saveTrapReport() {
+	trapReport.Time = time.Now().UnixNano()
 	// make topList
 	topList := []datastore.TrapSummaryEnt{}
 	for k, v := range trapTypeMap {
-		topList = append(topList, datastore.TrapSummaryEnt{TrapType: k, Count: v})
+		a := strings.SplitN(k, "\t", 2)
+		if len(a) == 2 {
+			topList = append(topList, datastore.TrapSummaryEnt{Sender: a[0], TrapType: a[1], Count: v})
+		}
 	}
 	sort.Slice(topList, func(i, j int) bool {
 		return topList[i].Count > topList[j].Count

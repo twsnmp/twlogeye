@@ -180,3 +180,164 @@ func (s *apiServer) SearchLog(req *api.LogRequest, stream api.TWLogEyeService_Se
 	})
 	return nil
 }
+
+func (s *apiServer) GetSyslogReport(req *api.ReportRequest, stream api.TWLogEyeService_GetSyslogReportServer) error {
+	datastore.ForEachSyslogReport(req.GetStart(), req.GetEnd(), func(l *datastore.SyslogReportEnt) bool {
+		r := &api.SyslogReportEnt{
+			Time:         l.Time,
+			Normal:       int32(l.Normal),
+			Warn:         int32(l.Warn),
+			Error:        int32(l.Error),
+			TopList:      []*api.LogSummaryEnt{},
+			TopErrorList: []*api.LogSummaryEnt{},
+		}
+		for _, t := range l.TopList {
+			r.TopList = append(r.TopList, &api.LogSummaryEnt{
+				LogPattern: t.LogPattern,
+				Count:      int32(t.Count),
+			})
+		}
+		for _, t := range l.TopErrorList {
+			r.TopErrorList = append(r.TopErrorList, &api.LogSummaryEnt{
+				LogPattern: t.LogPattern,
+				Count:      int32(t.Count),
+			})
+		}
+		if err := stream.Send(r); err != nil {
+			log.Printf("api get syslog report err=%v", err)
+			return false
+		}
+		return true
+	})
+	return nil
+}
+
+func (s *apiServer) GetTrapReport(req *api.ReportRequest, stream api.TWLogEyeService_GetTrapReportServer) error {
+	datastore.ForEachTrapReport(req.GetStart(), req.GetEnd(), func(l *datastore.TrapReportEnt) bool {
+		r := &api.TrapReportEnt{
+			Time:    l.Time,
+			Count:   int32(l.Count),
+			TopList: []*api.TrapSummaryEnt{},
+		}
+		for _, t := range l.TopList {
+			r.TopList = append(r.TopList, &api.TrapSummaryEnt{
+				Sender:   t.Sender,
+				TrapType: t.TrapType,
+				Count:    int32(t.Count),
+			})
+		}
+		if err := stream.Send(r); err != nil {
+			log.Printf("api get trap report err=%v", err)
+			return false
+		}
+		return true
+	})
+	return nil
+}
+
+func (s *apiServer) GetNetflowReport(req *api.ReportRequest, stream api.TWLogEyeService_GetNetflowReportServer) error {
+	datastore.ForEachNetflowReport(req.GetStart(), req.GetEnd(), func(l *datastore.NetflowReportEnt) bool {
+		r := &api.NetflowReportEnt{
+			Time:               l.Time,
+			Packets:            l.Packets,
+			Bytes:              l.Bytes,
+			TopMacPacketsList:  []*api.NetflowPacketsSummaryEnt{},
+			TopMacBytesList:    []*api.NetflowBytesSummaryEnt{},
+			TopIpPacketsList:   []*api.NetflowPacketsSummaryEnt{},
+			TopIpBytesList:     []*api.NetflowBytesSummaryEnt{},
+			TopFlowPacketsList: []*api.NetflowPacketsSummaryEnt{},
+			TopFlowBytesList:   []*api.NetflowBytesSummaryEnt{},
+			TopProtocolList:    []*api.NetflowProtocolCountEnt{},
+			TopFumbleSrcList:   []*api.NetflowIPCountEnt{},
+		}
+		for _, t := range l.TopMACPacketsList {
+			r.TopMacPacketsList = append(r.TopMacPacketsList, &api.NetflowPacketsSummaryEnt{
+				Key:     t.Key,
+				Packets: int32(t.Packets),
+			})
+		}
+		for _, t := range l.TopMACBytesList {
+			r.TopMacBytesList = append(r.TopMacBytesList, &api.NetflowBytesSummaryEnt{
+				Key:   t.Key,
+				Bytes: t.Bytes,
+			})
+		}
+		for _, t := range l.TopIPPacketsList {
+			r.TopIpPacketsList = append(r.TopIpPacketsList, &api.NetflowPacketsSummaryEnt{
+				Key:     t.Key,
+				Packets: int32(t.Packets),
+			})
+		}
+		for _, t := range l.TopIPBytesList {
+			r.TopIpBytesList = append(r.TopIpBytesList, &api.NetflowBytesSummaryEnt{
+				Key:   t.Key,
+				Bytes: t.Bytes,
+			})
+		}
+		for _, t := range l.TopFlowPacketsList {
+			r.TopFlowPacketsList = append(r.TopFlowPacketsList, &api.NetflowPacketsSummaryEnt{
+				Key:     t.Key,
+				Packets: int32(t.Packets),
+			})
+		}
+		for _, t := range l.TopFlowBytesList {
+			r.TopFlowBytesList = append(r.TopFlowBytesList, &api.NetflowBytesSummaryEnt{
+				Key:   t.Key,
+				Bytes: t.Bytes,
+			})
+		}
+		for _, t := range l.TopProtocolList {
+			r.TopProtocolList = append(r.TopProtocolList, &api.NetflowProtocolCountEnt{
+				Protocol: t.Protocol,
+				Count:    int32(t.Count),
+			})
+		}
+		for _, t := range l.TopFumbleSrcList {
+			r.TopFumbleSrcList = append(r.TopFumbleSrcList, &api.NetflowIPCountEnt{
+				Ip:    t.IP,
+				Count: int32(t.Count),
+			})
+		}
+		if err := stream.Send(r); err != nil {
+			log.Printf("api get netflow report err=%v", err)
+			return false
+		}
+		return true
+	})
+	return nil
+}
+
+func (s *apiServer) GetWindowsEventReport(req *api.ReportRequest, stream api.TWLogEyeService_GetWindowsEventReportServer) error {
+	datastore.ForEachWindowsEventReport(req.GetStart(), req.GetEnd(), func(l *datastore.WindowsEventReportEnt) bool {
+		r := &api.WindowsEventReportEnt{
+			Time:         l.Time,
+			Normal:       int32(l.Normal),
+			Warn:         int32(l.Warn),
+			Error:        int32(l.Error),
+			TopList:      []*api.WindowsEventSummary{},
+			TopErrorList: []*api.WindowsEventSummary{},
+		}
+		for _, t := range l.TopList {
+			r.TopList = append(r.TopList, &api.WindowsEventSummary{
+				Computer: t.Computer,
+				Provider: t.Provider,
+				EventId:  t.EeventID,
+				Count:    int32(t.Count),
+			})
+		}
+		for _, t := range l.TopErrorList {
+			r.TopErrorList = append(r.TopErrorList, &api.WindowsEventSummary{
+				Computer: t.Computer,
+				Provider: t.Provider,
+				EventId:  t.EeventID,
+				Count:    int32(t.Count),
+			})
+		}
+		if err := stream.Send(r); err != nil {
+			log.Printf("api get syslog report err=%v", err)
+			return false
+		}
+		return true
+	})
+	return nil
+}

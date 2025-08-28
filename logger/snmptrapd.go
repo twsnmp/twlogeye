@@ -73,7 +73,6 @@ func StartSnmpTrapd(ctx context.Context, wg *sync.WaitGroup) {
 		case l := <-trapCh:
 			list = append(list, l)
 			auditor.Audit(l)
-			log.Printf("trap log %+v", l)
 		case <-timer.C:
 			if len(list) > 0 {
 				st := time.Now()

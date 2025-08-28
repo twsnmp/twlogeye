@@ -15,7 +15,7 @@ import (
 )
 
 var netflowReporterCh chan *datastore.NetflowLogEnt
-var netflowReport *datastore.NetFlowReportEnt
+var netflowReport *datastore.NetflowReportEnt
 
 type netflowSummaryEnt struct {
 	Key     string
@@ -34,8 +34,8 @@ func startNetflow(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start netflow reporter")
 	defer wg.Done()
 	timer := time.NewTicker(time.Second * 1)
-	lastH := time.Now().Hour()
-	netflowReport = &datastore.NetFlowReportEnt{}
+	lastT := getIntervalTime()
+	netflowReport = &datastore.NetflowReportEnt{}
 	for {
 		select {
 		case <-ctx.Done():
@@ -44,11 +44,13 @@ func startNetflow(ctx context.Context, wg *sync.WaitGroup) {
 		case l := <-netflowReporterCh:
 			processNetflowReport(l)
 		case <-timer.C:
-			h := time.Now().Hour()
-			if lastH != h {
+			t := getIntervalTime()
+			if lastT != t {
+				lastT = t
+				st := time.Now()
 				saveNetflowReport()
+				log.Printf("save netflow report dur=%v", time.Since(st))
 			}
-
 		}
 	}
 }
@@ -65,51 +67,72 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 	var srcIP string
 	// var dstMAC string
 	var dstIP string
-	var bytes float64
-	var packets float64
-	var sp float64
-	var dp float64
+	var bytes int64
+	var packets int64
+	var sp int
+	var dp int
 	var protocol string
 	var tcpFlags string
-	if srcIP, ok = l.Log["srcAddr"].(string); !ok {
+	var ip net.IP
+	if ip, ok = l.Log["srcAddr"].(net.IP); !ok {
 		// IPFIX
-		if srcIP, ok = l.Log["sourceIPv4Address"].(string); !ok {
-			if srcIP, ok = l.Log["sourceIPv6Address"].(string); !ok {
-				return
-			}
-		}
-		if dstIP, ok = l.Log["destinationIPv4Address"].(string); !ok {
-			if dstIP, ok = l.Log["destinationIPv6Address"].(string); !ok {
-				return
-			}
-		}
-		if packets, ok = l.Log["packetDeltaCount"].(float64); !ok {
+		if ip, ok = l.Log["sourceIPv4Address"].(net.IP); ok {
+			srcIP = ip.String()
+		} else if ip, ok = l.Log["sourceIPv6Address"].(net.IP); ok {
+			srcIP = ip.String()
+		} else {
+			log.Printf("t=%T src=%s", l.Log["sourceIPv4Address"], l.Log["sourceIPv4Address"])
+			log.Panic()
 			return
 		}
-		if bytes, ok = l.Log["octetDeltaCount"].(float64); !ok {
+
+		if ip, ok = l.Log["destinationIPv4Address"].(net.IP); ok {
+			dstIP = ip.String()
+		} else if ip, ok = l.Log["destinationIPv6Address"].(net.IP); ok {
+			dstIP = ip.String()
+		} else {
+			log.Panic()
 			return
 		}
+		if _, ok = l.Log["packetDeltaCount"]; !ok {
+			log.Panic()
+			return
+		}
+		packets = getNetflowInt64(l.Log["packetDeltaCount"])
+		if _, ok = l.Log["octetDeltaCount"]; !ok {
+			log.Panic()
+			return
+		}
+		bytes = getNetflowInt64(l.Log["octetDeltaCount"])
 		protocol = "unknown"
-		var icmpTypeCode float64
-		var pi float64
-		if icmpTypeCode, ok = l.Log["icmpTypeCodeIPv6"].(float64); ok {
+		var icmpTypeCode int
+		var pi int
+		if _, ok = l.Log["icmpTypeCodeIPv6"]; ok {
+			icmpTypeCode = getNetflowInt(l.Log["icmpTypeCodeIPv6"])
 			protocol = "icmpv6"
-			sp = float64(int(icmpTypeCode) / 256)
-			dp = float64(int(icmpTypeCode) % 256)
+			sp = icmpTypeCode / 256
+			dp = icmpTypeCode % 256
 			pi = 1
-		} else if icmpTypeCode, ok = l.Log["icmpTypeCodeIPv4"].(float64); ok {
+		} else if _, ok = l.Log["icmpTypeCodeIPv4"]; ok {
+			icmpTypeCode = getNetflowInt(l.Log["icmpTypeCodeIPv4"])
 			protocol = "icmpv4"
-			sp = float64(int(icmpTypeCode) / 256)
-			dp = float64(int(icmpTypeCode) % 256)
+			sp = icmpTypeCode / 256
+			dp = icmpTypeCode % 256
 			pi = 1
-		} else if pi, ok = l.Log["protocolIdentifier"].(float64); ok {
-			if sp, ok = l.Log["sourceTransportPort"].(float64); !ok {
+		} else if _, ok = l.Log["protocolIdentifier"]; ok {
+			pi = getNetflowInt(l.Log["protocolIdentifier"])
+			if _, ok = l.Log["sourceTransportPort"]; !ok {
+				log.Panic()
 				return
 			}
-			if dp, ok = l.Log["destinationTransportPort"].(float64); !ok {
+			sp = getNetflowInt(l.Log["sourceTransportPort"])
+			if _, ok = l.Log["destinationTransportPort"]; !ok {
+				log.Panic()
 				return
 			}
-			if int(pi) == 6 {
+			dp = getNetflowInt(l.Log["destinationTransportPort"])
+			switch pi {
+			case 6:
 				if t, ok := l.Log["tcpflagsStr"]; !ok {
 					var tfb float64
 					if tfb, ok = l.Log["tcpControlBits"].(float64); ok {
@@ -129,11 +152,11 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 					tcpFlags = t.(string)
 				}
 				protocol = "tcp"
-			} else if int(pi) == 17 {
+			case 17:
 				protocol = "udp"
-			} else if int(pi) == 1 {
+			case 1:
 				protocol = "icmp"
-			} else {
+			default:
 				if v, ok := l.Log["protocolStr"]; ok {
 					protocol = v.(string)
 				} else {
@@ -141,30 +164,37 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 				}
 			}
 		}
-		if v, ok := l.Log["sourceMacAddress"]; ok {
-			if mac, ok := v.(string); ok {
-				srcMAC = mac
-			}
+		if mac, ok := l.Log["sourceMacAddress"].(string); ok {
+			srcMAC = mac
 		}
 	} else {
+		srcIP = ip.String()
 		// Netflow v5
-		if sp, ok = l.Log["srcPort"].(float64); !ok {
+		if _, ok = l.Log["srcPort"]; !ok {
+			log.Panic()
 			return
 		}
-		if dstIP, ok = l.Log["dstAddr"].(string); !ok {
+		sp = getNetflowInt(l.Log["srcPort"])
+		if ip, ok = l.Log["dstAddr"].(net.IP); ok {
+			dstIP = ip.String()
+		} else {
 			return
 		}
-		if dp, ok = l.Log["dstPort"].(float64); !ok {
+		if _, ok = l.Log["dstPort"]; !ok {
 			return
 		}
-		if packets, ok = l.Log["packets"].(float64); !ok {
+		dp = getNetflowInt(l.Log["dstPort"])
+		if _, ok = l.Log["packets"]; !ok {
 			return
 		}
-		if bytes, ok = l.Log["bytes"].(float64); !ok {
+		packets = getNetflowInt64(l.Log["packets"])
+		if _, ok = l.Log["bytes"]; !ok {
 			return
 		}
+		bytes = getNetflowInt64(l.Log["bytes"])
 		if protocol, ok = l.Log["protocolStr"].(string); !ok {
-			if pi, ok := l.Log["protocol"].(float64); ok {
+			if _, ok := l.Log["protocol"]; ok {
+				pi := getNetflowInt(l.Log["protocol"])
 				switch pi {
 				case 1:
 					protocol = "icmp"
@@ -175,14 +205,12 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 				case 17:
 					protocol = "udp"
 				default:
-					protocol = fmt.Sprintf("%d", int(pi))
+					protocol = fmt.Sprintf("%d", pi)
 				}
 			}
 		}
-		if v, ok := l.Log["sourceMacAddress"]; ok {
-			if mac, ok := v.(string); ok {
-				srcMAC = mac
-			}
+		if mac, ok := l.Log["sourceMacAddress"].(string); ok {
+			srcMAC = mac
 		}
 		if tcpFlags, ok = l.Log["tcpflagsStr"].(string); !ok {
 			tcpFlags = ""
@@ -224,12 +252,56 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 	netflowFlowMap[flow].Packets = int(packets)
 	protocol = getProtocolName(protocol, int(sp), int(dp))
 	netflowProtocolMap[protocol]++
-	if src, p := isFumble(srcIP, dstIP, protocol, tcpFlags); p > 0 {
+	if src := isFumble(srcIP, dstIP, protocol, tcpFlags, int(packets)); src != "" {
 		netflowFumbleSrcMap[src]++
 	}
 }
 
+func getNetflowInt64(r interface{}) int64 {
+	switch v := r.(type) {
+	case uint64:
+		return int64(v)
+	case int64:
+		return v
+	case float64:
+		return int64(v)
+	default:
+		log.Panicf("int64 type=%T", r)
+	}
+	return 0
+}
+
+func getNetflowInt(r interface{}) int {
+	switch v := r.(type) {
+	case uint64:
+		return int(v)
+	case int64:
+		return int(v)
+	case float64:
+		return int(v)
+	case float32:
+		return int(v)
+	case uint32:
+		return int(v)
+	case int32:
+		return int(v)
+	case uint16:
+		return int(v)
+	case int16:
+		return int(v)
+	case uint8:
+		return int(v)
+	case int8:
+		return int(v)
+	default:
+		log.Panicf("int64 type=%T", r)
+	}
+	return 0
+
+}
+
 func saveNetflowReport() {
+	netflowReport.Time = time.Now().UnixNano()
 	// make topList
 	topMACPacketsList := []datastore.NetflowPacketsSummaryEnt{}
 	topMACBytesList := []datastore.NetflowBytesSummaryEnt{}
@@ -326,7 +398,7 @@ func saveNetflowReport() {
 	netflowProtocolMap = make(map[string]int)
 	netflowFumbleSrcMap = make(map[string]int)
 	netflowFlowMap = make(map[string]*netflowSummaryEnt)
-	netflowReport = &datastore.NetFlowReportEnt{}
+	netflowReport = &datastore.NetflowReportEnt{}
 }
 
 func getProtocolName(prot string, sp, dp int) string {
@@ -379,17 +451,16 @@ func lessIP(ip1s, ip2s string) bool {
 	return true
 }
 
-func isFumble(src, dst, prot, tcpFlag string) (string, int) {
-	// SYN && FIN
-	if strings.Contains(tcpFlag, "SF") {
-		if strings.Contains(tcpFlag, "UAPR") {
-			return src, 2
+func isFumble(src, dst, prot, tcpFlag string, pkt int) string {
+	if tcpFlag != "" {
+		// Urget,Ack,Push,Reset ,Syn & Fin
+		if strings.Contains(tcpFlag, "UAPRSF") || pkt < 5 {
+			return src
 		}
-		return src, 1
 	}
 	// ICMP 3
 	if strings.HasPrefix(prot, "3/icmp") {
-		return dst, 1
+		return dst
 	}
-	return "", 0
+	return ""
 }

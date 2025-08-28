@@ -905,7 +905,7 @@ func (x *NetflowIPCountEnt) GetCount() int32 {
 	return 0
 }
 
-type NetFlowReportEnt struct {
+type NetflowReportEnt struct {
 	state              protoimpl.MessageState      `protogen:"open.v1"`
 	Time               int64                       `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
 	Packets            int64                       `protobuf:"varint,2,opt,name=packets,proto3" json:"packets,omitempty"`
@@ -922,20 +922,20 @@ type NetFlowReportEnt struct {
 	sizeCache          protoimpl.SizeCache
 }
 
-func (x *NetFlowReportEnt) Reset() {
-	*x = NetFlowReportEnt{}
+func (x *NetflowReportEnt) Reset() {
+	*x = NetflowReportEnt{}
 	mi := &file_twlogeye_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *NetFlowReportEnt) String() string {
+func (x *NetflowReportEnt) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NetFlowReportEnt) ProtoMessage() {}
+func (*NetflowReportEnt) ProtoMessage() {}
 
-func (x *NetFlowReportEnt) ProtoReflect() protoreflect.Message {
+func (x *NetflowReportEnt) ProtoReflect() protoreflect.Message {
 	mi := &file_twlogeye_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -947,82 +947,82 @@ func (x *NetFlowReportEnt) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use NetFlowReportEnt.ProtoReflect.Descriptor instead.
-func (*NetFlowReportEnt) Descriptor() ([]byte, []int) {
+// Deprecated: Use NetflowReportEnt.ProtoReflect.Descriptor instead.
+func (*NetflowReportEnt) Descriptor() ([]byte, []int) {
 	return file_twlogeye_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *NetFlowReportEnt) GetTime() int64 {
+func (x *NetflowReportEnt) GetTime() int64 {
 	if x != nil {
 		return x.Time
 	}
 	return 0
 }
 
-func (x *NetFlowReportEnt) GetPackets() int64 {
+func (x *NetflowReportEnt) GetPackets() int64 {
 	if x != nil {
 		return x.Packets
 	}
 	return 0
 }
 
-func (x *NetFlowReportEnt) GetBytes() int64 {
+func (x *NetflowReportEnt) GetBytes() int64 {
 	if x != nil {
 		return x.Bytes
 	}
 	return 0
 }
 
-func (x *NetFlowReportEnt) GetTopMacPacketsList() []*NetflowPacketsSummaryEnt {
+func (x *NetflowReportEnt) GetTopMacPacketsList() []*NetflowPacketsSummaryEnt {
 	if x != nil {
 		return x.TopMacPacketsList
 	}
 	return nil
 }
 
-func (x *NetFlowReportEnt) GetTopMacBytesList() []*NetflowBytesSummaryEnt {
+func (x *NetflowReportEnt) GetTopMacBytesList() []*NetflowBytesSummaryEnt {
 	if x != nil {
 		return x.TopMacBytesList
 	}
 	return nil
 }
 
-func (x *NetFlowReportEnt) GetTopIpPacketsList() []*NetflowPacketsSummaryEnt {
+func (x *NetflowReportEnt) GetTopIpPacketsList() []*NetflowPacketsSummaryEnt {
 	if x != nil {
 		return x.TopIpPacketsList
 	}
 	return nil
 }
 
-func (x *NetFlowReportEnt) GetTopIpBytesList() []*NetflowBytesSummaryEnt {
+func (x *NetflowReportEnt) GetTopIpBytesList() []*NetflowBytesSummaryEnt {
 	if x != nil {
 		return x.TopIpBytesList
 	}
 	return nil
 }
 
-func (x *NetFlowReportEnt) GetTopFlowPacketsList() []*NetflowPacketsSummaryEnt {
+func (x *NetflowReportEnt) GetTopFlowPacketsList() []*NetflowPacketsSummaryEnt {
 	if x != nil {
 		return x.TopFlowPacketsList
 	}
 	return nil
 }
 
-func (x *NetFlowReportEnt) GetTopFlowBytesList() []*NetflowBytesSummaryEnt {
+func (x *NetflowReportEnt) GetTopFlowBytesList() []*NetflowBytesSummaryEnt {
 	if x != nil {
 		return x.TopFlowBytesList
 	}
 	return nil
 }
 
-func (x *NetFlowReportEnt) GetTopProtocolList() []*NetflowProtocolCountEnt {
+func (x *NetflowReportEnt) GetTopProtocolList() []*NetflowProtocolCountEnt {
 	if x != nil {
 		return x.TopProtocolList
 	}
 	return nil
 }
 
-func (x *NetFlowReportEnt) GetTopFumbleSrcList() []*NetflowIPCountEnt {
+func (x *NetflowReportEnt) GetTopFumbleSrcList() []*NetflowIPCountEnt {
 	if x != nil {
 		return x.TopFumbleSrcList
 	}
@@ -1267,7 +1267,7 @@ var file_twlogeye_proto_rawDesc = string([]byte{
 	0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x49, 0x50, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x45, 0x6e, 0x74,
 	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x70,
 	0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52,
-	0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xdd, 0x05, 0x0a, 0x10, 0x4e, 0x65, 0x74, 0x46, 0x6c,
+	0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xdd, 0x05, 0x0a, 0x10, 0x4e, 0x65, 0x74, 0x66, 0x6c,
 	0x6f, 0x77, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x45, 0x6e, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x74,
 	0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12,
 	0x18, 0x0a, 0x07, 0x70, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03,
@@ -1368,7 +1368,7 @@ var file_twlogeye_proto_rawDesc = string([]byte{
 	0x0a, 0x10, 0x47, 0x65, 0x74, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x70, 0x6f,
 	0x72, 0x74, 0x12, 0x17, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x52, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a, 0x2e, 0x74, 0x77,
-	0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x46, 0x6c, 0x6f, 0x77, 0x52, 0x65,
+	0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x52, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x45, 0x6e, 0x74, 0x30, 0x01, 0x12, 0x53, 0x0a, 0x15, 0x47, 0x65, 0x74,
 	0x57, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x73, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x70, 0x6f,
 	0x72, 0x74, 0x12, 0x17, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x52, 0x65,
@@ -1409,7 +1409,7 @@ var file_twlogeye_proto_goTypes = []any{
 	(*NetflowBytesSummaryEnt)(nil),   // 12: twlogeye.NetflowBytesSummaryEnt
 	(*NetflowProtocolCountEnt)(nil),  // 13: twlogeye.NetflowProtocolCountEnt
 	(*NetflowIPCountEnt)(nil),        // 14: twlogeye.NetflowIPCountEnt
-	(*NetFlowReportEnt)(nil),         // 15: twlogeye.NetFlowReportEnt
+	(*NetflowReportEnt)(nil),         // 15: twlogeye.NetflowReportEnt
 	(*WindowsEventSummary)(nil),      // 16: twlogeye.WindowsEventSummary
 	(*WindowsEventReportEnt)(nil),    // 17: twlogeye.WindowsEventReportEnt
 }
@@ -1417,14 +1417,14 @@ var file_twlogeye_proto_depIdxs = []int32{
 	7,  // 0: twlogeye.SyslogReportEnt.top_list:type_name -> twlogeye.LogSummaryEnt
 	7,  // 1: twlogeye.SyslogReportEnt.top_error_list:type_name -> twlogeye.LogSummaryEnt
 	9,  // 2: twlogeye.TrapReportEnt.top_list:type_name -> twlogeye.TrapSummaryEnt
-	11, // 3: twlogeye.NetFlowReportEnt.top_mac_packets_list:type_name -> twlogeye.NetflowPacketsSummaryEnt
-	12, // 4: twlogeye.NetFlowReportEnt.top_mac_bytes_list:type_name -> twlogeye.NetflowBytesSummaryEnt
-	11, // 5: twlogeye.NetFlowReportEnt.top_ip_packets_list:type_name -> twlogeye.NetflowPacketsSummaryEnt
-	12, // 6: twlogeye.NetFlowReportEnt.top_ip_bytes_list:type_name -> twlogeye.NetflowBytesSummaryEnt
-	11, // 7: twlogeye.NetFlowReportEnt.top_flow_packets_list:type_name -> twlogeye.NetflowPacketsSummaryEnt
-	12, // 8: twlogeye.NetFlowReportEnt.top_flow_bytes_list:type_name -> twlogeye.NetflowBytesSummaryEnt
-	13, // 9: twlogeye.NetFlowReportEnt.top_protocol_list:type_name -> twlogeye.NetflowProtocolCountEnt
-	14, // 10: twlogeye.NetFlowReportEnt.top_fumble_src_list:type_name -> twlogeye.NetflowIPCountEnt
+	11, // 3: twlogeye.NetflowReportEnt.top_mac_packets_list:type_name -> twlogeye.NetflowPacketsSummaryEnt
+	12, // 4: twlogeye.NetflowReportEnt.top_mac_bytes_list:type_name -> twlogeye.NetflowBytesSummaryEnt
+	11, // 5: twlogeye.NetflowReportEnt.top_ip_packets_list:type_name -> twlogeye.NetflowPacketsSummaryEnt
+	12, // 6: twlogeye.NetflowReportEnt.top_ip_bytes_list:type_name -> twlogeye.NetflowBytesSummaryEnt
+	11, // 7: twlogeye.NetflowReportEnt.top_flow_packets_list:type_name -> twlogeye.NetflowPacketsSummaryEnt
+	12, // 8: twlogeye.NetflowReportEnt.top_flow_bytes_list:type_name -> twlogeye.NetflowBytesSummaryEnt
+	13, // 9: twlogeye.NetflowReportEnt.top_protocol_list:type_name -> twlogeye.NetflowProtocolCountEnt
+	14, // 10: twlogeye.NetflowReportEnt.top_fumble_src_list:type_name -> twlogeye.NetflowIPCountEnt
 	16, // 11: twlogeye.WindowsEventReportEnt.top_list:type_name -> twlogeye.WindowsEventSummary
 	16, // 12: twlogeye.WindowsEventReportEnt.top_error_list:type_name -> twlogeye.WindowsEventSummary
 	5,  // 13: twlogeye.TWLogEyeService.Stop:input_type -> twlogeye.Empty
@@ -1443,7 +1443,7 @@ var file_twlogeye_proto_depIdxs = []int32{
 	3,  // 26: twlogeye.TWLogEyeService.SearchLog:output_type -> twlogeye.LogResponse
 	8,  // 27: twlogeye.TWLogEyeService.GetSyslogReport:output_type -> twlogeye.SyslogReportEnt
 	10, // 28: twlogeye.TWLogEyeService.GetTrapReport:output_type -> twlogeye.TrapReportEnt
-	15, // 29: twlogeye.TWLogEyeService.GetNetflowReport:output_type -> twlogeye.NetFlowReportEnt
+	15, // 29: twlogeye.TWLogEyeService.GetNetflowReport:output_type -> twlogeye.NetflowReportEnt
 	17, // 30: twlogeye.TWLogEyeService.GetWindowsEventReport:output_type -> twlogeye.WindowsEventReportEnt
 	22, // [22:31] is the sub-list for method output_type
 	13, // [13:22] is the sub-list for method input_type

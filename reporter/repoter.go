@@ -3,6 +3,7 @@ package reporter
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/twsnmp/twlogeye/datastore"
 )
@@ -23,4 +24,15 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 	go startNetflow(ctx, wg)
 	wg.Add(1)
 	go startWindowsEvent(ctx, wg)
+}
+
+func getIntervalTime() int {
+	switch datastore.Config.ReportInterval {
+	case "day":
+		return time.Now().Local().Day()
+	case "minute":
+		return time.Now().Minute()
+	default:
+		return time.Now().Hour()
+	}
 }

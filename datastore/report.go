@@ -203,7 +203,7 @@ type NetflowIPCountEnt struct {
 	Count int
 }
 
-type NetFlowReportEnt struct {
+type NetflowReportEnt struct {
 	Time               int64
 	Packets            int64
 	Bytes              int64
@@ -217,7 +217,7 @@ type NetFlowReportEnt struct {
 	TopFumbleSrcList   []NetflowIPCountEnt
 }
 
-func SaveNetflowReport(r *NetFlowReportEnt) {
+func SaveNetflowReport(r *NetflowReportEnt) {
 	db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("report:netflow:%016x", r.Time)
 		if v, err := json.Marshal(r); err == nil {
@@ -232,7 +232,7 @@ func SaveNetflowReport(r *NetFlowReportEnt) {
 	})
 }
 
-func ForEachNetflowReport(st, et int64, callBack func(r *NetFlowReportEnt) bool) {
+func ForEachNetflowReport(st, et int64, callBack func(r *NetflowReportEnt) bool) {
 	if et == 0 {
 		et = time.Now().UnixNano()
 	}
@@ -248,7 +248,7 @@ func ForEachNetflowReport(st, et int64, callBack func(r *NetFlowReportEnt) bool)
 					if t > et {
 						break
 					}
-					var r NetFlowReportEnt
+					var r NetflowReportEnt
 					if err := item.Value(func(v []byte) error {
 						return json.Unmarshal(v, &r)
 					}); err == nil {

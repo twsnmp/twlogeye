@@ -21,7 +21,7 @@ func startSyslog(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start syslog reporter")
 	defer wg.Done()
 	timer := time.NewTicker(time.Second * 1)
-	lastH := time.Now().Hour()
+	lastT := getIntervalTime()
 	syslogReport = &datastore.SyslogReportEnt{}
 	syslogNormalizeMap = make(map[string]int)
 	syslogNormalizeErrorMap = make(map[string]int)
@@ -33,11 +33,13 @@ func startSyslog(ctx context.Context, wg *sync.WaitGroup) {
 		case l := <-syslogReporterCh:
 			processSyslogReport(l)
 		case <-timer.C:
-			h := time.Now().Hour()
-			if lastH != h {
+			t := getIntervalTime()
+			if lastT != t {
+				lastT = t
+				st := time.Now()
 				saveSyslogReport()
+				log.Printf("save syslog report dur=%v", time.Since(st))
 			}
-
 		}
 	}
 }
@@ -48,9 +50,10 @@ func SendSyslog(l *datastore.SyslogEnt) {
 
 func processSyslogReport(l *datastore.SyslogEnt) {
 	// Levelを取得する
-	var sv float64
+	var sv int
 	var ok bool
-	if sv, ok = l.Log["severity"].(float64); !ok {
+	if sv, ok = l.Log["severity"].(int); !ok {
+		log.Printf("severity=%#v", l.Log["severity"])
 		return
 	}
 	var host string
@@ -93,14 +96,21 @@ func processSyslogReport(l *datastore.SyslogEnt) {
 
 func saveSyslogReport() {
 	// make topList
+	syslogReport.Time = time.Now().UnixNano()
+
 	topList := []datastore.LogSummaryEnt{}
-	topErrorList := []datastore.LogSummaryEnt{}
 	for k, v := range syslogNormalizeMap {
 		topList = append(topList, datastore.LogSummaryEnt{LogPattern: k, Count: v})
 	}
 	sort.Slice(topList, func(i, j int) bool {
 		return topList[i].Count > topList[j].Count
 	})
+	if len(topList) > datastore.Config.ReportTopN {
+		topList = topList[:datastore.Config.ReportTopN]
+	}
+	syslogReport.TopList = topList
+
+	topErrorList := []datastore.LogSummaryEnt{}
 	for k, v := range syslogNormalizeErrorMap {
 		topErrorList = append(topErrorList, datastore.LogSummaryEnt{LogPattern: k, Count: v})
 	}
@@ -111,10 +121,7 @@ func saveSyslogReport() {
 		topErrorList = topErrorList[:datastore.Config.ReportTopN]
 	}
 	syslogReport.TopErrorList = topErrorList
-	if len(topList) > datastore.Config.ReportTopN {
-		topList = topList[:datastore.Config.ReportTopN]
-	}
-	syslogReport.TopList = topList
+
 	// Save syslog Report
 	datastore.SaveSyslogReport(syslogReport)
 	// Clear report

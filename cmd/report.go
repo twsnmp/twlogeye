@@ -37,6 +37,9 @@ var reportCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		st := getTime(startTime, 0)
 		et := getTime(endTime, time.Now().UnixNano())
+		if len(args) > 0 && reportType == "" {
+			reportType = args[0]
+		}
 		switch reportType {
 		case "trap":
 			getTrapReport(st, et)
@@ -52,7 +55,7 @@ var reportCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(reportCmd)
-	reportCmd.Flags().StringVar(&reportType, "reportType", "syslog", "report type ")
+	reportCmd.Flags().StringVar(&reportType, "reportType", "", "report type ")
 	reportCmd.Flags().StringVar(&startTime, "start", "", "start date and time")
 	reportCmd.Flags().StringVar(&endTime, "end", "", "end date and time")
 }
@@ -71,18 +74,21 @@ func getSyslogReport(st, et int64) {
 		if err != nil {
 			log.Fatalf("get syslog report err=%v", err)
 		}
-		fmt.Printf("%s normal=%d warn=%d error=%d\n", getTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError())
-		fmt.Println("===")
-		fmt.Println("Top log pattern list")
-		fmt.Println("No.\tPattern\tCount")
-		for i, t := range r.GetTopList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetLogPattern(), t.GetCount())
-		}
-		fmt.Println("===")
-		fmt.Println("Top error log pattern list")
-		fmt.Println("No.\tPattern\tCount")
-		for i, t := range r.GetTopErrorList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetLogPattern(), t.GetCount())
+		fmt.Printf("%s syslog normal=%d warn=%d error=%d\n", getTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError())
+		topList := r.GetTopList()
+		if len(topList) > 0 {
+			fmt.Println("Top syslog pattern list")
+			fmt.Println("No.\tPattern\tCount")
+			for i, t := range topList {
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetLogPattern(), t.GetCount())
+			}
+			fmt.Println("===")
+			fmt.Println("Top error syslog pattern list")
+			fmt.Println("No.\tPattern\tCount")
+			for i, t := range r.GetTopErrorList() {
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetLogPattern(), t.GetCount())
+			}
+			fmt.Println("===")
 		}
 	}
 }
@@ -101,12 +107,15 @@ func getTrapReport(st, et int64) {
 		if err != nil {
 			log.Fatalf("get trap report err=%v", err)
 		}
-		fmt.Printf("%s count=%d\n", getTimeStr(r.GetTime()), r.GetCount())
-		fmt.Println("===")
-		fmt.Println("Top TRAP type list")
-		fmt.Println("No.\tSender\tTrap Type\tCount")
-		for i, t := range r.GetTopList() {
-			fmt.Printf("%d\t%s\t%s\t%d\n", i+1, t.GetSender(), t.GetTrapType(), t.GetCount())
+		fmt.Printf("%s trap count=%d\n", getTimeStr(r.GetTime()), r.GetCount())
+		list := r.GetTopList()
+		if len(list) > 0 {
+			fmt.Println("Top TRAP type list")
+			fmt.Println("No.\tSender\tTrap Type\tCount")
+			for i, t := range list {
+				fmt.Printf("%d\t%s\t%s\t%d\n", i+1, t.GetSender(), t.GetTrapType(), t.GetCount())
+			}
+			fmt.Println("===")
 		}
 	}
 }
@@ -125,54 +134,49 @@ func getNetflowReport(st, et int64) {
 		if err != nil {
 			log.Fatalf("get netflow report err=%v", err)
 		}
-		fmt.Printf("%s packets=%d bytes=%d\n", getTimeStr(r.GetTime()), r.GetPackets(), r.GetBytes())
-		fmt.Println("===")
-		fmt.Println("Top MAC node packets list")
-		fmt.Println("No.\tMAC\tPackets")
-		for i, t := range r.GetTopMacPacketsList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetPackets())
-		}
-		fmt.Println("===")
-		fmt.Println("Top MAC node bytes list")
-		fmt.Println("No.\tMAC\tBytes")
-		for i, t := range r.GetTopMacBytesList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
-		}
-		fmt.Println("===")
-		fmt.Println("Top IP node packets list")
-		fmt.Println("No.\tIP\tPackets")
-		for i, t := range r.GetTopIpPacketsList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetPackets())
-		}
-		fmt.Println("===")
-		fmt.Println("Top IP node bytes list")
-		fmt.Println("No.\tIP\tBytes")
-		for i, t := range r.GetTopIpBytesList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
-		}
-		fmt.Println("===")
-		fmt.Println("Top flow packets list")
-		fmt.Println("No.\tFlow\tPackets")
-		for i, t := range r.GetTopFlowPacketsList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetPackets())
-		}
-		fmt.Println("===")
-		fmt.Println("Top flow bytes list")
-		fmt.Println("No.\tFlow\tBytes")
-		for i, t := range r.GetTopFlowBytesList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
-		}
-		fmt.Println("===")
-		fmt.Println("Top protocol list")
-		fmt.Println("No.\tProcottol\tCount")
-		for i, t := range r.GetTopProtocolList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetProtocol(), t.GetCount())
-		}
-		fmt.Println("===")
-		fmt.Println("Top Fumble src list")
-		fmt.Println("No.\tSrc\tCount")
-		for i, t := range r.GetTopFumbleSrcList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetIp(), t.GetCount())
+		fmt.Printf("%s netflow packets=%d bytes=%d\n", getTimeStr(r.GetTime()), r.GetPackets(), r.GetBytes())
+		if r.GetPackets() > 0 {
+			fmt.Println("Top MAC node packets list")
+			fmt.Println("No.\tMAC\tPackets")
+			for i, t := range r.GetTopMacPacketsList() {
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetPackets())
+			}
+			fmt.Println("Top MAC node bytes list")
+			fmt.Println("No.\tMAC\tBytes")
+			for i, t := range r.GetTopMacBytesList() {
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
+			}
+			fmt.Println("Top IP node packets list")
+			fmt.Println("No.\tIP\tPackets")
+			for i, t := range r.GetTopIpPacketsList() {
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetPackets())
+			}
+			fmt.Println("Top IP node bytes list")
+			fmt.Println("No.\tIP\tBytes")
+			for i, t := range r.GetTopIpBytesList() {
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
+			}
+			fmt.Println("Top flow packets list")
+			fmt.Println("No.\tFlow\tPackets")
+			for i, t := range r.GetTopFlowPacketsList() {
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetPackets())
+			}
+			fmt.Println("Top flow bytes list")
+			fmt.Println("No.\tFlow\tBytes")
+			for i, t := range r.GetTopFlowBytesList() {
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
+			}
+			fmt.Println("Top protocol list")
+			fmt.Println("No.\tProcottol\tCount")
+			for i, t := range r.GetTopProtocolList() {
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetProtocol(), t.GetCount())
+			}
+			fmt.Println("Top Fumble src list")
+			fmt.Println("No.\tSrc\tCount")
+			for i, t := range r.GetTopFumbleSrcList() {
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetIp(), t.GetCount())
+			}
+			fmt.Println("===")
 		}
 	}
 }
@@ -191,18 +195,19 @@ func getWindowsEventReport(st, et int64) {
 		if err != nil {
 			log.Fatalf("get windows event report err=%v", err)
 		}
-		fmt.Printf("%s normal=%d warn=%d error=%d\n", getTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError())
-		fmt.Println("===")
-		fmt.Println("Top log pattern list")
-		fmt.Println("No.\tComputer\tProvider\tEventID\tCount")
-		for i, t := range r.GetTopList() {
-			fmt.Printf("%d\t%s\t%s\t%s\t%d\n", i+1, t.GetComputer(), t.GetProvider(), t.GetEventId(), t.GetCount())
-		}
-		fmt.Println("===")
-		fmt.Println("Top error log pattern list")
-		fmt.Println("No.\tPattern\tCount")
-		for i, t := range r.GetTopErrorList() {
-			fmt.Printf("%d\t%s\t%s\t%s\t%d\n", i+1, t.GetComputer(), t.GetProvider(), t.GetEventId(), t.GetCount())
+		fmt.Printf("%s windows event normal=%d warn=%d error=%d\n", getTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError())
+		if len(r.GetTopList()) > 0 {
+			fmt.Println("Top windows event list")
+			fmt.Println("No.\tComputer\tProvider\tEventID\tCount")
+			for i, t := range r.GetTopList() {
+				fmt.Printf("%d\t%s\t%s\t%s\t%d\n", i+1, t.GetComputer(), t.GetProvider(), t.GetEventId(), t.GetCount())
+			}
+			fmt.Println("Top error windows event list")
+			fmt.Println("No.\tPattern\tCount")
+			for i, t := range r.GetTopErrorList() {
+				fmt.Printf("%d\t%s\t%s\t%s\t%d\n", i+1, t.GetComputer(), t.GetProvider(), t.GetEventId(), t.GetCount())
+			}
+			fmt.Println("===")
 		}
 	}
 }

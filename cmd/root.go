@@ -16,7 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -90,7 +89,6 @@ func initConfig() {
 	viper.BindEnv("cacert")
 
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 		if err := viper.Unmarshal(&datastore.Config); err != nil {
 			log.Fatalln(err)
 		}
