@@ -41,8 +41,8 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 		for _, d := range syslogDst {
 			d.Close()
 		}
-		for _, d := range syslogDst {
-			d.Close()
+		for _, d := range trapDst {
+			d.Conn.Close()
 		}
 		wg.Done()
 	}()
