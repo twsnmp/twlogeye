@@ -188,6 +188,8 @@ func (s *apiServer) GetSyslogReport(req *api.ReportRequest, stream api.TWLogEyeS
 			Normal:       int32(l.Normal),
 			Warn:         int32(l.Warn),
 			Error:        int32(l.Error),
+			Patterns:     int32(l.Patterns),
+			ErrPatterns:  int32(l.ErrPatterns),
 			TopList:      []*api.LogSummaryEnt{},
 			TopErrorList: []*api.LogSummaryEnt{},
 		}
@@ -217,6 +219,7 @@ func (s *apiServer) GetTrapReport(req *api.ReportRequest, stream api.TWLogEyeSer
 		r := &api.TrapReportEnt{
 			Time:    l.Time,
 			Count:   int32(l.Count),
+			Types:   int32(l.Types),
 			TopList: []*api.TrapSummaryEnt{},
 		}
 		for _, t := range l.TopList {
@@ -241,6 +244,11 @@ func (s *apiServer) GetNetflowReport(req *api.ReportRequest, stream api.TWLogEye
 			Time:               l.Time,
 			Packets:            l.Packets,
 			Bytes:              l.Bytes,
+			Macs:               int32(l.MACs),
+			Ips:                int32(l.IPs),
+			Flows:              int32(l.Flows),
+			Protocols:          int32(l.Protocols),
+			Fumbles:            int32(l.Fumbles),
 			TopMacPacketsList:  []*api.NetflowPacketsSummaryEnt{},
 			TopMacBytesList:    []*api.NetflowBytesSummaryEnt{},
 			TopIpPacketsList:   []*api.NetflowPacketsSummaryEnt{},
@@ -314,6 +322,8 @@ func (s *apiServer) GetWindowsEventReport(req *api.ReportRequest, stream api.TWL
 			Normal:       int32(l.Normal),
 			Warn:         int32(l.Warn),
 			Error:        int32(l.Error),
+			Types:        int32(l.Types),
+			ErrorTypes:   int32(l.ErrorTypes),
 			TopList:      []*api.WindowsEventSummary{},
 			TopErrorList: []*api.WindowsEventSummary{},
 		}

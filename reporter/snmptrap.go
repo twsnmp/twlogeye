@@ -91,6 +91,8 @@ func saveTrapReport() {
 		topList = topList[:datastore.Config.ReportTopN]
 	}
 	trapReport.TopList = topList
+	trapReport.Types = len(trapTypeMap)
+
 	// Save trap Report
 	datastore.SaveTrapReport(trapReport)
 	// Clear report

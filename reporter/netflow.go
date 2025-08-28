@@ -36,6 +36,11 @@ func startNetflow(ctx context.Context, wg *sync.WaitGroup) {
 	timer := time.NewTicker(time.Second * 1)
 	lastT := getIntervalTime()
 	netflowReport = &datastore.NetflowReportEnt{}
+	netflowMACMap = make(map[string]*netflowSummaryEnt)
+	netflowIPMap = make(map[string]*netflowSummaryEnt)
+	netflowFlowMap = make(map[string]*netflowSummaryEnt)
+	netflowProtocolMap = make(map[string]int)
+	netflowFumbleSrcMap = make(map[string]int)
 	for {
 		select {
 		case <-ctx.Done():
@@ -323,6 +328,7 @@ func saveNetflowReport() {
 	}
 	netflowReport.TopMACPacketsList = topMACPacketsList
 	netflowReport.TopMACBytesList = topMACBytesList
+	netflowReport.MACs = len(netflowMACMap)
 
 	topIPPacketsList := []datastore.NetflowPacketsSummaryEnt{}
 	topIPBytesList := []datastore.NetflowBytesSummaryEnt{}
@@ -344,6 +350,7 @@ func saveNetflowReport() {
 	}
 	netflowReport.TopIPPacketsList = topIPPacketsList
 	netflowReport.TopIPBytesList = topIPBytesList
+	netflowReport.IPs = len(netflowIPMap)
 
 	topFlowPacketsList := []datastore.NetflowPacketsSummaryEnt{}
 	topFlowBytesList := []datastore.NetflowBytesSummaryEnt{}
@@ -365,6 +372,7 @@ func saveNetflowReport() {
 	}
 	netflowReport.TopFlowPacketsList = topFlowPacketsList
 	netflowReport.TopFlowBytesList = topFlowBytesList
+	netflowReport.Flows = len(netflowFlowMap)
 
 	topProtocolList := []datastore.NetflowProtocolCountEnt{}
 	for k, v := range netflowProtocolMap {
@@ -377,6 +385,7 @@ func saveNetflowReport() {
 		topProtocolList = topProtocolList[:datastore.Config.ReportTopN]
 	}
 	netflowReport.TopProtocolList = topProtocolList
+	netflowReport.Protocols = len(netflowProtocolMap)
 
 	topFumbleSrcList := []datastore.NetflowIPCountEnt{}
 	for k, v := range netflowFumbleSrcMap {
@@ -389,7 +398,7 @@ func saveNetflowReport() {
 		topFumbleSrcList = topFumbleSrcList[:datastore.Config.ReportTopN]
 	}
 	netflowReport.TopFumbleSrcList = topFumbleSrcList
-
+	netflowReport.Fumbles = len(netflowFumbleSrcMap)
 	// Save trap Report
 	datastore.SaveNetflowReport(netflowReport)
 	// Clear report

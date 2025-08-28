@@ -28,6 +28,7 @@ import (
 )
 
 var reportType string
+var noList bool
 
 // reportCmd represents the report command
 var reportCmd = &cobra.Command{
@@ -58,6 +59,7 @@ func init() {
 	reportCmd.Flags().StringVar(&reportType, "reportType", "", "report type ")
 	reportCmd.Flags().StringVar(&startTime, "start", "", "start date and time")
 	reportCmd.Flags().StringVar(&endTime, "end", "", "end date and time")
+	reportCmd.Flags().BoolVar(&noList, "noList", false, "report summary only")
 }
 
 func getSyslogReport(st, et int64) {
@@ -74,9 +76,11 @@ func getSyslogReport(st, et int64) {
 		if err != nil {
 			log.Fatalf("get syslog report err=%v", err)
 		}
-		fmt.Printf("%s syslog normal=%d warn=%d error=%d\n", getTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError())
+		fmt.Printf("%s syslog normal=%d warn=%d error=%d patterns=%d err_patterns=%d\n",
+			getReportTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError(),
+			r.GetPatterns(), r.GetErrPatterns())
 		topList := r.GetTopList()
-		if len(topList) > 0 {
+		if len(topList) > 0 && !noList {
 			fmt.Println("Top syslog pattern list")
 			fmt.Println("No.\tPattern\tCount")
 			for i, t := range topList {
@@ -107,9 +111,9 @@ func getTrapReport(st, et int64) {
 		if err != nil {
 			log.Fatalf("get trap report err=%v", err)
 		}
-		fmt.Printf("%s trap count=%d\n", getTimeStr(r.GetTime()), r.GetCount())
+		fmt.Printf("%s trap count=%d types=%d\n", getReportTimeStr(r.GetTime()), r.GetCount(), r.GetTypes())
 		list := r.GetTopList()
-		if len(list) > 0 {
+		if len(list) > 0 && !noList {
 			fmt.Println("Top TRAP type list")
 			fmt.Println("No.\tSender\tTrap Type\tCount")
 			for i, t := range list {
@@ -134,8 +138,10 @@ func getNetflowReport(st, et int64) {
 		if err != nil {
 			log.Fatalf("get netflow report err=%v", err)
 		}
-		fmt.Printf("%s netflow packets=%d bytes=%d\n", getTimeStr(r.GetTime()), r.GetPackets(), r.GetBytes())
-		if r.GetPackets() > 0 {
+		fmt.Printf("%s netflow packets=%d bytes=%d macs=%d ips=%d flows=%d prots=%d fumbles=%d\n",
+			getReportTimeStr(r.GetTime()), r.GetPackets(), r.GetBytes(),
+			r.GetMacs(), r.GetIps(), r.GetFlows(), r.GetProtocols(), r.GetFumbles())
+		if r.GetPackets() > 0 && !noList {
 			fmt.Println("Top MAC node packets list")
 			fmt.Println("No.\tMAC\tPackets")
 			for i, t := range r.GetTopMacPacketsList() {
@@ -195,8 +201,10 @@ func getWindowsEventReport(st, et int64) {
 		if err != nil {
 			log.Fatalf("get windows event report err=%v", err)
 		}
-		fmt.Printf("%s windows event normal=%d warn=%d error=%d\n", getTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError())
-		if len(r.GetTopList()) > 0 {
+		fmt.Printf("%s windows event normal=%d warn=%d error=%d types=%d error_types=%d\n",
+			getReportTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError(),
+			r.GetTypes(), r.GetErrorTypes())
+		if len(r.GetTopList()) > 0 && !noList {
 			fmt.Println("Top windows event list")
 			fmt.Println("No.\tComputer\tProvider\tEventID\tCount")
 			for i, t := range r.GetTopList() {

@@ -71,6 +71,10 @@ func getTimeStr(t int64) string {
 	return time.Unix(0, t).Format(time.RFC3339Nano)
 }
 
+func getReportTimeStr(t int64) string {
+	return time.Unix(0, t).Format(time.DateTime)
+}
+
 func getTime(s string, dt int64) int64 {
 	if t, err := dateparse.ParseLocal(s); err == nil {
 		return t.UnixNano()

@@ -66,6 +66,8 @@ type SyslogReportEnt struct {
 	Normal       int
 	Warn         int
 	Error        int
+	Patterns     int
+	ErrPatterns  int
 	TopList      []LogSummaryEnt
 	TopErrorList []LogSummaryEnt
 }
@@ -130,6 +132,7 @@ type TrapSummaryEnt struct {
 type TrapReportEnt struct {
 	Time    int64
 	Count   int
+	Types   int
 	TopList []TrapSummaryEnt
 }
 
@@ -207,6 +210,11 @@ type NetflowReportEnt struct {
 	Time               int64
 	Packets            int64
 	Bytes              int64
+	MACs               int
+	IPs                int
+	Flows              int
+	Protocols          int
+	Fumbles            int
 	TopMACPacketsList  []NetflowPacketsSummaryEnt
 	TopMACBytesList    []NetflowBytesSummaryEnt
 	TopIPPacketsList   []NetflowPacketsSummaryEnt
@@ -280,6 +288,8 @@ type WindowsEventReportEnt struct {
 	Normal       int
 	Warn         int
 	Error        int
+	Types        int
+	ErrorTypes   int
 	TopList      []WindowsEventSummary
 	TopErrorList []WindowsEventSummary
 }

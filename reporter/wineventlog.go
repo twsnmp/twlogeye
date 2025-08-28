@@ -79,6 +79,7 @@ func saveWindowsEventReport() {
 		topList = topList[:datastore.Config.ReportTopN]
 	}
 	wineventReport.TopList = topList
+	wineventReport.Types = len(wineventTypeMap)
 
 	topErrorList := []datastore.WindowsEventSummary{}
 	for k, v := range wineventTypeErrorMap {
@@ -94,6 +95,7 @@ func saveWindowsEventReport() {
 		topErrorList = topErrorList[:datastore.Config.ReportTopN]
 	}
 	wineventReport.TopErrorList = topErrorList
+	wineventReport.ErrorTypes = len(wineventTypeErrorMap)
 
 	// Save trap Report
 	datastore.SaveWindowsEventReport(wineventReport)

@@ -109,6 +109,7 @@ func saveSyslogReport() {
 		topList = topList[:datastore.Config.ReportTopN]
 	}
 	syslogReport.TopList = topList
+	syslogReport.Patterns = len(syslogNormalizeMap)
 
 	topErrorList := []datastore.LogSummaryEnt{}
 	for k, v := range syslogNormalizeErrorMap {
@@ -121,6 +122,7 @@ func saveSyslogReport() {
 		topErrorList = topErrorList[:datastore.Config.ReportTopN]
 	}
 	syslogReport.TopErrorList = topErrorList
+	syslogReport.ErrPatterns = len(syslogNormalizeErrorMap)
 
 	// Save syslog Report
 	datastore.SaveSyslogReport(syslogReport)

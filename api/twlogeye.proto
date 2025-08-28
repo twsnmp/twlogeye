@@ -78,8 +78,10 @@ message SyslogReportEnt {
   int32 normal = 2;
   int32 warn = 3;
   int32 error = 4;
-  repeated LogSummaryEnt top_list = 5;
-  repeated LogSummaryEnt top_error_list = 6;
+  int32 patterns = 5;
+  int32 err_patterns = 6;
+  repeated LogSummaryEnt top_list = 7;
+  repeated LogSummaryEnt top_error_list = 8;
 }
 
 message TrapSummaryEnt {
@@ -91,7 +93,8 @@ message TrapSummaryEnt {
 message TrapReportEnt {
   int64 time = 1;
   int32 count = 2;
-  repeated TrapSummaryEnt top_list = 3;
+  int32 types = 3;
+  repeated TrapSummaryEnt top_list = 4;
 }
 
 message NetflowPacketsSummaryEnt {
@@ -118,14 +121,19 @@ message NetflowReportEnt {
   int64 time = 1;
   int64 packets = 2;
   int64 bytes = 3;
-  repeated NetflowPacketsSummaryEnt top_mac_packets_list = 4;
-  repeated NetflowBytesSummaryEnt top_mac_bytes_list = 5;
-  repeated NetflowPacketsSummaryEnt top_ip_packets_list = 6;
-  repeated NetflowBytesSummaryEnt top_ip_bytes_list = 7;
-  repeated NetflowPacketsSummaryEnt top_flow_packets_list = 8;
-  repeated NetflowBytesSummaryEnt top_flow_bytes_list = 9;
-  repeated NetflowProtocolCountEnt top_protocol_list = 10;
-  repeated NetflowIPCountEnt top_fumble_src_list = 11;
+  int32 macs = 4;
+  int32 ips = 5;
+  int32 flows = 6;
+  int32 protocols = 7;
+  int32 fumbles = 8;
+  repeated NetflowPacketsSummaryEnt top_mac_packets_list = 9;
+  repeated NetflowBytesSummaryEnt top_mac_bytes_list = 10;
+  repeated NetflowPacketsSummaryEnt top_ip_packets_list = 11;
+  repeated NetflowBytesSummaryEnt top_ip_bytes_list = 12;
+  repeated NetflowPacketsSummaryEnt top_flow_packets_list = 13;
+  repeated NetflowBytesSummaryEnt top_flow_bytes_list = 14;
+  repeated NetflowProtocolCountEnt top_protocol_list = 15;
+  repeated NetflowIPCountEnt top_fumble_src_list = 16;
 }
 
 
@@ -141,8 +149,10 @@ message WindowsEventReportEnt {
   int32 normal = 2;
   int32 warn = 3;
   int32 error = 4;
-  repeated WindowsEventSummary top_list = 5;
-  repeated WindowsEventSummary top_error_list = 6;
+  int32 types = 5;
+  int32 error_types = 6;
+  repeated WindowsEventSummary top_list = 7;
+  repeated WindowsEventSummary top_error_list = 8;
 }
 
 /*
