@@ -49,8 +49,20 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 			evaluators = []*evaluator.RuleEvaluator{}
 			loadSigmaRules()
 		case l := <-auditorCh:
-			if ev := matchSigmaRule(l); ev != nil {
-				n := &datastore.NotifyEnt{
+			var n *datastore.NotifyEnt
+			if l.Type == datastore.AnomalyReport {
+				n = &datastore.NotifyEnt{
+					Time:  l.Time,
+					Src:   l.Src,
+					Type:  l.Type,
+					Log:   l.Log,
+					ID:    "TwLogEye:anomaly",
+					Level: "high",
+					Title: l.Log,
+					Tags:  "anomaly",
+				}
+			} else if ev := matchSigmaRule(l); ev != nil {
+				n = &datastore.NotifyEnt{
 					Time:  l.Time,
 					Src:   l.Src,
 					Type:  l.Type,
@@ -60,16 +72,18 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 					Title: ev.Title,
 					Tags:  strings.Join(ev.Tags, ";"),
 				}
-				notify.Norify(n)
-				datastore.SaveNotify(n)
-				watchChMap.Range(func(k, v any) bool {
-					if ch, ok := v.(chan *datastore.NotifyEnt); ok {
-						ch <- n
-					}
-					return true
-				})
-				log.Printf("notify %s %s %s", n.Src, n.ID, n.Level)
+			} else {
+				continue
 			}
+			notify.Norify(n)
+			datastore.SaveNotify(n)
+			watchChMap.Range(func(k, v any) bool {
+				if ch, ok := v.(chan *datastore.NotifyEnt); ok {
+					ch <- n
+				}
+				return true
+			})
+			log.Printf("notify %s %s %s", n.Src, n.ID, n.Level)
 		}
 	}
 }

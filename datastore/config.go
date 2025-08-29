@@ -30,6 +30,8 @@ type ConfigEnt struct {
 	ReportInterval string `yaml:"reportInterval"`
 	// Report Top N
 	ReportTopN int `yaml:"reportTopN"`
+	// Threshold for Anomaly Detection Report
+	AnomalyReportThreshold float64 `yaml:"anomalyReportThreshold"`
 	// GROK
 	GrokPat []string `yaml:"grockPat"`
 	GrokDef string   `yaml:"grokDef"`

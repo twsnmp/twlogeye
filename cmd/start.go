@@ -69,6 +69,7 @@ func init() {
 	startCmd.Flags().IntVar(&datastore.Config.NotifyRetention, "notifyRetention", 7, "notify retention(days)")
 	startCmd.Flags().IntVar(&datastore.Config.ReportRetention, "reportRetention", 7, "report retention(days)")
 	startCmd.Flags().IntVar(&datastore.Config.ReportTopN, "reportTopN", 10, "report top n")
+	startCmd.Flags().Float64Var(&datastore.Config.AnomalyReportThreshold, "anomalyReportThreshold", 0.0, "anomaly report threshold")
 	startCmd.Flags().StringVar(&datastore.Config.ReportInterval, "reportInterval", "hour", "report interval (day,hour,minute)")
 	startCmd.Flags().StringVar(&syslogDst, "syslogDst", "", "syslog dst")
 	startCmd.Flags().StringVar(&syslogDst, "trapDst", "", "SNMP TRAP dst")

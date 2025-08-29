@@ -17,6 +17,7 @@ const (
 	NetFlow
 	SnmpTrap
 	WindowsEventLog
+	AnomalyReport
 )
 
 type LogEnt struct {

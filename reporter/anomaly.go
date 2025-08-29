@@ -2,6 +2,7 @@ package reporter
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -10,6 +11,7 @@ import (
 
 	iforest "github.com/codegaudi/go-iforest"
 
+	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
 )
 
@@ -138,7 +140,7 @@ func wineventReportToVector(r *datastore.WindowsEventReportEnt) []float64 {
 
 func calcAnomalyScore(t string, a *anomalyCheckDataEnt) {
 	a.Scores = []float64{}
-	if len(a.Times) < 2 {
+	if len(a.Times) < 10 {
 		return
 	}
 	subSamplingSize := 256
@@ -212,4 +214,12 @@ func calcAnomalyScore(t string, a *anomalyCheckDataEnt) {
 		Max:     maxScore,
 		MaxTime: maxTime,
 	})
+	if datastore.Config.AnomalyReportThreshold > 0 && datastore.Config.AnomalyReportThreshold < lastScore {
+		auditor.Audit(&datastore.LogEnt{
+			Time: lastTime,
+			Type: datastore.AnomalyReport,
+			Src:  "anomaly:" + t,
+			Log:  fmt.Sprintf("%s reporter detect anomaly score=%.2f", t, lastScore),
+		})
+	}
 }
