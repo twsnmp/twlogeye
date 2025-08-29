@@ -99,6 +99,11 @@ func saveWindowsEventReport() {
 
 	// Save trap Report
 	datastore.SaveWindowsEventReport(wineventReport)
+	anomalyCh <- &anomalyChannelData{
+		Time:   wineventReport.Time,
+		Type:   "winevent",
+		Vector: wineventReportToVector(wineventReport),
+	}
 	// Clear report
 	wineventTypeMap = make(map[string]int)
 	wineventTypeErrorMap = make(map[string]int)

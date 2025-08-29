@@ -7,9 +7,11 @@ toolchain go1.24.0
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/bradleyjkemp/sigma-go v0.6.6
+	github.com/codegaudi/go-iforest v0.0.1
 	github.com/dgraph-io/badger/v4 v4.5.0
 	github.com/elastic/go-grok v0.3.1
 	github.com/gosnmp/gosnmp v1.38.0
+	github.com/montanaflynn/stats v0.7.1
 	github.com/sleepinggenius2/gosmi v0.4.4
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0

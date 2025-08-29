@@ -48,6 +48,8 @@ var reportCmd = &cobra.Command{
 			getNetflowReport(st, et)
 		case "winevent":
 			getWindowsEventReport(st, et)
+		case "anomaly":
+			getAnomalyReport(st, et)
 		default:
 			getSyslogReport(st, et)
 		}
@@ -217,5 +219,24 @@ func getWindowsEventReport(st, et int64) {
 			}
 			fmt.Println("===")
 		}
+	}
+}
+
+func getAnomalyReport(st, et int64) {
+	client := getClient()
+	s, err := client.GetAnomalyReport(context.Background(), &api.ReportRequest{Start: st, End: et})
+	if err != nil {
+		log.Fatalf("get trap report err=%v", err)
+	}
+	for {
+		r, err := s.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			log.Fatalf("get trap report err=%v", err)
+		}
+		fmt.Printf("%s anomaly type=%s score=%.2f max=%.2f at %s\n",
+			getReportTimeStr(r.GetTime()), r.GetType(), r.GetScore(), r.GetMax(), getReportTimeStr(r.GetMaxTime()))
 	}
 }

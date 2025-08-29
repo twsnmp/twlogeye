@@ -339,3 +339,59 @@ func ForEachWindowsEventReport(st, et int64, callBack func(r *WindowsEventReport
 		return nil
 	})
 }
+
+type AnomalyReportEnt struct {
+	Time    int64
+	Type    string
+	Score   float64
+	Max     float64
+	MaxTime int64
+}
+
+func SaveAnomalyReport(r *AnomalyReportEnt) {
+	st := time.Now()
+	db.Update(func(txn *badger.Txn) error {
+		k := fmt.Sprintf("report:anomaly:%016x", r.Time)
+		if v, err := json.Marshal(r); err == nil {
+			e := badger.NewEntry([]byte(k), []byte(v)).WithTTL(time.Hour * 24 * time.Duration(Config.ReportRetention))
+			if err := txn.SetEntry(e); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+		return nil
+	})
+	log.Printf("save aomaly report dur=%v", time.Since(st))
+}
+
+func ForEachAnomalyReport(st, et int64, callBack func(r *AnomalyReportEnt) bool) {
+	if et == 0 {
+		et = time.Now().UnixNano()
+	}
+	db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		for it.Seek([]byte(fmt.Sprintf("report:anomaly:%016x", st))); it.ValidForPrefix([]byte("report:anomaly:")); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			a := strings.SplitN(string(k), ":", 3)
+			if len(a) == 3 {
+				if t, err := strconv.ParseInt(a[2], 16, 64); err == nil {
+					if t > et {
+						break
+					}
+					var r AnomalyReportEnt
+					if err := item.Value(func(v []byte) error {
+						return json.Unmarshal(v, &r)
+					}); err == nil {
+						if !callBack(&r) {
+							break
+						}
+					}
+				}
+			}
+		}
+		return nil
+	})
+}

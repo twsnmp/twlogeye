@@ -344,7 +344,25 @@ func (s *apiServer) GetWindowsEventReport(req *api.ReportRequest, stream api.TWL
 			})
 		}
 		if err := stream.Send(r); err != nil {
-			log.Printf("api get syslog report err=%v", err)
+			log.Printf("api get windows event report err=%v", err)
+			return false
+		}
+		return true
+	})
+	return nil
+}
+
+func (s *apiServer) GetAnomalyReport(req *api.ReportRequest, stream api.TWLogEyeService_GetAnomalyReportServer) error {
+	datastore.ForEachAnomalyReport(req.GetStart(), req.GetEnd(), func(l *datastore.AnomalyReportEnt) bool {
+		r := &api.AnomalyReportEnt{
+			Time:    l.Time,
+			Type:    l.Type,
+			Score:   l.Score,
+			Max:     l.Max,
+			MaxTime: l.MaxTime,
+		}
+		if err := stream.Send(r); err != nil {
+			log.Printf("api get anomaly report err=%v", err)
 			return false
 		}
 		return true

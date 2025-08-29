@@ -95,6 +95,11 @@ func saveTrapReport() {
 
 	// Save trap Report
 	datastore.SaveTrapReport(trapReport)
+	anomalyCh <- &anomalyChannelData{
+		Time:   trapReport.Time,
+		Type:   "trap",
+		Vector: trapReportToVector(trapReport),
+	}
 	// Clear report
 	trapTypeMap = make(map[string]int)
 	trapReport = &datastore.TrapReportEnt{}

@@ -199,7 +199,6 @@ func loadMIBsFromFS() {
 			continue
 		}
 		path = fmt.Sprintf("mibs/%s", path)
-		log.Printf("load mib path=%s", path)
 		if r, err := mibfs.Open(path); err == nil {
 			if asn1, err := io.ReadAll(r); err == nil {
 				if loadExtMIB(asn1, "int", path, false) {
@@ -213,7 +212,6 @@ func loadMIBsFromFS() {
 		}
 	}
 	for _, path := range skipList {
-		log.Printf("retry to load mib path=%s", path)
 		if r, err := mibfs.Open(path); err == nil {
 			if asn1, err := io.ReadAll(r); err == nil {
 				if loadExtMIB(asn1, "int", path, true) {
@@ -238,7 +236,6 @@ func loadExtMIBs() {
 			if info.IsDir() {
 				return nil
 			}
-			log.Printf("load ext mib path=%s", path)
 			if asn1, err := os.ReadFile(path); err == nil {
 				if loadExtMIB(asn1, "ext", path, false) {
 					skipMap[path] = true
@@ -254,7 +251,6 @@ func loadExtMIBs() {
 	for hasHit && len(skipMap) > 0 {
 		hasHit = false
 		for path := range skipMap {
-			log.Printf("retry %d to load ext mib path=%s", r, path)
 			if asn1, err := os.ReadFile(path); err == nil {
 				if loadExtMIB(asn1, "ext", path, false) {
 					log.Printf("has skip mib file=%s", path)
@@ -310,7 +306,6 @@ func loadExtMIB(asn1 []byte, fileType, file string, retry bool) bool {
 		oid := getOid(&module.Body.Identity.Oid)
 		mapNameToOID[name] = oid
 		nameList = append(nameList, name)
-		log.Printf("module %s=%s", name, oid)
 	}
 	if module.Body.Types != nil {
 		for _, t := range module.Body.Types {

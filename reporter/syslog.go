@@ -126,6 +126,11 @@ func saveSyslogReport() {
 
 	// Save syslog Report
 	datastore.SaveSyslogReport(syslogReport)
+	anomalyCh <- &anomalyChannelData{
+		Time:   syslogReport.Time,
+		Type:   "syslog",
+		Vector: syslogReportToVector(syslogReport),
+	}
 	// Clear report
 	syslogNormalizeMap = make(map[string]int)
 	syslogNormalizeErrorMap = make(map[string]int)

@@ -23,6 +23,8 @@ service TWLogEyeService {
 	rpc GetNetflowReport (ReportRequest) returns (stream NetflowReportEnt);
   // Get Windows Event Report
 	rpc GetWindowsEventReport (ReportRequest) returns (stream WindowsEventReportEnt);
+  // Get Anomaly Report
+	rpc GetAnomalyReport (ReportRequest) returns (stream AnomalyReportEnt);
 }
 
 message NofifyRequest {
@@ -153,6 +155,14 @@ message WindowsEventReportEnt {
   int32 error_types = 6;
   repeated WindowsEventSummary top_list = 7;
   repeated WindowsEventSummary top_error_list = 8;
+}
+
+message AnomalyReportEnt {
+  int64 time = 1;
+  string type = 2;
+  double score = 3;
+  double max = 4;
+  int64 max_time = 5;
 }
 
 /*

@@ -401,6 +401,11 @@ func saveNetflowReport() {
 	netflowReport.Fumbles = len(netflowFumbleSrcMap)
 	// Save trap Report
 	datastore.SaveNetflowReport(netflowReport)
+	anomalyCh <- &anomalyChannelData{
+		Time:   netflowReport.Time,
+		Type:   "netflow",
+		Vector: netflowReportToVector(netflowReport),
+	}
 	// Clear report
 	netflowMACMap = make(map[string]*netflowSummaryEnt)
 	netflowIPMap = make(map[string]*netflowSummaryEnt)

@@ -13,6 +13,7 @@ func Init() {
 	syslogReporterCh = make(chan *datastore.SyslogEnt, 20000)
 	trapReporterCh = make(chan *datastore.TrapLogEnt, 20000)
 	netflowReporterCh = make(chan *datastore.NetflowLogEnt, 20000)
+	anomalyCh = make(chan *anomalyChannelData, 10)
 }
 
 func Start(ctx context.Context, wg *sync.WaitGroup) {
@@ -24,6 +25,8 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 	go startNetflow(ctx, wg)
 	wg.Add(1)
 	go startWindowsEvent(ctx, wg)
+	wg.Add(1)
+	go startAnomaly(ctx, wg)
 }
 
 func getIntervalTime() int {
