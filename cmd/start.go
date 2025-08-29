@@ -35,6 +35,7 @@ import (
 
 var syslogDst string
 var trapDst string
+var webhookDst string
 var grokPat string
 
 // startCmd represents the start command
@@ -48,6 +49,9 @@ var startCmd = &cobra.Command{
 		}
 		if trapDst != "" {
 			datastore.Config.TrapDst = strings.Split(trapDst, ",")
+		}
+		if webhookDst != "" {
+			datastore.Config.WebhookDst = strings.Split(webhookDst, ",")
 		}
 		if grokPat != "" {
 			datastore.Config.GrokPat = strings.Split(grokPat, ",")
@@ -73,6 +77,7 @@ func init() {
 	startCmd.Flags().StringVar(&datastore.Config.ReportInterval, "reportInterval", "hour", "report interval (day,hour,minute)")
 	startCmd.Flags().StringVar(&syslogDst, "syslogDst", "", "syslog dst")
 	startCmd.Flags().StringVar(&syslogDst, "trapDst", "", "SNMP TRAP dst")
+	startCmd.Flags().StringVar(&webhookDst, "webhhokDst", "", "Webhook dst URL")
 	startCmd.Flags().StringVar(&datastore.Config.TrapCommunity, "trapCommunity", "", "SNMP TRAP Community")
 	startCmd.Flags().StringVar(&datastore.Config.SigmaRules, "sigmaRules", "", "SIGMA rule path")
 	startCmd.Flags().StringVar(&datastore.Config.SigmaConfigs, "sigmaConfigs", "", "SIGMA config path")

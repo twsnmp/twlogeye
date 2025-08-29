@@ -1,10 +1,13 @@
 package notify
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -60,6 +63,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 			for _, d := range trapDst {
 				sendTrap(d, n)
 			}
+			webhook(n)
 		}
 	}
 }
@@ -154,4 +158,62 @@ func sendTrap(dst *gosnmp.GoSNMP, n *datastore.NotifyEnt) {
 	if err != nil {
 		log.Println("send trap err=", err)
 	}
+}
+
+type webHookNotifyEnt struct {
+	// Log
+	Time string `json:"Time"`
+	Type string `json:"Type"`
+	Log  string `json:"Log"`
+	Src  string `json:"Src"`
+	// Sigma rule
+	ID    string `json:"ID"`
+	Title string `json:"Title"`
+	Tags  string `json:"Tags"`
+	Level string `json:"Level"`
+}
+
+func webhook(n *datastore.NotifyEnt) {
+	if len(datastore.Config.WebhookDst) < 1 {
+		return
+	}
+	j, err := json.Marshal(&webHookNotifyEnt{
+		Time:  time.Unix(0, n.Time).Format(time.RFC3339),
+		Type:  n.Type.String(),
+		Log:   n.Log,
+		Src:   n.Src,
+		ID:    n.ID,
+		Title: n.Title,
+		Tags:  n.Tags,
+		Level: n.Level,
+	})
+	if err != nil {
+		log.Printf("webhook err=%v", err)
+		return
+	}
+	for _, url := range datastore.Config.WebhookDst {
+		if err := postWebhook(url, j); err != nil {
+			log.Printf("webhook err=%v", err)
+		}
+	}
+}
+
+func postWebhook(url string, j []byte) error {
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(j))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{
+		Timeout: time.Second * time.Duration(2),
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		return fmt.Errorf("webhook error %s", resp.Status)
+	}
+	return nil
 }

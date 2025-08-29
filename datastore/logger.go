@@ -20,6 +20,22 @@ const (
 	AnomalyReport
 )
 
+func (t LogType) String() string {
+	switch t {
+	case Syslog:
+		return "syslog"
+	case NetFlow:
+		return "netflow"
+	case SnmpTrap:
+		return "trap"
+	case WindowsEventLog:
+		return "windowsEvent"
+	case AnomalyReport:
+		return "anomalyReport"
+	}
+	return "unknown"
+}
+
 type LogEnt struct {
 	Time int64
 	Type LogType

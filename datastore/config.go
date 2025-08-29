@@ -19,6 +19,7 @@ type ConfigEnt struct {
 	// Dst
 	SyslogDst     []string `yaml:"syslogDst"`
 	TrapDst       []string `yaml:"trapDst"`
+	WebhookDst    []string `yaml:"webhookDst"`
 	TrapCommunity string   `yaml:"trapCommunity"`
 	// Log retention period (hours)
 	LogRetention int `yaml:"logRetention"`

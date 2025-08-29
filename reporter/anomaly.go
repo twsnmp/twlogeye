@@ -140,7 +140,7 @@ func wineventReportToVector(r *datastore.WindowsEventReportEnt) []float64 {
 
 func calcAnomalyScore(t string, a *anomalyCheckDataEnt) {
 	a.Scores = []float64{}
-	if len(a.Times) < 10 {
+	if len(a.Times) < 2 {
 		return
 	}
 	subSamplingSize := 256
