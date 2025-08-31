@@ -281,6 +281,24 @@ func GetSigmaRuleEvaluators() []*evaluator.RuleEvaluator {
 	return evaluators
 }
 
+func GetEvaluators() []*evaluator.RuleEvaluator {
+	return evaluators
+}
+
+func ParseSigmaRule(c string) (string, error) {
+	rule, err := sigma.ParseRule([]byte(c))
+	if err == nil {
+		return rule.ID, nil
+	}
+	if strings.Contains(err.Error(), "'*'") {
+		rule, err = autoFixSigmaRule([]byte(c), rule)
+		if err == nil {
+			return rule.ID, nil
+		}
+	}
+	return "", err
+}
+
 func TestRule(args []string) {
 	loadSigmaConfigs()
 	loadSigmaRules()

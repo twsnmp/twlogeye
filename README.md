@@ -323,6 +323,79 @@ Global Flags:
       --serverKey string    API server private key
 ```
 
+## MCP Server Tool Specifications
+
+This document describes the tools and their parameters for the MCP server defined in `mcp.go`.
+
+### `search_log`
+
+Searches for logs from TwLogEye.
+
+- **Parameters:**
+  - `start` (string): The date and time to start the search (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to `1970/01/01 00:00:00`.
+  - `end` (string): The date and time to end the search (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to the current time.
+  - `type` (string): The type of log (one of `syslog`, `trap`, `netflow`, `winevent`).
+  - `filter` (string): A regular expression to filter logs.
+
+### `search_notify`
+
+Searches for notifications from TwLogEye.
+
+- **Parameters:**
+  - `start` (string): The date and time to start the search (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to `1970/01/01 00:00:00`.
+  - `end` (string): The date and time to end the search (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to the current time.
+  - `level` (string): A regular expression to filter notification levels (e.g., `high|critical`). If not specified, no filtering is applied. Level names include `info`, `low`, `medium`, `high`, `critical`, etc.
+
+### `get_report`
+
+Retrieves a report from TwLogEye.
+
+- **Parameters:**
+  - `start` (string): The start date and time for the report (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to `1970/01/01 00:00:00`.
+  - `end` (string): The end date and time for the report (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to the current time.
+  - `type` (string): The type of report (one of `syslog`, `trap`, `netflow`, `winevent`, `anomaly`). `winevent` refers to Windows Event Logs.
+
+### `get_sigma_evaluator_list`
+
+Retrieves a list of Sigma rule evaluators from TwLogEye.
+
+- **Parameters:** None
+
+### `get_sigma_rule_id_list`
+
+Retrieves a list of Sigma rule IDs from TwLogEye.
+
+- **Parameters:** None
+
+### `get_sigma_rule`
+
+Retrieves a Sigma rule with the specified ID from TwLogEye.
+
+- **Parameters:**
+  - `id` (string): The ID of the Sigma rule to retrieve.
+
+### `add_sigma_rule`
+
+Adds a new Sigma rule to TwLogEye.
+
+- **Parameters:**
+  - `rule` (string): The Sigma rule string in YAML format.
+
+### `delete_sigma_rule`
+
+Deletes a Sigma rule with the specified ID from TwLogEye.
+
+- **Parameters:**
+  - `id` (string): The ID of the Sigma rule to delete.
+
+### `reload_sigma_rule`
+
+Reloads the Sigma rules loaded in TwLogEye.
+
+- **Parameters:** None
+
+
+
 ## Setting file
 
 Use the file specified in --config or the current directory ./twlogeye.yaml as the configuration file.

@@ -87,6 +87,7 @@ func initConfig() {
 	viper.BindEnv("clientcert")
 	viper.BindEnv("clinetkey")
 	viper.BindEnv("cacert")
+	viper.BindEnv("mcpToken")
 
 	if err := viper.ReadInConfig(); err == nil {
 		if err := viper.Unmarshal(&datastore.Config); err != nil {
@@ -113,5 +114,8 @@ func initConfig() {
 	}
 	if v := viper.GetString("cacert"); v != "" {
 		apiCACert = v
+	}
+	if v := viper.GetString("mcpToken"); v != "" {
+		datastore.Config.MCPToken = v
 	}
 }

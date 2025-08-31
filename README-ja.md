@@ -345,6 +345,78 @@ Global Flags:
       --serverKey string    API server private key
 ```
 
+## MCPサーバー ツールの仕様
+
+`mcp.go`で定義されているMCPサーバーのツールとそのパラメータについて説明します。
+
+### `search_log`
+
+TwLogEyeからログを検索します。
+
+- **パラメータ:**
+  - `start` (string): 検索を開始する日時 (例: `2025/08/30 11:00:00`)。指定しない場合は `1970/01/01 00:00:00` になります。
+  - `end` (string): 検索を終了する日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
+  - `type` (string): ログの種別 (`syslog`, `trap`, `netflow`, `winevent` のいずれか)。
+  - `filter` (string): ログをフィルタリングするための正規表現。
+
+### `search_notify`
+
+TwLogEyeから通知を検索します。
+
+- **パラメータ:**
+  - `start` (string): 検索を開始する日時 (例: `2025/08/30 11:00:00`)。指定しない場合は `1970/01/01 00:00:00` になります。
+  - `end` (string): 検索を終了する日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
+  - `level` (string): 通知レベルをフィルタリングするための正規表現 (例: `high|critical`)。指定しない場合はフィルタリングされません。レベル名には `info`, `low`, `medium`, `high`, `critical` などがあります。
+
+### `get_report`
+
+TwLogEyeからレポートを取得します。
+
+- **パラメータ:**
+  - `start` (string): レポートの開始日時 (例: `2025/08/30 11:00:00`)。指定しない場合は `1970/01/01 00:00:00` になります。
+  - `end` (string): レポートの終了日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
+  - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `anomaly` のいずれか)。`winevent` は Windowsイベントログを指します。
+
+### `get_sigma_evaluator_list`
+
+TwLogEyeからSigmaルール評価器のリストを取得します。
+
+- **パラメータ:** なし
+
+## `get_sigma_rule_id_list`
+
+TwLogEyeからSigmaルールのIDリストを取得します。
+
+- **パラメータ:** なし
+
+### `get_sigma_rule`
+
+TwLogEyeから指定したIDのSigmaルールを取得します。
+
+- **パラメータ:**
+  - `id` (string): 取得するSigmaルールのID。
+
+### `add_sigma_rule`
+
+TwLogEyeに新しいSigmaルールを追加します。
+
+- **パラメータ:**
+  - `rule` (string): YAML形式のSigmaルール文字列。
+
+### `delete_sigma_rule`
+
+TwLogEyeから指定したIDのSigmaルールを削除します。
+
+- **パラメータ:**
+  - `id` (string): 削除するSigmaルールのID。
+
+### `reload_sigma_rule`
+
+TwLogEyeにロードされているSigmaルールを再読み込みします。
+
+- **パラメータ:** なし
+
+
 ## 設定ファイル
 
 --config パラメータで指定するか、カレントディレクトリの ./twlogeye.yamlを設定ファイルとして使用します。YAML形式です。

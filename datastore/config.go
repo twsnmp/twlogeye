@@ -46,6 +46,10 @@ type ConfigEnt struct {
 	SigmaSkipError bool   `yaml:"sigmaSkipError"`
 	// SNMP MIB
 	MIBPath string `yaml:"mibPath"`
+	// MCP
+	MCPEndpoint string `yaml:"mcpEndpoint"`
+	MCPFrom     string `yaml:"mcpFrom"`
+	MCPToken    string `yaml:"mcpToken"`
 	// Debug
 	Debug bool `yaml:"debug"`
 }
