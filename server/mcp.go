@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/araddon/dateparse"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -513,6 +514,7 @@ func addGetSigmaRuleTool(s *server.MCPServer) {
 		id := request.GetString("id", "")
 		r, err := datastore.GetSigmaRuleFromDB(id)
 		if err != nil {
+			log.Printf("get sigma rule id=%s err=%v", id, err)
 			r = err.Error()
 		}
 		return mcp.NewToolResultText(r), nil
@@ -531,15 +533,26 @@ func addAddSigmaRuleTool(s *server.MCPServer) {
 		if rule == "" {
 			return mcp.NewToolResultText("rule is empty"), nil
 		}
+		if !strings.Contains(rule, "id: ") {
+			// Auto generate ID
+			i := uuid.New()
+			rule = "id: " + i.String() + "\n" + rule
+		}
 		id, err := auditor.ParseSigmaRule(rule)
+		if id == "" {
+			log.Printf("id not found rule=%s", rule)
+			return mcp.NewToolResultText("id not found"), nil
+		}
 		if err != nil {
+			log.Printf("parse sigma rule err=%v", err)
+			log.Printf("rule=%s", rule)
 			return mcp.NewToolResultText(err.Error()), nil
 		}
 		err = datastore.AddSigmaRuleToDB(id, rule)
 		if err != nil {
 			return mcp.NewToolResultText(err.Error()), nil
 		}
-		return mcp.NewToolResultText("add sigma rule id=%s" + id), nil
+		return mcp.NewToolResultText("add sigma rule id=" + id), nil
 	})
 }
 

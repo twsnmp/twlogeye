@@ -113,7 +113,7 @@ func AddSigmaRuleToDB(id, rule string) error {
 func GetSigmaRuleFromDB(id string) (string, error) {
 	r := ""
 	err := db.View(func(txn *badger.Txn) error {
-		if item, err := txn.Get([]byte("sigma:rulte:" + id)); err == nil {
+		if item, err := txn.Get([]byte("sigma:rule:" + id)); err == nil {
 			item.Value(func(v []byte) error {
 				r = string(v)
 				return nil
