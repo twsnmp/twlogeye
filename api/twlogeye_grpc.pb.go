@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	TWLogEyeService_Stop_FullMethodName                  = "/twlogeye.TWLogEyeService/Stop"
 	TWLogEyeService_Reload_FullMethodName                = "/twlogeye.TWLogEyeService/Reload"
+	TWLogEyeService_ClearDB_FullMethodName               = "/twlogeye.TWLogEyeService/ClearDB"
 	TWLogEyeService_WatchNotify_FullMethodName           = "/twlogeye.TWLogEyeService/WatchNotify"
 	TWLogEyeService_SearchNotify_FullMethodName          = "/twlogeye.TWLogEyeService/SearchNotify"
 	TWLogEyeService_SearchLog_FullMethodName             = "/twlogeye.TWLogEyeService/SearchLog"
@@ -40,6 +41,8 @@ type TWLogEyeServiceClient interface {
 	Stop(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ControlResponse, error)
 	// Reload sigma rules
 	Reload(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ControlResponse, error)
+	// ClearDB
+	ClearDB(ctx context.Context, in *ClearRequest, opts ...grpc.CallOption) (*ControlResponse, error)
 	// Watch Notify
 	WatchNotify(ctx context.Context, in *Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[NotifyResponse], error)
 	// Search Notify
@@ -82,6 +85,16 @@ func (c *tWLogEyeServiceClient) Reload(ctx context.Context, in *Empty, opts ...g
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ControlResponse)
 	err := c.cc.Invoke(ctx, TWLogEyeService_Reload_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tWLogEyeServiceClient) ClearDB(ctx context.Context, in *ClearRequest, opts ...grpc.CallOption) (*ControlResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ControlResponse)
+	err := c.cc.Invoke(ctx, TWLogEyeService_ClearDB_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -267,6 +280,8 @@ type TWLogEyeServiceServer interface {
 	Stop(context.Context, *Empty) (*ControlResponse, error)
 	// Reload sigma rules
 	Reload(context.Context, *Empty) (*ControlResponse, error)
+	// ClearDB
+	ClearDB(context.Context, *ClearRequest) (*ControlResponse, error)
 	// Watch Notify
 	WatchNotify(*Empty, grpc.ServerStreamingServer[NotifyResponse]) error
 	// Search Notify
@@ -300,6 +315,9 @@ func (UnimplementedTWLogEyeServiceServer) Stop(context.Context, *Empty) (*Contro
 }
 func (UnimplementedTWLogEyeServiceServer) Reload(context.Context, *Empty) (*ControlResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Reload not implemented")
+}
+func (UnimplementedTWLogEyeServiceServer) ClearDB(context.Context, *ClearRequest) (*ControlResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClearDB not implemented")
 }
 func (UnimplementedTWLogEyeServiceServer) WatchNotify(*Empty, grpc.ServerStreamingServer[NotifyResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method WatchNotify not implemented")
@@ -381,6 +399,24 @@ func _TWLogEyeService_Reload_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TWLogEyeServiceServer).Reload(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TWLogEyeService_ClearDB_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClearRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TWLogEyeServiceServer).ClearDB(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TWLogEyeService_ClearDB_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TWLogEyeServiceServer).ClearDB(ctx, req.(*ClearRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -498,6 +534,10 @@ var TWLogEyeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Reload",
 			Handler:    _TWLogEyeService_Reload_Handler,
+		},
+		{
+			MethodName: "ClearDB",
+			Handler:    _TWLogEyeService_ClearDB_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

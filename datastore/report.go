@@ -51,6 +51,14 @@ func GetServiceName(prot string, port int) (string, bool) {
 	return k, false
 }
 
+func ClearReport(t string) {
+	prefix := "report:"
+	if t != "" && t != "all" {
+		prefix += t
+	}
+	db.DropPrefix([]byte(prefix))
+}
+
 type SyslogEnt struct {
 	Time int64
 	Log  map[string]any

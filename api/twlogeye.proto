@@ -9,6 +9,8 @@ service TWLogEyeService {
 	rpc Stop (Empty) returns (ControlResponse); 
 	// Reload sigma rules
 	rpc Reload (Empty) returns (ControlResponse); 
+  // ClearDB
+	rpc ClearDB (ClearRequest) returns (ControlResponse);
 	// Watch Notify
 	rpc WatchNotify (Empty) returns (stream NotifyResponse);
 	// Search Notify
@@ -177,6 +179,11 @@ message MonitorReportEnt {
   int64 bytes = 7;
   double db_speed = 8;
   int64 db_size = 9;
+}
+
+message ClearRequest {
+	string type = 1;
+	string subtype = 2;
 }
 
 /*

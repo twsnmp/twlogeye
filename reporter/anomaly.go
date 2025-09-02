@@ -33,6 +33,7 @@ var trapAnomaly anomalyCheckDataEnt
 var netflowAnomaly anomalyCheckDataEnt
 var wineventAnomaly anomalyCheckDataEnt
 var monitorAnomaly anomalyCheckDataEnt
+var clearAnomalyDataCh = make(chan bool)
 
 func startAnomaly(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start anomaly reporter")
@@ -43,6 +44,8 @@ func startAnomaly(ctx context.Context, wg *sync.WaitGroup) {
 		case <-ctx.Done():
 			log.Printf("stop anomaly reporter")
 			return
+		case <-clearAnomalyDataCh:
+			loadReportData()
 		case a := <-anomalyCh:
 			switch a.Type {
 			case "syslog":
@@ -70,25 +73,39 @@ func startAnomaly(ctx context.Context, wg *sync.WaitGroup) {
 	}
 }
 
+func ClearAnomalyData() {
+	clearAnomalyDataCh <- true
+}
+
 func loadReportData() {
+	syslogAnomaly = anomalyCheckDataEnt{}
 	datastore.ForEachSyslogReport(0, time.Now().UnixNano(), func(r *datastore.SyslogReportEnt) bool {
 		syslogAnomaly.Times = append(syslogAnomaly.Times, r.Time)
 		syslogAnomaly.Vectors = append(syslogAnomaly.Vectors, syslogReportToVector(r))
 		return true
 	})
+	trapAnomaly = anomalyCheckDataEnt{}
 	datastore.ForEachTrapReport(0, time.Now().UnixNano(), func(r *datastore.TrapReportEnt) bool {
 		trapAnomaly.Times = append(trapAnomaly.Times, r.Time)
 		trapAnomaly.Vectors = append(trapAnomaly.Vectors, trapReportToVector(r))
 		return true
 	})
+	netflowAnomaly = anomalyCheckDataEnt{}
 	datastore.ForEachNetflowReport(0, time.Now().UnixNano(), func(r *datastore.NetflowReportEnt) bool {
 		netflowAnomaly.Times = append(netflowAnomaly.Times, r.Time)
 		netflowAnomaly.Vectors = append(netflowAnomaly.Vectors, netflowReportToVector(r))
 		return true
 	})
+	wineventAnomaly = anomalyCheckDataEnt{}
 	datastore.ForEachWindowsEventReport(0, time.Now().UnixNano(), func(r *datastore.WindowsEventReportEnt) bool {
 		wineventAnomaly.Times = append(wineventAnomaly.Times, r.Time)
 		wineventAnomaly.Vectors = append(wineventAnomaly.Vectors, wineventReportToVector(r))
+		return true
+	})
+	monitorAnomaly = anomalyCheckDataEnt{}
+	datastore.ForEachMonitorReport(0, time.Now().UnixNano(), func(r *datastore.MonitorReportEnt) bool {
+		monitorAnomaly.Times = append(monitorAnomaly.Times, r.Time)
+		monitorAnomaly.Vectors = append(monitorAnomaly.Vectors, monitorReportToVector(r))
 		return true
 	})
 }

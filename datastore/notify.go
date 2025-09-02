@@ -10,6 +10,10 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
+func ClearNotify() {
+	db.DropPrefix([]byte("notify:"))
+}
+
 type NotifyEnt struct {
 	// Log
 	Time int64

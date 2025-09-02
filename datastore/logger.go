@@ -36,6 +36,23 @@ func (t LogType) String() string {
 	return "unknown"
 }
 
+func ClearLog(t string) {
+	switch t {
+	case "syslog":
+	case "netflow":
+	case "trap":
+	case "windows":
+	case "all":
+		db.DropPrefix([]byte("syslog:"))
+		db.DropPrefix([]byte("trap:"))
+		db.DropPrefix([]byte("netflow:"))
+		db.DropPrefix([]byte("windows:"))
+	default:
+		return
+	}
+	db.DropPrefix([]byte(t + ":"))
+}
+
 type LogEnt struct {
 	Time int64
 	Type LogType

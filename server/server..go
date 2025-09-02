@@ -16,6 +16,7 @@ import (
 	"github.com/twsnmp/twlogeye/api"
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
+	"github.com/twsnmp/twlogeye/reporter"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
@@ -114,6 +115,28 @@ func (s *apiServer) Reload(ctx context.Context, req *api.Empty) (*api.ControlRes
 	return &api.ControlResponse{
 		Ok:      true,
 		Message: "twLogEye reloading",
+	}, nil
+}
+
+func (s *apiServer) ClearDB(ctx context.Context, req *api.ClearRequest) (*api.ControlResponse, error) {
+	st := time.Now()
+	t := req.GetType()
+	sub := req.GetSubtype()
+	switch t {
+	case "logs":
+		datastore.ClearLog(sub)
+	case "notify":
+		datastore.ClearNotify()
+	case "report":
+		datastore.ClearReport(sub)
+		if sub == "anomaly" {
+			reporter.ClearAnomalyData()
+		}
+	}
+	log.Printf("clear db %s %s dur=%v", t, sub, time.Since(st))
+	return &api.ControlResponse{
+		Ok:      true,
+		Message: fmt.Sprintf("twlogeye clear %s %s", t, sub),
 	}, nil
 }
 
