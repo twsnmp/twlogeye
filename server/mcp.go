@@ -274,7 +274,7 @@ func addGetReportTool(s *server.MCPServer) {
 			mcp.Description(`end date and time to get report. ex. 2025/08/30 11:00:00 empty is now.`),
 		),
 		mcp.WithString("type",
-			mcp.Description(`type of report. type can be "syslog","trap","netflow","winevent","anomaly"
+			mcp.Description(`type of report. type can be "syslog","trap","netflow","winevent","anomaly","monitor"
 "winevent" is windows event log`),
 		),
 	)
@@ -292,6 +292,8 @@ func addGetReportTool(s *server.MCPServer) {
 			r = getWindowsEventReport(st, et)
 		case "anomaly":
 			r = getAnomalyReport(st, et)
+		case "monitor":
+			r = getMonitorReport(st, et)
 		default:
 			r = getSyslogReport(st, et)
 		}
@@ -459,6 +461,42 @@ func getAnomalyReport(st, et int64) string {
 				Score:   r.Score,
 				Max:     r.Max,
 				MaxTime: time.Unix(0, r.MaxTime).Format(time.RFC3339),
+			})
+		return true
+	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
+type mcpMonitorReportEnt struct {
+	Time    string
+	CPU     float64
+	Memory  float64
+	Load    float64
+	Disk    float64
+	Net     float64
+	Bytes   int64
+	DBSpeed float64
+	DBSize  int64
+}
+
+func getMonitorReport(st, et int64) string {
+	list := []mcpMonitorReportEnt{}
+	datastore.ForEachMonitorReport(st, et, func(r *datastore.MonitorReportEnt) bool {
+		list = append(list,
+			mcpMonitorReportEnt{
+				Time:    time.Unix(0, r.Time).Format(time.RFC3339),
+				CPU:     r.CPU,
+				Memory:  r.Memory,
+				Load:    r.Load,
+				Disk:    r.Disk,
+				Net:     r.Net,
+				Bytes:   r.Bytes,
+				DBSpeed: r.DBSpeed,
+				DBSize:  r.DBSize,
 			})
 		return true
 	})
