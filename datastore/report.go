@@ -349,7 +349,6 @@ type AnomalyReportEnt struct {
 }
 
 func SaveAnomalyReport(r *AnomalyReportEnt) {
-	st := time.Now()
 	db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("report:anomaly:%016x", r.Time)
 		if v, err := json.Marshal(r); err == nil {
@@ -362,7 +361,6 @@ func SaveAnomalyReport(r *AnomalyReportEnt) {
 		}
 		return nil
 	})
-	log.Printf("save aomaly report dur=%v", time.Since(st))
 }
 
 func ForEachAnomalyReport(st, et int64, callBack func(r *AnomalyReportEnt) bool) {
@@ -382,6 +380,64 @@ func ForEachAnomalyReport(st, et int64, callBack func(r *AnomalyReportEnt) bool)
 						break
 					}
 					var r AnomalyReportEnt
+					if err := item.Value(func(v []byte) error {
+						return json.Unmarshal(v, &r)
+					}); err == nil {
+						if !callBack(&r) {
+							break
+						}
+					}
+				}
+			}
+		}
+		return nil
+	})
+}
+
+type MonitorReportEnt struct {
+	Time    int64
+	CPU     float64
+	Memory  float64
+	Load    float64
+	Disk    float64
+	Net     float64
+	Bytes   int64
+	DBSpeed float64
+	DBSize  int64
+}
+
+func SaveMonitorReport(r *MonitorReportEnt) {
+	db.Update(func(txn *badger.Txn) error {
+		k := fmt.Sprintf("report:monitor:%016x", r.Time)
+		if v, err := json.Marshal(r); err == nil {
+			e := badger.NewEntry([]byte(k), []byte(v)).WithTTL(time.Hour * 24 * time.Duration(Config.ReportRetention))
+			if err := txn.SetEntry(e); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+		return nil
+	})
+}
+
+func ForEachMonitorReport(st, et int64, callBack func(r *MonitorReportEnt) bool) {
+	if et == 0 {
+		et = time.Now().UnixNano()
+	}
+	db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		for it.Seek([]byte(fmt.Sprintf("report:monitor:%016x", st))); it.ValidForPrefix([]byte("report:monitor:")); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			a := strings.SplitN(string(k), ":", 3)
+			if len(a) == 3 {
+				if t, err := strconv.ParseInt(a[2], 16, 64); err == nil {
+					if t > et {
+						break
+					}
+					var r MonitorReportEnt
 					if err := item.Value(func(v []byte) error {
 						return json.Unmarshal(v, &r)
 					}); err == nil {

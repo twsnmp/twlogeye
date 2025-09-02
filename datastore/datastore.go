@@ -31,3 +31,11 @@ func CloseDB() {
 		db.Close()
 	}
 }
+
+func GetDBSize() int64 {
+	if db == nil {
+		return 0
+	}
+	lsm, dbs := db.Size()
+	return lsm + dbs
+}

@@ -50,6 +50,8 @@ var reportCmd = &cobra.Command{
 			getWindowsEventReport(st, et)
 		case "anomaly":
 			getAnomalyReport(st, et)
+		case "monitor":
+			getMonitorReport(st, et)
 		default:
 			getSyslogReport(st, et)
 		}
@@ -226,7 +228,7 @@ func getAnomalyReport(st, et int64) {
 	client := getClient()
 	s, err := client.GetAnomalyReport(context.Background(), &api.ReportRequest{Start: st, End: et})
 	if err != nil {
-		log.Fatalf("get trap report err=%v", err)
+		log.Fatalf("get anomaly report err=%v", err)
 	}
 	for {
 		r, err := s.Recv()
@@ -234,9 +236,28 @@ func getAnomalyReport(st, et int64) {
 			break
 		}
 		if err != nil {
-			log.Fatalf("get trap report err=%v", err)
+			log.Fatalf("get anomary report err=%v", err)
 		}
 		fmt.Printf("%s anomaly type=%s score=%.2f max=%.2f at %s\n",
 			getReportTimeStr(r.GetTime()), r.GetType(), r.GetScore(), r.GetMax(), getReportTimeStr(r.GetMaxTime()))
+	}
+}
+
+func getMonitorReport(st, et int64) {
+	client := getClient()
+	s, err := client.GetMonitorReport(context.Background(), &api.ReportRequest{Start: st, End: et})
+	if err != nil {
+		log.Fatalf("get monitor report err=%v", err)
+	}
+	for {
+		r, err := s.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			log.Fatalf("get monitor report err=%v", err)
+		}
+		fmt.Printf("%s monitor cpu=%.2f%% mem=%.2f%% load=%.2f disk=%.2f%% net=%.2fBPS dbspeed=%.2fBPS dbsize=%d\n",
+			getReportTimeStr(r.GetTime()), r.GetCpu(), r.GetMemory(), r.GetLoad(), r.GetDisk(), r.GetNet(), r.GetDbSpeed(), r.GetDbSize())
 	}
 }

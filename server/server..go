@@ -369,3 +369,25 @@ func (s *apiServer) GetAnomalyReport(req *api.ReportRequest, stream api.TWLogEye
 	})
 	return nil
 }
+
+func (s *apiServer) GetMonitorReport(req *api.ReportRequest, stream api.TWLogEyeService_GetMonitorReportServer) error {
+	datastore.ForEachMonitorReport(req.GetStart(), req.GetEnd(), func(l *datastore.MonitorReportEnt) bool {
+		r := &api.MonitorReportEnt{
+			Time:    l.Time,
+			Cpu:     l.CPU,
+			Memory:  l.Memory,
+			Load:    l.Load,
+			Disk:    l.Disk,
+			Net:     l.Net,
+			Bytes:   l.Bytes,
+			DbSpeed: l.DBSpeed,
+			DbSize:  l.DBSize,
+		}
+		if err := stream.Send(r); err != nil {
+			log.Printf("api get monitor report err=%v", err)
+			return false
+		}
+		return true
+	})
+	return nil
+}

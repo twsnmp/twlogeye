@@ -25,6 +25,8 @@ service TWLogEyeService {
 	rpc GetWindowsEventReport (ReportRequest) returns (stream WindowsEventReportEnt);
   // Get Anomaly Report
 	rpc GetAnomalyReport (ReportRequest) returns (stream AnomalyReportEnt);
+  // Get Monitor Report
+	rpc GetMonitorReport (ReportRequest) returns (stream MonitorReportEnt);
 }
 
 message NofifyRequest {
@@ -163,6 +165,18 @@ message AnomalyReportEnt {
   double score = 3;
   double max = 4;
   int64 max_time = 5;
+}
+
+message MonitorReportEnt {
+  int64 time = 1;
+  double cpu = 2;
+  double memory = 3;
+  double load = 4;
+  double disk = 5;
+  double net = 6;
+  int64 bytes = 7;
+  double db_speed = 8;
+  int64 db_size = 9;
 }
 
 /*

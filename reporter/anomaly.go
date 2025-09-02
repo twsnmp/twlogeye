@@ -32,6 +32,7 @@ var syslogAnomaly anomalyCheckDataEnt
 var trapAnomaly anomalyCheckDataEnt
 var netflowAnomaly anomalyCheckDataEnt
 var wineventAnomaly anomalyCheckDataEnt
+var monitorAnomaly anomalyCheckDataEnt
 
 func startAnomaly(ctx context.Context, wg *sync.WaitGroup) {
 	log.Printf("start anomaly reporter")
@@ -60,6 +61,10 @@ func startAnomaly(ctx context.Context, wg *sync.WaitGroup) {
 				wineventAnomaly.Times = append(wineventAnomaly.Times, a.Time)
 				wineventAnomaly.Vectors = append(wineventAnomaly.Vectors, a.Vector)
 				calcAnomalyScore("winevent", &wineventAnomaly)
+			case "monitor":
+				monitorAnomaly.Times = append(monitorAnomaly.Times, a.Time)
+				monitorAnomaly.Vectors = append(monitorAnomaly.Vectors, a.Vector)
+				calcAnomalyScore("monitor", &monitorAnomaly)
 			}
 		}
 	}
@@ -138,9 +143,23 @@ func wineventReportToVector(r *datastore.WindowsEventReportEnt) []float64 {
 	}
 }
 
+func monitorReportToVector(r *datastore.MonitorReportEnt) []float64 {
+	t := time.Unix(0, r.Time)
+	return []float64{
+		float64(t.Hour()),
+		float64(t.Weekday()),
+		float64(r.CPU),
+		float64(r.Memory),
+		float64(r.Load),
+		float64(r.Net),
+		float64(r.Disk),
+		float64(r.DBSpeed),
+	}
+}
+
 func calcAnomalyScore(t string, a *anomalyCheckDataEnt) {
 	a.Scores = []float64{}
-	if len(a.Times) < 2 {
+	if len(a.Times) < 10 {
 		return
 	}
 	subSamplingSize := 256
@@ -168,7 +187,6 @@ func calcAnomalyScore(t string, a *anomalyCheckDataEnt) {
 	}
 	diff := max - min
 	if diff == 0 {
-		log.Println("calcAnomalyScore diff=0")
 		// All data is  same not anomaly
 		datastore.SaveAnomalyReport(&datastore.AnomalyReportEnt{
 			Time:    time.Now().UnixNano(),

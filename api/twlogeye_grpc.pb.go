@@ -29,6 +29,7 @@ const (
 	TWLogEyeService_GetNetflowReport_FullMethodName      = "/twlogeye.TWLogEyeService/GetNetflowReport"
 	TWLogEyeService_GetWindowsEventReport_FullMethodName = "/twlogeye.TWLogEyeService/GetWindowsEventReport"
 	TWLogEyeService_GetAnomalyReport_FullMethodName      = "/twlogeye.TWLogEyeService/GetAnomalyReport"
+	TWLogEyeService_GetMonitorReport_FullMethodName      = "/twlogeye.TWLogEyeService/GetMonitorReport"
 )
 
 // TWLogEyeServiceClient is the client API for TWLogEyeService service.
@@ -55,6 +56,8 @@ type TWLogEyeServiceClient interface {
 	GetWindowsEventReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[WindowsEventReportEnt], error)
 	// Get Anomaly Report
 	GetAnomalyReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AnomalyReportEnt], error)
+	// Get Monitor Report
+	GetMonitorReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MonitorReportEnt], error)
 }
 
 type tWLogEyeServiceClient struct {
@@ -237,6 +240,25 @@ func (c *tWLogEyeServiceClient) GetAnomalyReport(ctx context.Context, in *Report
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type TWLogEyeService_GetAnomalyReportClient = grpc.ServerStreamingClient[AnomalyReportEnt]
 
+func (c *tWLogEyeServiceClient) GetMonitorReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MonitorReportEnt], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[8], TWLogEyeService_GetMonitorReport_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[ReportRequest, MonitorReportEnt]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TWLogEyeService_GetMonitorReportClient = grpc.ServerStreamingClient[MonitorReportEnt]
+
 // TWLogEyeServiceServer is the server API for TWLogEyeService service.
 // All implementations must embed UnimplementedTWLogEyeServiceServer
 // for forward compatibility.
@@ -261,6 +283,8 @@ type TWLogEyeServiceServer interface {
 	GetWindowsEventReport(*ReportRequest, grpc.ServerStreamingServer[WindowsEventReportEnt]) error
 	// Get Anomaly Report
 	GetAnomalyReport(*ReportRequest, grpc.ServerStreamingServer[AnomalyReportEnt]) error
+	// Get Monitor Report
+	GetMonitorReport(*ReportRequest, grpc.ServerStreamingServer[MonitorReportEnt]) error
 	mustEmbedUnimplementedTWLogEyeServiceServer()
 }
 
@@ -300,6 +324,9 @@ func (UnimplementedTWLogEyeServiceServer) GetWindowsEventReport(*ReportRequest, 
 }
 func (UnimplementedTWLogEyeServiceServer) GetAnomalyReport(*ReportRequest, grpc.ServerStreamingServer[AnomalyReportEnt]) error {
 	return status.Errorf(codes.Unimplemented, "method GetAnomalyReport not implemented")
+}
+func (UnimplementedTWLogEyeServiceServer) GetMonitorReport(*ReportRequest, grpc.ServerStreamingServer[MonitorReportEnt]) error {
+	return status.Errorf(codes.Unimplemented, "method GetMonitorReport not implemented")
 }
 func (UnimplementedTWLogEyeServiceServer) mustEmbedUnimplementedTWLogEyeServiceServer() {}
 func (UnimplementedTWLogEyeServiceServer) testEmbeddedByValue()                         {}
@@ -446,6 +473,17 @@ func _TWLogEyeService_GetAnomalyReport_Handler(srv interface{}, stream grpc.Serv
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type TWLogEyeService_GetAnomalyReportServer = grpc.ServerStreamingServer[AnomalyReportEnt]
 
+func _TWLogEyeService_GetMonitorReport_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ReportRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TWLogEyeServiceServer).GetMonitorReport(m, &grpc.GenericServerStream[ReportRequest, MonitorReportEnt]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TWLogEyeService_GetMonitorReportServer = grpc.ServerStreamingServer[MonitorReportEnt]
+
 // TWLogEyeService_ServiceDesc is the grpc.ServiceDesc for TWLogEyeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -501,6 +539,11 @@ var TWLogEyeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "GetAnomalyReport",
 			Handler:       _TWLogEyeService_GetAnomalyReport_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetMonitorReport",
+			Handler:       _TWLogEyeService_GetMonitorReport_Handler,
 			ServerStreams: true,
 		},
 	},

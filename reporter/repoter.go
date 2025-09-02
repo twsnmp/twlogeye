@@ -27,6 +27,8 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 	go startWindowsEvent(ctx, wg)
 	wg.Add(1)
 	go startAnomaly(ctx, wg)
+	wg.Add(1)
+	go startMonitor(ctx, wg)
 }
 
 func getIntervalTime() int {
