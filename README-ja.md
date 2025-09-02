@@ -51,9 +51,10 @@ Winddowsは、リリースのzipファイルをダウンロードするかscoop�
 helpコマンドで確認できます。
 
 ```terminal
-Eye-like log server to monitor threats in logs with signa rules
+Eye-like log server to monitor threats in logs with sigma rules
 Supported logs are
 - syslog
+- SNMP trap
 - NetFlow/IPFIX
 - Windows Event Log
 You can find sigma rule here.
@@ -63,12 +64,14 @@ Usage:
   twlogeye [command]
 
 Available Commands:
+  clear       Clear DB of twlogeye
   completion  Generate the autocompletion script for the specified shell
   gencert     Generate TLS private key and cert
   help        Help about any command
   log         Search log
-  notify      Serach notify
+  notify      Search notify
   reload      Reload rules
+  report      Get report
   sigma       Check sigma rules (list|stat|logsrc|field|check|test)
   start       Start twlogeye
   stop        Stop twlogeye
@@ -102,17 +105,25 @@ Usage:
   twlogeye start [flags]
 
 Flags:
+      --anomalyReportThreshold float   anomaly report threshold
+  -d, --dbPath string                  DB Path default: memory
       --debug                          debug mode
       --grokDef string                 GROK define file
       --grokPat string                 GROK patterns
   -h, --help                           help for start
       --keyValParse                    Splunk Key value parse
-  -l, --logPath string                 Log DB Path default: memory
+  -l, --logPath string                 Log DB Path default: memory old option
       --logRetention int               log retention(hours) (default 48)
+      --mcpEndpoint string             MCP server endpoint
+      --mcpFrom string                 MCP server from ip address list
+      --mcpToekn string                MCP server token
       --mibPath string                 SNMP Ext MIB Path
       --namedCaptures string           Named capture defs path
       --netflowPort int                netflow port 0=disable
-      --notifyRetention int            notify retention(days) (default 30)
+      --notifyRetention int            notify retention(days) (default 7)
+      --reportInterval string          report interval (day,hour,minute) (default "hour")
+      --reportRetention int            report retention(days) (default 7)
+      --reportTopN int                 report top n (default 10)
       --sigmaConfigs string            SIGMA config path
       --sigmaRules string              SIGMA rule path
       --sigmaSkipError                 Skip sigma rule error
@@ -123,6 +134,7 @@ Flags:
       --trapCommunity string           SNMP TRAP Community
       --trapDst string                 SNMP TRAP dst
       --trapPort int                   SNMP TRAP recive port 0=disable
+      --webhookDst string              Webhook dst URL
       --winAuth string                 Windows eventlog auth
       --winEventLogChannel string      Windows eventlog channel
   -i, --winEventLogCheckInterval int   Windows evnetlog check interval
@@ -228,6 +240,36 @@ Global Flags:
       --serverKey string    API server private key
 ```
 
+#### report コマンド
+
+レポートを表示するコマンドです。
+
+```
+$twlogeye help report
+Get report via api
+
+Usage:
+  twlogeye report [flags]
+
+Flags:
+      --end string          end date and time
+  -h, --help                help for report
+      --noList              report summary only
+      --reportType string   report type
+      --start string        start date and time
+
+Global Flags:
+  -p, --apiPort int         API Server port (default 8081)
+      --apiServer string    server IP or host name (default "localhost")
+      --caCert string       API CA cert
+      --clientCert string   API client cert
+      --clientKey string    API client private key
+      --config string       config file (default is ./twlogeye.yaml)
+      --serverCert string   API server cert
+      --serverKey string    API server private key
+```
+
+
 #### stop コマンド
 
 サーバーを停止するコマンドです。
@@ -273,6 +315,31 @@ Global Flags:
       --caCert string       API CA cert
       --clientCert string   API client cert
 
+```
+
+#### clear コマンド
+
+データベース上のログ、通知、レポートをクリアするコマンドです。
+
+```
+$twlogeye help clear
+Clear DB of twlogeye via api type is "logs","notify","report"
+
+Usage:
+  twlogeye clear <type> <subtype> [flags]
+
+Flags:
+  -h, --help   help for clear
+
+Global Flags:
+  -p, --apiPort int         API Server port (default 8081)
+      --apiServer string    server IP or host name (default "localhost")
+      --caCert string       API CA cert
+      --clientCert string   API client cert
+      --clientKey string    API client private key
+      --config string       config file (default is ./twlogeye.yaml)
+      --serverCert string   API server cert
+      --serverKey string    API server private key
 ```
 
 
@@ -375,7 +442,7 @@ TwLogEyeからレポートを取得します。
 - **パラメータ:**
   - `start` (string): レポートの開始日時 (例: `2025/08/30 11:00:00`)。指定しない場合は `1970/01/01 00:00:00` になります。
   - `end` (string): レポートの終了日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
-  - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `anomaly` のいずれか)。`winevent` は Windowsイベントログを指します。
+  - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `anomaly`,`monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
 
 ### `get_sigma_evaluator_list`
 

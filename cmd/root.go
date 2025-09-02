@@ -36,9 +36,10 @@ var apiClientKey string
 var rootCmd = &cobra.Command{
 	Use:   "twlogeye",
 	Short: "Eye-like log server to monitor threats in logs",
-	Long: `Eye-like log server to monitor threats in logs with signa rules
+	Long: `Eye-like log server to monitor threats in logs with sigma rules
 Supported logs are
 - syslog
+- SNMP trap
 - NetFlow/IPFIX
 - Windows Event Log
 You can find sigma rule here.

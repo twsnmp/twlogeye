@@ -26,9 +26,9 @@ import (
 
 // clearCmd represents the stop command
 var clearCmd = &cobra.Command{
-	Use:   "clear",
+	Use:   "clear <type> <subtype>",
 	Short: "Clear DB of twlogeye",
-	Long:  `Clear DB of twlogeye via api`,
+	Long:  `Clear DB of twlogeye via api type is "logs","notify","report"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		switch len(args) {
 		case 0:
