@@ -1,12 +1,28 @@
 # twlogeye
-Eye-like log server to monitor threats in logs
 
-Import sigma rules.
+[日本語のREADME](README-ja.md)
+
+twlogeye is an AI-native log server.
+
+SIGMA Rules
 
 https://github.com/SigmaHQ/sigma
 
+can be directly loaded for threat detection.
+It supports MCP servers and assists AI in log analysis.
+Notifications can be sent to AI-enabled automation tools via webhooks.
+Machine learning enables anomaly detection from logs.
 
-[日本語のREADME](README-ja.md)
+Supported log formats include:
+
+- syslog
+- SNMP Trap
+- Netflow
+- Windows Event log (Windows environments only)
+
+
+Translated with DeepL.com (free version)
+
 
 ## Install
 

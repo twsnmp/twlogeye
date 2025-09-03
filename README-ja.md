@@ -1,12 +1,22 @@
 # twlogeye
-twlogeyeは目のようなログ監視サーバーです。
+
+twlogeyeはAIネイティブなログサーバーです。
 
 SIGMAルール
 
 https://github.com/SigmaHQ/sigma
 
-
 を直接読み込み脅威の検知をすることができます。
+MCPサーバーに対応しておりAIがログ分析することを助けます。
+WebhookによりAI対応の自動化ツールに通知することができます。
+機械学習によりログから異常を検知できます。
+
+対応しているログは
+
+- syslog
+- SNMP Trap
+- Netflow
+- Windows Event log (Windows環境のみ)
 
 
 ## Install
