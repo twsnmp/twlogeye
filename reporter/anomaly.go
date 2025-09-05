@@ -111,10 +111,7 @@ func loadReportData() {
 }
 
 func syslogReportToVector(r *datastore.SyslogReportEnt) []float64 {
-	t := time.Unix(0, r.Time)
 	return []float64{
-		float64(t.Hour()),
-		float64(t.Weekday()),
 		float64(r.Normal),
 		float64(r.Warn),
 		float64(r.Error),
@@ -122,21 +119,16 @@ func syslogReportToVector(r *datastore.SyslogReportEnt) []float64 {
 		float64(r.ErrPatterns),
 	}
 }
+
 func trapReportToVector(r *datastore.TrapReportEnt) []float64 {
-	t := time.Unix(0, r.Time)
 	return []float64{
-		float64(t.Hour()),
-		float64(t.Weekday()),
 		float64(r.Count),
 		float64(r.Types),
 	}
 }
 
 func netflowReportToVector(r *datastore.NetflowReportEnt) []float64 {
-	t := time.Unix(0, r.Time)
 	return []float64{
-		float64(t.Hour()),
-		float64(t.Weekday()),
 		float64(r.Packets),
 		float64(r.Bytes),
 		float64(r.MACs),
@@ -148,10 +140,7 @@ func netflowReportToVector(r *datastore.NetflowReportEnt) []float64 {
 }
 
 func wineventReportToVector(r *datastore.WindowsEventReportEnt) []float64 {
-	t := time.Unix(0, r.Time)
 	return []float64{
-		float64(t.Hour()),
-		float64(t.Weekday()),
 		float64(r.Normal),
 		float64(r.Warn),
 		float64(r.Error),
@@ -161,10 +150,7 @@ func wineventReportToVector(r *datastore.WindowsEventReportEnt) []float64 {
 }
 
 func monitorReportToVector(r *datastore.MonitorReportEnt) []float64 {
-	t := time.Unix(0, r.Time)
 	return []float64{
-		float64(t.Hour()),
-		float64(t.Weekday()),
 		float64(r.CPU),
 		float64(r.Memory),
 		float64(r.Load),
@@ -179,17 +165,18 @@ func calcAnomalyScore(t string, a *anomalyCheckDataEnt) {
 	if len(a.Times) < 10 {
 		return
 	}
+	vectors := getVectors(a)
 	subSamplingSize := 256
-	if len(a.Vectors) < subSamplingSize {
-		subSamplingSize = len(a.Vectors)
+	if len(vectors) < subSamplingSize {
+		subSamplingSize = len(vectors)
 	}
-	i, err := iforest.NewIForest(a.Vectors, 1000, subSamplingSize)
+	i, err := iforest.NewIForest(vectors, 1000, subSamplingSize)
 	if err != nil {
 		log.Printf("calcAnomalyScore err=%v", err)
 		return
 	}
-	r := make([]float64, len(a.Vectors))
-	for j, v := range a.Vectors {
+	r := make([]float64, len(vectors))
+	for j, v := range vectors {
 		r[j] = i.CalculateAnomalyScore(v)
 	}
 	max, err := stats.Max(r)
@@ -205,13 +192,6 @@ func calcAnomalyScore(t string, a *anomalyCheckDataEnt) {
 	diff := max - min
 	if diff == 0 {
 		// All data is  same not anomaly
-		datastore.SaveAnomalyReport(&datastore.AnomalyReportEnt{
-			Time:    time.Now().UnixNano(),
-			Type:    t,
-			Score:   50.0,
-			Max:     50.0,
-			MaxTime: time.Now().UnixNano(),
-		})
 		return
 	}
 	for i := range r {
@@ -228,33 +208,48 @@ func calcAnomalyScore(t string, a *anomalyCheckDataEnt) {
 		log.Printf("calcAnomalyScore err=%v", err)
 		return
 	}
-	maxScore := 0.0
-	maxTime := int64(0)
-	lastScore := 0.0
-	lastTime := int64(0)
+	list := []*datastore.AnomalyReportEnt{}
+	var e *datastore.AnomalyReportEnt
 	for j, v := range r {
-		score := ((10 * (float64(v) - mean) / sd) + 50)
-		a.Scores = append(a.Scores, score)
-		if score > maxScore {
-			maxScore = score
-			maxTime = a.Times[j]
+		e = &datastore.AnomalyReportEnt{
+			Time:  a.Times[j],
+			Score: ((10 * (float64(v) - mean) / sd) + 50),
 		}
-		lastScore = score
-		lastTime = a.Times[j]
+		list = append(list, e)
 	}
-	datastore.SaveAnomalyReport(&datastore.AnomalyReportEnt{
-		Time:    lastTime,
-		Type:    t,
-		Score:   lastScore,
-		Max:     maxScore,
-		MaxTime: maxTime,
-	})
-	if datastore.Config.AnomalyReportThreshold > 0 && datastore.Config.AnomalyReportThreshold < lastScore {
+	datastore.SaveAnomalyReport(t, list)
+	if e == nil || len(list) < 24 {
+		return
+	}
+	if (e.Time - list[0].Time) < (int64(datastore.Config.AnomalyNotifyDelay) * 3600 * 1000 * 1000 * 1000) {
+		return
+	}
+	if datastore.Config.AnomalyReportThreshold > 0 && datastore.Config.AnomalyReportThreshold < e.Score {
 		auditor.Audit(&datastore.LogEnt{
-			Time: lastTime,
+			Time: e.Time,
 			Type: datastore.AnomalyReport,
 			Src:  "anomaly:" + t,
-			Log:  fmt.Sprintf("%s reporter detect anomaly score=%.2f", t, lastScore),
+			Log:  fmt.Sprintf("%s reporter detect anomaly score=%.2f", t, e.Score),
 		})
 	}
+}
+
+func getVectors(a *anomalyCheckDataEnt) [][]float64 {
+	if !datastore.Config.AnomalyUseTimeData ||
+		a.Times[len(a.Times)-1]-a.Times[0] < 7*24*60*60*1000*1000*1000 ||
+		len(a.Times) != len(a.Vectors) {
+		return a.Vectors
+	}
+	r := [][]float64{}
+	for i, v := range a.Vectors {
+		t := time.Unix(0, a.Times[i])
+		if t.Weekday() == time.Sunday || t.Weekday() == time.Saturday {
+			v = append(v, float64(1))
+		} else {
+			v = append(v, float64(0))
+		}
+		v = append(v, float64(t.Hour()))
+		r = append(r, v)
+	}
+	return r
 }

@@ -16,7 +16,9 @@ WebhookによりAI対応の自動化ツールに通知することができま�
 - syslog
 - SNMP Trap
 - Netflow
-- Windows Event log (Windows環境のみ)
+- Windowsイベントログ (Windows環境のみ)
+
+です。
 
 
 ## Install
@@ -33,6 +35,10 @@ Linux/Mac OSではHomebrewでもインストールできます。
 $brew install twsnmp/tap/twlogeye
 ```
 
+Linux版のパッケージもリリースに用意してあります。
+https://github.com/twsnmp/twlogeye/releases
+
+
 Winddowsは、リリースのzipファイルをダウンロードするかscoopでインストールできます。
 
 
@@ -43,7 +49,7 @@ Winddowsは、リリースのzipファイルをダウンロードするかscoop�
 
 ## 基本的な使い方
 
-- ログを保存するディレクトリとSgmaルールを保存するディレクトリを作成
+- ログを保存するディレクトリとSgimaルールを保存するディレクトリを作成
 - 設定ファイルを作成
 - Sigmaルールをコピーまたは、作成
 - サーバーを開始
@@ -115,7 +121,9 @@ Usage:
   twlogeye start [flags]
 
 Flags:
+      --anomalyNotifyDelay int         Grace period for sending notifications when detecting anomalies (default 24)
       --anomalyReportThreshold float   anomaly report threshold
+      --anomayUseTime                  Include weekends and hours in the vector data for anomaly detection
   -d, --dbPath string                  DB Path default: memory
       --debug                          debug mode
       --grokDef string                 GROK define file
@@ -259,14 +267,13 @@ $twlogeye help report
 Get report via api
 
 Usage:
-  twlogeye report [flags]
+  twlogeye report <report type> [<anomaly type>] [flags]
 
 Flags:
-      --end string          end date and time
-  -h, --help                help for report
-      --noList              report summary only
-      --reportType string   report type
-      --start string        start date and time
+      --end string     end date and time
+  -h, --help           help for report
+      --noList         report summary only
+      --start string   start date and time
 
 Global Flags:
   -p, --apiPort int         API Server port (default 8081)
@@ -452,7 +459,16 @@ TwLogEyeからレポートを取得します。
 - **パラメータ:**
   - `start` (string): レポートの開始日時 (例: `2025/08/30 11:00:00`)。指定しない場合は `1970/01/01 00:00:00` になります。
   - `end` (string): レポートの終了日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
-  - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `anomaly`,`monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
+  - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
+
+### `get_anomaly_report`
+
+TwLogEyeから異常検知のレポートを取得します。
+
+- **パラメータ:**
+  - `start` (string): レポートの開始日時 (例: `2025/08/30 11:00:00`)。指定しない場合は `1970/01/01 00:00:00` になります。
+  - `end` (string): レポートの終了日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
+  - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
 
 ### `get_sigma_evaluator_list`
 
@@ -498,35 +514,79 @@ TwLogEyeにロードされているSigmaルールを再読み込みします。
 
 --config パラメータで指定するか、カレントディレクトリの ./twlogeye.yamlを設定ファイルとして使用します。YAML形式です。
 
-| キー | 説明 |
-| --- | --- |
-|logPath| Log DBのパス|
-|syslogUDPPort| syslog UDP 受信ポート|
-|syslogTCPPort| syslog TCP 受信ポート|
-|netflowPort| NetFlow 受信ポート|
-|snmpTrapPort|SNMP Trap 受信ポート|
-|winEventLogChannel|Windowsイベントログの監視チャネル|
-|winEventLogCheckInterval|Windowsイベントログの監視周期(秒単位)|
-|winEventLogCheckStart|Windowsイベントログの監視開始時間|
-|winRemote|Windowsイベントログを監視するリモートホスト|
-|winUser|Windowsイベントログを監視するリモートホストのユーザー|
-|winPassword|Windowsイベントログを監視するリモートホストのユーザーのパスワード|
-|winAuth|Windowsイベントログを監視するリモートホストへの認証方式| 
-|winSJIS|Windowsイベントログの文字コードがSHIF-JIS|
-|syslogDst| syslog通知の宛先|
-|trapDst|SNMP TRAP通知の宛先|
-|trapCommunity|SNMP TRAP通知のCommunity名|
-|logRetention|ログの保存時間|
-|notifyRetention|通知の保存日数|
-|grockPat|GROKパターン定義|
-|grokDef|GROK定義ファイルのパス|
-|namedCaptures|正規表現の定義ファイルパス|
-|keyValParse|Splunkのようなキーバリューの取得を行う|
-|sigmaRules|sigmaルールのパス|
-|sigmaConfigs|sigma設定のパス|
-|sigmaSkipError|Sigmaルール、設定の読み込みエラーを無視する|
-|mibPath|SNMP MIBのパス|
-|debug|デバックモード|
+
+`ConfigEnt`構造体の設定ファイルについて、日本語で各項目を説明します。
+
+---
+
+## 設定ファイル項目一覧
+
+### データベースとログのパス
+* **`dbPath`**: データベースファイルのパスを指定します。
+* **`logPath`**: ログファイルのパスを指定します。
+
+### 受信ポート設定
+* **`syslogUDPPort`**: Syslog (UDP) の受信ポート番号。
+* **`syslogTCPPort`**: Syslog (TCP) の受信ポート番号。
+* **`netFlowPort`**: NetFlow の受信ポート番号。
+* **`snmpTrapPort`**: SNMPトラップ の受信ポート番号。
+
+### Windowsイベントログ設定
+* **`winEventLogChannel`**: 監視するWindowsイベントログのチャンネル名（例: "System"、"Security"）。
+* **`winEventLogCheckInterval`**: イベントログのチェック間隔を秒単位で指定します。
+* **`winEventLogCheckStart`**: イベントログの監視を開始する位置を秒単位で指定します。
+* **`winRemote`**: Windowsログを取得するリモートホスト名またはIPアドレス。
+* **`winUser`**: リモートホストに接続するためのユーザー名。
+* **`winPassword`**: リモートホストに接続するためのパスワード。
+* **`winAuth`**: 認証方式を指定します。
+* **`winLogSJIS`**: WindowsログがShift_JIS形式の場合に`true`を設定します。
+
+### 転送先設定
+* **`syslogDst`**: Syslogの転送先ホストのリスト。
+* **`trapDst`**: SNMPトラップの転送先ホストのリスト。
+* **`webhookDst`**: Webhookの転送先URLのリスト。
+* **`trapCommunity`**: SNMPトラップで使用するコミュニティ名。
+
+### データ保持期間設定
+* **`logRetention`**: ログの保持期間を時間単位で指定します。
+* **`notifyRetention`**: 通知データの保持期間を日単位で指定します。
+* **`reportRetention`**: レポートの保持期間を日単位で指定します。
+
+### レポート設定
+* **`reportInterval`**: レポートを生成する間隔を`日,時間,分`の形式で指定します。
+* **`reportTopN`**: レポートで表示する上位N件の数を指定します。
+
+### 異常検知レポート設定
+* **`anomalyReportThreshold`**: 異常検知の閾値を浮動小数点数で指定します。
+* **`anomalyUseTimeData`**: 異常検知に曜日や時間帯のデータを使用するかどうかを`true`または`false`で指定します。
+* **`anomalyNotifyDelay`**: 異常検知時に通知を送信するまでの猶予期間を時間単位で指定します。
+
+### ログ解析 (GROK)
+* **`grokPat`**: GROKパターンを定義するファイルのパスのリスト。
+* **`grokDef`**: GROK定義ファイル（例: `grok-patterns`）のパス。
+
+### ログ解析 (Named capture)
+* **`namedCaptures`**: ログから特定の情報を抽出するための名前付きキャプチャ設定。
+
+### ログ解析 (Key/Value)
+* **`keyValParse`**: ログをKey/Value形式で解析するかどうかを`true`または`false`で指定します。
+
+### Sigmaルール設定
+* **`sigmaRules`**: Sigmaルールファイルのパス。
+* **`sigmaConfigs`**: Sigma設定ファイルのパス。
+* **`sigmaSkipError`**: Sigmaルールの処理中にエラーが発生した場合に、そのルールをスキップするかどうかを`true`または`false`で指定します。
+
+### SNMP MIB設定
+* **`mibPath`**: SNMP MIBファイルのパス。
+
+### MCP (Microsoft Cloud) 設定
+* **`mcpEndpoint`**: MCPのエンドポイントURL。
+* **`mcpFrom`**: MCPからの送信元アドレス。
+* **`mcpToken`**: MCPに接続するためのトークン。
+
+### デバッグ
+* **`debug`**: デバッグモードを有効にするかどうかを`true`または`false`で指定します。
+
 
 
 ## 環境変数

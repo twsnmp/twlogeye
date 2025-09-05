@@ -17,8 +17,11 @@ var trapReport *datastore.TrapReportEnt
 var trapTypeMap map[string]int
 
 func startTrap(ctx context.Context, wg *sync.WaitGroup) {
-	log.Printf("start trap reporter")
 	defer wg.Done()
+	if datastore.Config.SNMPTrapPort == 0 {
+		return
+	}
+	log.Printf("start trap reporter")
 	timer := time.NewTicker(time.Second * 1)
 	lastT := getIntervalTime()
 	trapReport = &datastore.TrapReportEnt{}

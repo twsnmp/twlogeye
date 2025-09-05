@@ -56,6 +56,7 @@ func makeMCPServer(cert, key string) (*server.StreamableHTTPServer, *echo.Echo) 
 	addSearchLogTool(s)
 	addSearchNotifyTool(s)
 	addGetReportTool(s)
+	addGetAnomalyReportTool(s)
 	addGetSigmaRuleEvaluatorListTool(s)
 	addReloadSigmaRuleTool(s)
 	addGetSigmaRuleIDListTool(s)
@@ -290,8 +291,6 @@ func addGetReportTool(s *server.MCPServer) {
 			r = getNetflowReport(st, et)
 		case "winevent":
 			r = getWindowsEventReport(st, et)
-		case "anomaly":
-			r = getAnomalyReport(st, et)
 		case "monitor":
 			r = getMonitorReport(st, et)
 		default:
@@ -444,23 +443,39 @@ func getWindowsEventReport(st, et int64) string {
 }
 
 type mcpAnomalyReportEnt struct {
-	Time    string
-	Type    string
-	Score   float64
-	Max     float64
-	MaxTime string
+	Time  string
+	Score float64
 }
 
-func getAnomalyReport(st, et int64) string {
+func addGetAnomalyReportTool(s *server.MCPServer) {
+	tool := mcp.NewTool("get_anomaly_report",
+		mcp.WithDescription("get anomaly report from TwLogEye"),
+		mcp.WithString("start",
+			mcp.Description(`start date and time to get report. ex. 2025/08/30 11:00:00. empty is 1970/01/01 00:00:00`),
+		),
+		mcp.WithString("end",
+			mcp.Description(`end date and time to get report. ex. 2025/08/30 11:00:00 empty is now.`),
+		),
+		mcp.WithString("type",
+			mcp.Description(`type of anomaly report. type can be "syslog","trap","netflow","winevent","monitor"
+"winevent" is windows event log`),
+		),
+	)
+	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		st := getTime(request.GetString("start", ""), 0)
+		et := getTime(request.GetString("end", ""), time.Now().UnixNano())
+		t := request.GetString("type", "syslog")
+		r := getAnomalyReport(t, st, et)
+		return mcp.NewToolResultText(r), nil
+	})
+}
+
+func getAnomalyReport(t string, st, et int64) string {
 	list := []mcpAnomalyReportEnt{}
-	datastore.ForEachAnomalyReport(st, et, func(r *datastore.AnomalyReportEnt) bool {
+	datastore.ForEachAnomalyReport(t, st, et, func(r *datastore.AnomalyReportEnt) bool {
 		list = append(list,
 			mcpAnomalyReportEnt{
-				Time:    time.Unix(0, r.Time).Format(time.RFC3339),
-				Type:    r.Type,
-				Score:   r.Score,
-				Max:     r.Max,
-				MaxTime: time.Unix(0, r.MaxTime).Format(time.RFC3339),
+				Score: r.Score,
 			})
 		return true
 	})

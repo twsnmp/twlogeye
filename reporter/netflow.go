@@ -31,8 +31,11 @@ var netflowProtocolMap map[string]int
 var netflowFumbleSrcMap map[string]int
 
 func startNetflow(ctx context.Context, wg *sync.WaitGroup) {
-	log.Printf("start netflow reporter")
 	defer wg.Done()
+	if datastore.Config.NetFlowPort == 0 {
+		return
+	}
+	log.Printf("start netflow reporter")
 	timer := time.NewTicker(time.Second * 1)
 	lastT := getIntervalTime()
 	netflowReport = &datastore.NetflowReportEnt{}

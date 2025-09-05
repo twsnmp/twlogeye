@@ -29,7 +29,7 @@ func startMonitor(ctx context.Context, wg *sync.WaitGroup) {
 			log.Printf("stop monitor reporter")
 			return
 		case <-timer.C:
-			t := time.Now().Unix() / 60
+			t := time.Now().Unix() / 300
 			if lastT != t {
 				lastT = t
 				saveMonitorReport()

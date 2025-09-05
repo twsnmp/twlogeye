@@ -33,6 +33,10 @@ type ConfigEnt struct {
 	ReportTopN int `yaml:"reportTopN"`
 	// Threshold for Anomaly Detection Report
 	AnomalyReportThreshold float64 `yaml:"anomalyReportThreshold"`
+	// Use hour and weekend data for anomaly detection
+	AnomalyUseTimeData bool `yaml:"anomalyUseTimeData"`
+	// Grace period for sending notifications when detecting anomalies
+	AnomalyNotifyDelay int `yaml:"anomalyNotifyDelay"`
 	// GROK
 	GrokPat []string `yaml:"grockPat"`
 	GrokDef string   `yaml:"grokDef"`

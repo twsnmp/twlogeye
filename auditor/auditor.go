@@ -366,7 +366,7 @@ func loadNamedCaptures() {
 	}
 	c, err := os.ReadFile(datastore.Config.NamedCaptures)
 	if err != nil {
-		log.Fatalf("laodNameCaptures err=%v", err)
+		log.Fatalf("load name captures err=%v", err)
 	}
 	for _, l := range strings.Split(string(c), "\n") {
 		namedCaptureRegList = append(namedCaptureRegList, regexp.MustCompile(l))

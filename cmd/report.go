@@ -27,21 +27,20 @@ import (
 	"github.com/twsnmp/twlogeye/api"
 )
 
-var reportType string
 var noList bool
 
 // reportCmd represents the report command
 var reportCmd = &cobra.Command{
-	Use:   "report",
+	Use:   "report <report type> [<anomaly type>]",
 	Short: "Get report",
 	Long:  `Get report via api`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 1 {
+			log.Fatalln("twlogeye report <report type>")
+		}
 		st := getTime(startTime, 0)
 		et := getTime(endTime, time.Now().UnixNano())
-		if len(args) > 0 && reportType == "" {
-			reportType = args[0]
-		}
-		switch reportType {
+		switch args[0] {
 		case "trap":
 			getTrapReport(st, et)
 		case "netflow":
@@ -49,7 +48,10 @@ var reportCmd = &cobra.Command{
 		case "winevent":
 			getWindowsEventReport(st, et)
 		case "anomaly":
-			getAnomalyReport(st, et)
+			if len(args) < 2 {
+				log.Fatalln("twlogeye report anomaly <type>")
+			}
+			getAnomalyReport(args[1], st, et)
 		case "monitor":
 			getMonitorReport(st, et)
 		default:
@@ -60,7 +62,6 @@ var reportCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(reportCmd)
-	reportCmd.Flags().StringVar(&reportType, "reportType", "", "report type ")
 	reportCmd.Flags().StringVar(&startTime, "start", "", "start date and time")
 	reportCmd.Flags().StringVar(&endTime, "end", "", "end date and time")
 	reportCmd.Flags().BoolVar(&noList, "noList", false, "report summary only")
@@ -224,9 +225,9 @@ func getWindowsEventReport(st, et int64) {
 	}
 }
 
-func getAnomalyReport(st, et int64) {
+func getAnomalyReport(t string, st, et int64) {
 	client := getClient()
-	s, err := client.GetAnomalyReport(context.Background(), &api.ReportRequest{Start: st, End: et})
+	s, err := client.GetAnomalyReport(context.Background(), &api.AnomalyReportRequest{Type: t, Start: st, End: et})
 	if err != nil {
 		log.Fatalf("get anomaly report err=%v", err)
 	}
@@ -238,8 +239,8 @@ func getAnomalyReport(st, et int64) {
 		if err != nil {
 			log.Fatalf("get anomary report err=%v", err)
 		}
-		fmt.Printf("%s anomaly type=%s score=%.2f max=%.2f at %s\n",
-			getReportTimeStr(r.GetTime()), r.GetType(), r.GetScore(), r.GetMax(), getReportTimeStr(r.GetMaxTime()))
+		fmt.Printf("%s anomaly type=%s score=%.2f\n",
+			getReportTimeStr(r.GetTime()), t, r.GetScore())
 	}
 }
 

@@ -18,8 +18,11 @@ var wineventTypeMap map[string]int
 var wineventTypeErrorMap map[string]int
 
 func startWindowsEvent(ctx context.Context, wg *sync.WaitGroup) {
-	log.Printf("start winevent reporter")
 	defer wg.Done()
+	if datastore.Config.WinEventLogCheckInterval == 0 || datastore.Config.WinEventLogChannel == "" {
+		return
+	}
+	log.Printf("start winevent reporter")
 	timer := time.NewTicker(time.Second * 1)
 	lastT := getIntervalTime()
 	wineventReport = &datastore.WindowsEventReportEnt{}

@@ -49,7 +49,8 @@ func ForEachSigmaConfig(callBack func(c string, d []byte)) {
 // ForEachSigmaRules : call back with sigma rule data
 func ForEachSigmaRules(callBack func(c []byte, path string)) {
 	if Config.SigmaRules == "" {
-		log.Fatalln("no sigma rule path")
+		log.Println("no sigma rule path")
+		return
 	}
 	if strings.HasPrefix(Config.SigmaRules, "embed:") {
 		p := path.Join("sigma", "rules", Config.SigmaRules[6:])

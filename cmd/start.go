@@ -73,6 +73,7 @@ func init() {
 	startCmd.Flags().IntVar(&datastore.Config.NotifyRetention, "notifyRetention", 7, "notify retention(days)")
 	startCmd.Flags().IntVar(&datastore.Config.ReportRetention, "reportRetention", 7, "report retention(days)")
 	startCmd.Flags().IntVar(&datastore.Config.ReportTopN, "reportTopN", 10, "report top n")
+	startCmd.Flags().IntVar(&datastore.Config.AnomalyNotifyDelay, "anomalyNotifyDelay", 24, "Grace period for sending notifications when detecting anomalies")
 	startCmd.Flags().Float64Var(&datastore.Config.AnomalyReportThreshold, "anomalyReportThreshold", 0.0, "anomaly report threshold")
 	startCmd.Flags().StringVar(&datastore.Config.ReportInterval, "reportInterval", "hour", "report interval (day,hour,minute)")
 	startCmd.Flags().StringVar(&syslogDst, "syslogDst", "", "syslog dst")
@@ -97,6 +98,7 @@ func init() {
 	startCmd.Flags().BoolVar(&datastore.Config.SigmaSkipError, "sigmaSkipError", false, "Skip sigma rule error")
 	startCmd.Flags().BoolVar(&datastore.Config.Debug, "debug", false, "debug mode")
 	startCmd.Flags().BoolVar(&datastore.Config.WinLogSJIS, "sjis", false, "Windows eventlog SHIT-JIS mode")
+	startCmd.Flags().BoolVar(&datastore.Config.AnomalyUseTimeData, "anomayUseTime", false, "Include weekends and hours in the vector data for anomaly detection")
 }
 
 func start() {

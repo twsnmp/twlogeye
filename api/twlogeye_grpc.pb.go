@@ -58,7 +58,7 @@ type TWLogEyeServiceClient interface {
 	// Get Windows Event Report
 	GetWindowsEventReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[WindowsEventReportEnt], error)
 	// Get Anomaly Report
-	GetAnomalyReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AnomalyReportEnt], error)
+	GetAnomalyReport(ctx context.Context, in *AnomalyReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AnomalyReportEnt], error)
 	// Get Monitor Report
 	GetMonitorReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MonitorReportEnt], error)
 }
@@ -234,13 +234,13 @@ func (c *tWLogEyeServiceClient) GetWindowsEventReport(ctx context.Context, in *R
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type TWLogEyeService_GetWindowsEventReportClient = grpc.ServerStreamingClient[WindowsEventReportEnt]
 
-func (c *tWLogEyeServiceClient) GetAnomalyReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AnomalyReportEnt], error) {
+func (c *tWLogEyeServiceClient) GetAnomalyReport(ctx context.Context, in *AnomalyReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AnomalyReportEnt], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[7], TWLogEyeService_GetAnomalyReport_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[ReportRequest, AnomalyReportEnt]{ClientStream: stream}
+	x := &grpc.GenericClientStream[AnomalyReportRequest, AnomalyReportEnt]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ type TWLogEyeServiceServer interface {
 	// Get Windows Event Report
 	GetWindowsEventReport(*ReportRequest, grpc.ServerStreamingServer[WindowsEventReportEnt]) error
 	// Get Anomaly Report
-	GetAnomalyReport(*ReportRequest, grpc.ServerStreamingServer[AnomalyReportEnt]) error
+	GetAnomalyReport(*AnomalyReportRequest, grpc.ServerStreamingServer[AnomalyReportEnt]) error
 	// Get Monitor Report
 	GetMonitorReport(*ReportRequest, grpc.ServerStreamingServer[MonitorReportEnt]) error
 	mustEmbedUnimplementedTWLogEyeServiceServer()
@@ -340,7 +340,7 @@ func (UnimplementedTWLogEyeServiceServer) GetNetflowReport(*ReportRequest, grpc.
 func (UnimplementedTWLogEyeServiceServer) GetWindowsEventReport(*ReportRequest, grpc.ServerStreamingServer[WindowsEventReportEnt]) error {
 	return status.Errorf(codes.Unimplemented, "method GetWindowsEventReport not implemented")
 }
-func (UnimplementedTWLogEyeServiceServer) GetAnomalyReport(*ReportRequest, grpc.ServerStreamingServer[AnomalyReportEnt]) error {
+func (UnimplementedTWLogEyeServiceServer) GetAnomalyReport(*AnomalyReportRequest, grpc.ServerStreamingServer[AnomalyReportEnt]) error {
 	return status.Errorf(codes.Unimplemented, "method GetAnomalyReport not implemented")
 }
 func (UnimplementedTWLogEyeServiceServer) GetMonitorReport(*ReportRequest, grpc.ServerStreamingServer[MonitorReportEnt]) error {
@@ -499,11 +499,11 @@ func _TWLogEyeService_GetWindowsEventReport_Handler(srv interface{}, stream grpc
 type TWLogEyeService_GetWindowsEventReportServer = grpc.ServerStreamingServer[WindowsEventReportEnt]
 
 func _TWLogEyeService_GetAnomalyReport_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ReportRequest)
+	m := new(AnomalyReportRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(TWLogEyeServiceServer).GetAnomalyReport(m, &grpc.GenericServerStream[ReportRequest, AnomalyReportEnt]{ServerStream: stream})
+	return srv.(TWLogEyeServiceServer).GetAnomalyReport(m, &grpc.GenericServerStream[AnomalyReportRequest, AnomalyReportEnt]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.

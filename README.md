@@ -21,9 +21,6 @@ Supported log formats include:
 - Windows Event log (Windows environments only)
 
 
-Translated with DeepL.com (free version)
-
-
 ## Install
 
 It is recommended to install the Linux/Mac OS with a shell script.
@@ -37,6 +34,11 @@ Linux/Mac OS can be installed on Homebrew.
 ```terminal
 $brew install twsnmp/tap/twlogeye
 ```
+
+Linux packages are also available for release.
+
+https://github.com/twsnmp/twlogeye/releases
+
 
 Winddows downloads zip files from the release or scoop
 Install in.
@@ -118,7 +120,9 @@ Usage:
   twlogeye start [flags]
 
 Flags:
+      --anomalyNotifyDelay int         Grace period for sending notifications when detecting anomalies (default 24)
       --anomalyReportThreshold float   anomaly report threshold
+      --anomayUseTime                  Include weekends and hours in the vector data for anomaly detection
   -d, --dbPath string                  DB Path default: memory
       --debug                          debug mode
       --grokDef string                 GROK define file
@@ -253,14 +257,13 @@ $twlogeye help report
 Get report via api
 
 Usage:
-  twlogeye report [flags]
+  twlogeye report <report type> [<anomaly type>] [flags]
 
 Flags:
-      --end string          end date and time
-  -h, --help                help for report
-      --noList              report summary only
-      --reportType string   report type
-      --start string        start date and time
+      --end string     end date and time
+  -h, --help           help for report
+      --noList         report summary only
+      --start string   start date and time
 
 Global Flags:
   -p, --apiPort int         API Server port (default 8081)
@@ -484,35 +487,91 @@ Reloads the Sigma rules loaded in TwLogEye.
 Use the file specified in --config or the current directory ./twlogeye.yaml as the configuration file.
 YAML format.It corresponds to the following keys.
 
-| Key | Descr |
-| --- | --- |
-|logPath| Log DB path|
-|syslogUDPPort| syslog UDP port|
-|syslogTCPPort| syslog TCP port|
-|netflowPort| NetFlow port|
-|snmpTrapPort|SNMP Trap port|
-|winEventLogChannel|Windows Event Log Channel|
-|winEventLogCheckInterval|Windows check interval (sec)
-|winEventLogCheckStart|Windows Event Log check start time(hour)|
-|winRemote|Windows Event log remote host|
-|winUser|Windows Event log user|
-|winPassword|Windows Event log password|
-|winAuth|Windows Event log auth mode| 
-|winSJIS|Windows Event log is SHIF-JIS|
-|syslogDst| syslog notify dst|
-|trapDst|SNMP TRAP notify dst|
-|trapCommunity|SNMP TRAP Community|
-|logRetention|Log retention(hour)|
-|notifyRetention|Notify retention(days)|
-|grockPat|GROK pattern|
-|grokDef|GROK Def file path|
-|namedCaptures|Name Captures def file path|
-|keyValParse|Splunk syle key value parser|
-|sigmaRules|sigma rules path|
-|sigmaConfigs|sigma config path|
-|sigmaSkipError|Skip sigma rule and config error|
-|mibPath|SNMP MIB path|
-|debug|Debug mod sigma rule match|
+
+### Core Configuration
+
+* **`dbPath`**: Specifies the path to the database file.
+
+---
+
+### Inbound Data Ports
+
+* **`syslogUDPPort`**: The port for receiving Syslog messages over UDP.
+* **`syslogTCPPort`**: The port for receiving Syslog messages over TCP.
+* **`netflowPort`**: The port for receiving NetFlow data.
+* **`snmpTrapPort`**: The port for receiving SNMP trap messages.
+
+---
+
+### Windows Event Log Collection
+
+* **`winEventLogChannel`**: The name of the Windows Event Log channel to monitor (e.g., "System", "Security").
+* **`winEventLogCheckInterval`**: The interval in seconds to check for new event logs.
+* **`winEventLogCheckStart`**: The starting point in seconds from which to begin monitoring event logs.
+* **`winRemote`**: The hostname or IP address of the remote Windows machine.
+* **`winUser`**: The username for authenticating with the remote machine.
+* **`winPassword`**: The password for authentication.
+* **`winAuth`**: The authentication method to use.
+* **`winLogSJIS`**: A boolean flag (`true` or `false`) to indicate if Windows logs are in Shift JIS encoding.
+
+---
+
+### Outbound Forwarding Destinations
+
+* **`syslogDst`**: A list of destination hosts to forward Syslog messages to.
+* **`trapDst`**: A list of destination hosts for forwarding SNMP traps.
+* **`webhookDst`**: A list of webhook URLs to send data to.
+* **`trapCommunity`**: The SNMP community string used for traps.
+
+---
+
+### Data Retention Periods
+
+* **`logRetention`**: The log retention period in hours.
+* **`notifyRetention`**: The notification data retention period in days.
+* **`reportRetention`**: The report data retention period in days.
+
+---
+
+### Reporting Settings
+
+* **`reportInterval`**: The interval for generating reports, specified as `day,hour,minute`.
+* **`reportTopN`**: The number of top entries to include in reports.
+
+---
+
+### Anomaly Detection
+
+* **`anomalyReportThreshold`**: A floating-point value representing the threshold for anomaly detection.
+* **`anomalyUseTimeData`**: A boolean flag to include time and day of the week data in anomaly detection analysis.
+* **`anomalyNotifyDelay`**: The grace period in seconds before sending a notification for a detected anomaly.
+
+---
+
+### Log Parsing
+
+* **`grokPat`**: A list of file paths containing Grok patterns.
+* **`grokDef`**: The path to the Grok definition file, like `grok-patterns`.
+* **`namedCaptures`**: Configuration for named capture groups to extract specific information from logs.
+* **`keyValParse`**: A boolean flag to enable or disable key/value log parsing.
+
+---
+
+### Sigma Rules
+
+* **`sigmaRules`**: The path to the Sigma rule files.
+* **`sigmaConfigs`**: The path to the Sigma configuration files.
+* **`sigmaSkipError`**: A boolean flag to skip a rule if an error occurs during processing.
+
+---
+
+### Other Settings
+
+* **`mibPath`**: The path to the SNMP MIB files.
+* **`mcpEndpoint`**: The endpoint URL for Microsoft Cloud Platform (MCP).
+* **`mcpFrom`**: The "from" address for messages sent to MCP.
+* **`mcpToken`**: The authentication token for MCP.
+* **`debug`**: A boolean flag to enable or disable debug mode.
 
 
 ## environmental variables

@@ -18,8 +18,11 @@ var syslogNormalizeMap map[string]int
 var syslogNormalizeErrorMap map[string]int
 
 func startSyslog(ctx context.Context, wg *sync.WaitGroup) {
-	log.Printf("start syslog reporter")
 	defer wg.Done()
+	if datastore.Config.SyslogTCPPort == 0 && datastore.Config.SyslogUDPPort == 0 {
+		return
+	}
+	log.Printf("start syslog reporter")
 	timer := time.NewTicker(time.Second * 1)
 	lastT := getIntervalTime()
 	syslogReport = &datastore.SyslogReportEnt{}

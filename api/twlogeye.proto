@@ -26,7 +26,7 @@ service TWLogEyeService {
   // Get Windows Event Report
 	rpc GetWindowsEventReport (ReportRequest) returns (stream WindowsEventReportEnt);
   // Get Anomaly Report
-	rpc GetAnomalyReport (ReportRequest) returns (stream AnomalyReportEnt);
+	rpc GetAnomalyReport (AnomalyReportRequest) returns (stream AnomalyReportEnt);
   // Get Monitor Report
 	rpc GetMonitorReport (ReportRequest) returns (stream MonitorReportEnt);
 }
@@ -161,12 +161,15 @@ message WindowsEventReportEnt {
   repeated WindowsEventSummary top_error_list = 8;
 }
 
+message AnomalyReportRequest {
+  int64 start = 1;
+	int64 end = 2;
+  string type = 3;
+}
+
 message AnomalyReportEnt {
   int64 time = 1;
-  string type = 2;
-  double score = 3;
-  double max = 4;
-  int64 max_time = 5;
+  double score = 2;
 }
 
 message MonitorReportEnt {
