@@ -20,6 +20,14 @@ WebhookによりAI対応の自動化ツールに通知することができま�
 
 です。
 
+システムの構成は
+
+![](images/twlogeye.png)
+
+です。
+
+ログやレポートの保存にGo言語製の高速Key/Value Store Badgerを
+を使用しているため毎秒数万件のログを数TB単位で保存できます。
 
 ## Install
 
@@ -107,7 +115,7 @@ Flags:
 Use "twlogeye [command] --help" for more information about a command.
 ```
 
-### ロウサーバー
+### ログサーバー
 #### start コマンド
 
 サーバーを起動するコマンドです。

@@ -21,6 +21,15 @@ Supported log formats include:
 - Windows Event log (Windows environments only)
 
 
+The system configuration is
+
+![](images/twlogeye.png).
+
+
+
+We use Badger, a high-speed Key/Value Store built in Go, for storing logs and reports. This enables us to store tens of thousands of logs per second, amounting to several terabytes.
+
+
 ## Install
 
 It is recommended to install the Linux/Mac OS with a shell script.
