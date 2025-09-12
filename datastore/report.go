@@ -95,6 +95,32 @@ func SaveSyslogReport(r *SyslogReportEnt) {
 	})
 }
 
+func GetLastSyslogReport() *SyslogReportEnt {
+	var r *SyslogReportEnt
+	prefix := []byte("report:syslog:")
+	db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		it.Seek([]byte("report:syslog:z"))
+		if it.ValidForPrefix(prefix) {
+			item := it.Item()
+			var sr SyslogReportEnt
+			if err := item.Value(func(v []byte) error {
+				return json.Unmarshal(v, &sr)
+			}); err == nil {
+				r = &sr
+			} else {
+				log.Printf("err=%v", err)
+			}
+		}
+		return nil
+	})
+	return r
+}
+
 func ForEachSyslogReport(st, et int64, callBack func(r *SyslogReportEnt) bool) {
 	if et == 0 {
 		et = time.Now().UnixNano()
@@ -157,6 +183,32 @@ func SaveTrapReport(r *TrapReportEnt) {
 		}
 		return nil
 	})
+}
+
+func GetLastTrapReport() *TrapReportEnt {
+	var r *TrapReportEnt
+	prefix := []byte("report:trap:")
+	db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		it.Seek([]byte("report:trap:z"))
+		if it.ValidForPrefix(prefix) {
+			item := it.Item()
+			var tr TrapReportEnt
+			if err := item.Value(func(v []byte) error {
+				return json.Unmarshal(v, &tr)
+			}); err == nil {
+				r = &tr
+			} else {
+				log.Printf("err=%v", err)
+			}
+		}
+		return nil
+	})
+	return r
 }
 
 func ForEachTrapReport(st, et int64, callBack func(r *TrapReportEnt) bool) {
@@ -248,6 +300,32 @@ func SaveNetflowReport(r *NetflowReportEnt) {
 	})
 }
 
+func GetLastNetflowReport() *NetflowReportEnt {
+	var r *NetflowReportEnt
+	prefix := []byte("report:netflow:")
+	db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		it.Seek([]byte("report:netflow:z"))
+		if it.ValidForPrefix(prefix) {
+			item := it.Item()
+			var nr NetflowReportEnt
+			if err := item.Value(func(v []byte) error {
+				return json.Unmarshal(v, &nr)
+			}); err == nil {
+				r = &nr
+			} else {
+				log.Printf("err=%v", err)
+			}
+		}
+		return nil
+	})
+	return r
+}
+
 func ForEachNetflowReport(st, et int64, callBack func(r *NetflowReportEnt) bool) {
 	if et == 0 {
 		et = time.Now().UnixNano()
@@ -317,6 +395,32 @@ func SaveWindowsEventReport(r *WindowsEventReportEnt) {
 	})
 }
 
+func GetLastWindowsEventReport() *WindowsEventReportEnt {
+	var r *WindowsEventReportEnt
+	prefix := []byte("report:winevent:")
+	db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		it.Seek([]byte("report:winevent:z"))
+		if it.ValidForPrefix(prefix) {
+			item := it.Item()
+			var wr WindowsEventReportEnt
+			if err := item.Value(func(v []byte) error {
+				return json.Unmarshal(v, &wr)
+			}); err == nil {
+				r = &wr
+			} else {
+				log.Printf("err=%v", err)
+			}
+		}
+		return nil
+	})
+	return r
+}
+
 func ForEachWindowsEventReport(st, et int64, callBack func(r *WindowsEventReportEnt) bool) {
 	if et == 0 {
 		et = time.Now().UnixNano()
@@ -369,6 +473,32 @@ func SaveAnomalyReport(t string, list []*AnomalyReportEnt) {
 		}
 		return nil
 	})
+}
+
+func GetLastAnomalyReport(t string) *AnomalyReportEnt {
+	var r *AnomalyReportEnt
+	prefix := []byte("report:anomaly:" + t)
+	db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		it.Seek([]byte("report:anomaly:" + t + ":z"))
+		if it.ValidForPrefix(prefix) {
+			item := it.Item()
+			var ar AnomalyReportEnt
+			if err := item.Value(func(v []byte) error {
+				return json.Unmarshal(v, &ar)
+			}); err == nil {
+				r = &ar
+			} else {
+				log.Printf("err=%v", err)
+			}
+		}
+		return nil
+	})
+	return r
 }
 
 func ForEachAnomalyReport(t string, st, et int64, callBack func(r *AnomalyReportEnt) bool) {
@@ -427,6 +557,32 @@ func SaveMonitorReport(r *MonitorReportEnt) {
 		}
 		return nil
 	})
+}
+
+func GetLastMonitorReport() *MonitorReportEnt {
+	var r *MonitorReportEnt
+	prefix := []byte("report:monitor:")
+	db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		it.Seek([]byte("report:monitor:z"))
+		if it.ValidForPrefix(prefix) {
+			item := it.Item()
+			var mr MonitorReportEnt
+			if err := item.Value(func(v []byte) error {
+				return json.Unmarshal(v, &mr)
+			}); err == nil {
+				r = &mr
+			} else {
+				log.Printf("err=%v", err)
+			}
+		}
+		return nil
+	})
+	return r
 }
 
 func ForEachMonitorReport(st, et int64, callBack func(r *MonitorReportEnt) bool) {

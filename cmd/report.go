@@ -54,6 +54,24 @@ var reportCmd = &cobra.Command{
 			getAnomalyReport(args[1], st, et)
 		case "monitor":
 			getMonitorReport(st, et)
+		case "last":
+			if len(args) < 2 {
+				log.Fatalln("twlogeye report last <type>")
+			}
+			switch args[1] {
+			case "trap":
+				getLastTrapReport()
+			case "netflow":
+				getLastNetflowReport()
+			case "winevent":
+				getLastWindowsEventReport()
+			case "monitor":
+				getLastMonitorReport()
+			case "anomaly":
+				getLastAnomalyReport()
+			default:
+				getLastSyslogReport()
+			}
 		default:
 			getSyslogReport(st, et)
 		}
@@ -102,6 +120,32 @@ func getSyslogReport(st, et int64) {
 	}
 }
 
+func getLastSyslogReport() {
+	client := getClient()
+	r, err := client.GetLastSyslogReport(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("get last syslog report err=%v", err)
+	}
+	fmt.Printf("%s syslog normal=%d warn=%d error=%d patterns=%d err_patterns=%d\n",
+		getReportTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError(),
+		r.GetPatterns(), r.GetErrPatterns())
+	topList := r.GetTopList()
+	if len(topList) > 0 && !noList {
+		fmt.Println("Top syslog pattern list")
+		fmt.Println("No.\tPattern\tCount")
+		for i, t := range topList {
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetLogPattern(), t.GetCount())
+		}
+		fmt.Println("===")
+		fmt.Println("Top error syslog pattern list")
+		fmt.Println("No.\tPattern\tCount")
+		for i, t := range r.GetTopErrorList() {
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetLogPattern(), t.GetCount())
+		}
+		fmt.Println("===")
+	}
+}
+
 func getTrapReport(st, et int64) {
 	client := getClient()
 	s, err := client.GetTrapReport(context.Background(), &api.ReportRequest{Start: st, End: et})
@@ -126,6 +170,24 @@ func getTrapReport(st, et int64) {
 			}
 			fmt.Println("===")
 		}
+	}
+}
+
+func getLastTrapReport() {
+	client := getClient()
+	r, err := client.GetLastTrapReport(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("get last trap report err=%v", err)
+	}
+	fmt.Printf("%s trap count=%d types=%d\n", getReportTimeStr(r.GetTime()), r.GetCount(), r.GetTypes())
+	list := r.GetTopList()
+	if len(list) > 0 && !noList {
+		fmt.Println("Top TRAP type list")
+		fmt.Println("No.\tSender\tTrap Type\tCount")
+		for i, t := range list {
+			fmt.Printf("%d\t%s\t%s\t%d\n", i+1, t.GetSender(), t.GetTrapType(), t.GetCount())
+		}
+		fmt.Println("===")
 	}
 }
 
@@ -192,6 +254,60 @@ func getNetflowReport(st, et int64) {
 	}
 }
 
+func getLastNetflowReport() {
+	client := getClient()
+	r, err := client.GetLastNetflowReport(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("get last netflow report err=%v", err)
+	}
+	fmt.Printf("%s netflow packets=%d bytes=%d macs=%d ips=%d flows=%d prots=%d fumbles=%d\n",
+		getReportTimeStr(r.GetTime()), r.GetPackets(), r.GetBytes(),
+		r.GetMacs(), r.GetIps(), r.GetFlows(), r.GetProtocols(), r.GetFumbles())
+	if r.GetPackets() > 0 && !noList {
+		fmt.Println("Top MAC node packets list")
+		fmt.Println("No.\tMAC\tPackets")
+		for i, t := range r.GetTopMacPacketsList() {
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetPackets())
+		}
+		fmt.Println("Top MAC node bytes list")
+		fmt.Println("No.\tMAC\tBytes")
+		for i, t := range r.GetTopMacBytesList() {
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
+		}
+		fmt.Println("Top IP node packets list")
+		fmt.Println("No.\tIP\tPackets")
+		for i, t := range r.GetTopIpPacketsList() {
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetPackets())
+		}
+		fmt.Println("Top IP node bytes list")
+		fmt.Println("No.\tIP\tBytes")
+		for i, t := range r.GetTopIpBytesList() {
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
+		}
+		fmt.Println("Top flow packets list")
+		fmt.Println("No.\tFlow\tPackets")
+		for i, t := range r.GetTopFlowPacketsList() {
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetPackets())
+		}
+		fmt.Println("Top flow bytes list")
+		fmt.Println("No.\tFlow\tBytes")
+		for i, t := range r.GetTopFlowBytesList() {
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
+		}
+		fmt.Println("Top protocol list")
+		fmt.Println("No.\tProcottol\tCount")
+		for i, t := range r.GetTopProtocolList() {
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetProtocol(), t.GetCount())
+		}
+		fmt.Println("Top Fumble src list")
+		fmt.Println("No.\tSrc\tCount")
+		for i, t := range r.GetTopFumbleSrcList() {
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetIp(), t.GetCount())
+		}
+		fmt.Println("===")
+	}
+}
+
 func getWindowsEventReport(st, et int64) {
 	client := getClient()
 	s, err := client.GetWindowsEventReport(context.Background(), &api.ReportRequest{Start: st, End: et})
@@ -225,6 +341,30 @@ func getWindowsEventReport(st, et int64) {
 	}
 }
 
+func getLastWindowsEventReport() {
+	client := getClient()
+	r, err := client.GetLastWindowsEventReport(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("get last windows event report err=%v", err)
+	}
+	fmt.Printf("%s windows event normal=%d warn=%d error=%d types=%d error_types=%d\n",
+		getReportTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError(),
+		r.GetTypes(), r.GetErrorTypes())
+	if len(r.GetTopList()) > 0 && !noList {
+		fmt.Println("Top windows event list")
+		fmt.Println("No.\tComputer\tProvider\tEventID\tCount")
+		for i, t := range r.GetTopList() {
+			fmt.Printf("%d\t%s\t%s\t%s\t%d\n", i+1, t.GetComputer(), t.GetProvider(), t.GetEventId(), t.GetCount())
+		}
+		fmt.Println("Top error windows event list")
+		fmt.Println("No.\tPattern\tCount")
+		for i, t := range r.GetTopErrorList() {
+			fmt.Printf("%d\t%s\t%s\t%s\t%d\n", i+1, t.GetComputer(), t.GetProvider(), t.GetEventId(), t.GetCount())
+		}
+		fmt.Println("===")
+	}
+}
+
 func getAnomalyReport(t string, st, et int64) {
 	client := getClient()
 	s, err := client.GetAnomalyReport(context.Background(), &api.AnomalyReportRequest{Type: t, Start: st, End: et})
@@ -241,6 +381,19 @@ func getAnomalyReport(t string, st, et int64) {
 		}
 		fmt.Printf("%s anomaly type=%s score=%.2f\n",
 			getReportTimeStr(r.GetTime()), t, r.GetScore())
+	}
+}
+
+func getLastAnomalyReport() {
+	client := getClient()
+	r, err := client.GetLastAnomalyReport(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("get last anomaly report err=%v", err)
+	}
+	fmt.Printf("%s anomaly report\n", getReportTimeStr(r.GetTime()))
+	for _, s := range r.GetScoreList() {
+		fmt.Printf("%s type=%s score=%.2f\n",
+			getReportTimeStr(s.Time), s.Type, s.Score)
 	}
 }
 
@@ -261,4 +414,14 @@ func getMonitorReport(st, et int64) {
 		fmt.Printf("%s monitor cpu=%.2f%% mem=%.2f%% load=%.2f disk=%.2f%% net=%.2fBPS dbspeed=%.2fBPS dbsize=%d\n",
 			getReportTimeStr(r.GetTime()), r.GetCpu(), r.GetMemory(), r.GetLoad(), r.GetDisk(), r.GetNet(), r.GetDbSpeed(), r.GetDbSize())
 	}
+}
+
+func getLastMonitorReport() {
+	client := getClient()
+	r, err := client.GetLastMonitorReport(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("get last monitor report err=%v", err)
+	}
+	fmt.Printf("%s monitor cpu=%.2f%% mem=%.2f%% load=%.2f disk=%.2f%% net=%.2fBPS dbspeed=%.2fBPS dbsize=%d\n",
+		getReportTimeStr(r.GetTime()), r.GetCpu(), r.GetMemory(), r.GetLoad(), r.GetDisk(), r.GetNet(), r.GetDbSpeed(), r.GetDbSize())
 }

@@ -237,6 +237,36 @@ func (s *apiServer) GetSyslogReport(req *api.ReportRequest, stream api.TWLogEyeS
 	return nil
 }
 
+func (s *apiServer) GetLastSyslogReport(ctx context.Context, req *api.Empty) (*api.SyslogReportEnt, error) {
+	l := datastore.GetLastSyslogReport()
+	if l == nil {
+		return nil, fmt.Errorf("syslog report not found")
+	}
+	r := &api.SyslogReportEnt{
+		Time:         l.Time,
+		Normal:       int32(l.Normal),
+		Warn:         int32(l.Warn),
+		Error:        int32(l.Error),
+		Patterns:     int32(l.Patterns),
+		ErrPatterns:  int32(l.ErrPatterns),
+		TopList:      []*api.LogSummaryEnt{},
+		TopErrorList: []*api.LogSummaryEnt{},
+	}
+	for _, t := range l.TopList {
+		r.TopList = append(r.TopList, &api.LogSummaryEnt{
+			LogPattern: t.LogPattern,
+			Count:      int32(t.Count),
+		})
+	}
+	for _, t := range l.TopErrorList {
+		r.TopErrorList = append(r.TopErrorList, &api.LogSummaryEnt{
+			LogPattern: t.LogPattern,
+			Count:      int32(t.Count),
+		})
+	}
+	return r, nil
+}
+
 func (s *apiServer) GetTrapReport(req *api.ReportRequest, stream api.TWLogEyeService_GetTrapReportServer) error {
 	datastore.ForEachTrapReport(req.GetStart(), req.GetEnd(), func(l *datastore.TrapReportEnt) bool {
 		r := &api.TrapReportEnt{
@@ -259,6 +289,27 @@ func (s *apiServer) GetTrapReport(req *api.ReportRequest, stream api.TWLogEyeSer
 		return true
 	})
 	return nil
+}
+
+func (s *apiServer) GetLastTrapReport(ctx context.Context, req *api.Empty) (*api.TrapReportEnt, error) {
+	l := datastore.GetLastTrapReport()
+	if l == nil {
+		return nil, fmt.Errorf("trap report not found")
+	}
+	r := &api.TrapReportEnt{
+		Time:    l.Time,
+		Count:   int32(l.Count),
+		Types:   int32(l.Types),
+		TopList: []*api.TrapSummaryEnt{},
+	}
+	for _, t := range l.TopList {
+		r.TopList = append(r.TopList, &api.TrapSummaryEnt{
+			Sender:   t.Sender,
+			TrapType: t.TrapType,
+			Count:    int32(t.Count),
+		})
+	}
+	return r, nil
 }
 
 func (s *apiServer) GetNetflowReport(req *api.ReportRequest, stream api.TWLogEyeService_GetNetflowReportServer) error {
@@ -338,6 +389,80 @@ func (s *apiServer) GetNetflowReport(req *api.ReportRequest, stream api.TWLogEye
 	return nil
 }
 
+func (s *apiServer) GetLastNetflowReport(ctx context.Context, req *api.Empty) (*api.NetflowReportEnt, error) {
+	l := datastore.GetLastNetflowReport()
+	if l == nil {
+		return nil, fmt.Errorf("netflow report not found")
+	}
+	r := &api.NetflowReportEnt{
+		Time:               l.Time,
+		Packets:            l.Packets,
+		Bytes:              l.Bytes,
+		Macs:               int32(l.MACs),
+		Ips:                int32(l.IPs),
+		Flows:              int32(l.Flows),
+		Protocols:          int32(l.Protocols),
+		Fumbles:            int32(l.Fumbles),
+		TopMacPacketsList:  []*api.NetflowPacketsSummaryEnt{},
+		TopMacBytesList:    []*api.NetflowBytesSummaryEnt{},
+		TopIpPacketsList:   []*api.NetflowPacketsSummaryEnt{},
+		TopIpBytesList:     []*api.NetflowBytesSummaryEnt{},
+		TopFlowPacketsList: []*api.NetflowPacketsSummaryEnt{},
+		TopFlowBytesList:   []*api.NetflowBytesSummaryEnt{},
+		TopProtocolList:    []*api.NetflowProtocolCountEnt{},
+		TopFumbleSrcList:   []*api.NetflowIPCountEnt{},
+	}
+	for _, t := range l.TopMACPacketsList {
+		r.TopMacPacketsList = append(r.TopMacPacketsList, &api.NetflowPacketsSummaryEnt{
+			Key:     t.Key,
+			Packets: int32(t.Packets),
+		})
+	}
+	for _, t := range l.TopMACBytesList {
+		r.TopMacBytesList = append(r.TopMacBytesList, &api.NetflowBytesSummaryEnt{
+			Key:   t.Key,
+			Bytes: t.Bytes,
+		})
+	}
+	for _, t := range l.TopIPPacketsList {
+		r.TopIpPacketsList = append(r.TopIpPacketsList, &api.NetflowPacketsSummaryEnt{
+			Key:     t.Key,
+			Packets: int32(t.Packets),
+		})
+	}
+	for _, t := range l.TopIPBytesList {
+		r.TopIpBytesList = append(r.TopIpBytesList, &api.NetflowBytesSummaryEnt{
+			Key:   t.Key,
+			Bytes: t.Bytes,
+		})
+	}
+	for _, t := range l.TopFlowPacketsList {
+		r.TopFlowPacketsList = append(r.TopFlowPacketsList, &api.NetflowPacketsSummaryEnt{
+			Key:     t.Key,
+			Packets: int32(t.Packets),
+		})
+	}
+	for _, t := range l.TopFlowBytesList {
+		r.TopFlowBytesList = append(r.TopFlowBytesList, &api.NetflowBytesSummaryEnt{
+			Key:   t.Key,
+			Bytes: t.Bytes,
+		})
+	}
+	for _, t := range l.TopProtocolList {
+		r.TopProtocolList = append(r.TopProtocolList, &api.NetflowProtocolCountEnt{
+			Protocol: t.Protocol,
+			Count:    int32(t.Count),
+		})
+	}
+	for _, t := range l.TopFumbleSrcList {
+		r.TopFumbleSrcList = append(r.TopFumbleSrcList, &api.NetflowIPCountEnt{
+			Ip:    t.IP,
+			Count: int32(t.Count),
+		})
+	}
+	return r, nil
+}
+
 func (s *apiServer) GetWindowsEventReport(req *api.ReportRequest, stream api.TWLogEyeService_GetWindowsEventReportServer) error {
 	datastore.ForEachWindowsEventReport(req.GetStart(), req.GetEnd(), func(l *datastore.WindowsEventReportEnt) bool {
 		r := &api.WindowsEventReportEnt{
@@ -375,6 +500,40 @@ func (s *apiServer) GetWindowsEventReport(req *api.ReportRequest, stream api.TWL
 	return nil
 }
 
+func (s *apiServer) GetLastWindowsEventReport(ctx context.Context, req *api.Empty) (*api.WindowsEventReportEnt, error) {
+	l := datastore.GetLastWindowsEventReport()
+	if l == nil {
+		return nil, fmt.Errorf("windows event report not found")
+	}
+	r := &api.WindowsEventReportEnt{
+		Time:         l.Time,
+		Normal:       int32(l.Normal),
+		Warn:         int32(l.Warn),
+		Error:        int32(l.Error),
+		Types:        int32(l.Types),
+		ErrorTypes:   int32(l.ErrorTypes),
+		TopList:      []*api.WindowsEventSummary{},
+		TopErrorList: []*api.WindowsEventSummary{},
+	}
+	for _, t := range l.TopList {
+		r.TopList = append(r.TopList, &api.WindowsEventSummary{
+			Computer: t.Computer,
+			Provider: t.Provider,
+			EventId:  t.EeventID,
+			Count:    int32(t.Count),
+		})
+	}
+	for _, t := range l.TopErrorList {
+		r.TopErrorList = append(r.TopErrorList, &api.WindowsEventSummary{
+			Computer: t.Computer,
+			Provider: t.Provider,
+			EventId:  t.EeventID,
+			Count:    int32(t.Count),
+		})
+	}
+	return r, nil
+}
+
 func (s *apiServer) GetAnomalyReport(req *api.AnomalyReportRequest, stream api.TWLogEyeService_GetAnomalyReportServer) error {
 	datastore.ForEachAnomalyReport(req.GetType(), req.GetStart(), req.GetEnd(), func(l *datastore.AnomalyReportEnt) bool {
 		r := &api.AnomalyReportEnt{
@@ -388,6 +547,24 @@ func (s *apiServer) GetAnomalyReport(req *api.AnomalyReportRequest, stream api.T
 		return true
 	})
 	return nil
+}
+
+func (s *apiServer) GetLastAnomalyReport(ctx context.Context, req *api.Empty) (*api.LastAnomalyReportEnt, error) {
+	r := &api.LastAnomalyReportEnt{
+		Time:      time.Now().UnixNano(),
+		ScoreList: []*api.LastAnomalyReportScore{},
+	}
+	for _, t := range []string{"syslog", "trap", "netflow", "winevent", "monitor"} {
+		l := datastore.GetLastAnomalyReport(t)
+		if l != nil {
+			r.ScoreList = append(r.ScoreList, &api.LastAnomalyReportScore{
+				Type:  t,
+				Time:  l.Time,
+				Score: l.Score,
+			})
+		}
+	}
+	return r, nil
 }
 
 func (s *apiServer) GetMonitorReport(req *api.ReportRequest, stream api.TWLogEyeService_GetMonitorReportServer) error {
@@ -410,4 +587,23 @@ func (s *apiServer) GetMonitorReport(req *api.ReportRequest, stream api.TWLogEye
 		return true
 	})
 	return nil
+}
+
+func (s *apiServer) GetLastMonitorReport(ctx context.Context, req *api.Empty) (*api.MonitorReportEnt, error) {
+	l := datastore.GetLastMonitorReport()
+	if l == nil {
+		return nil, fmt.Errorf("monitor report not found")
+	}
+	r := &api.MonitorReportEnt{
+		Time:    l.Time,
+		Cpu:     l.CPU,
+		Memory:  l.Memory,
+		Load:    l.Load,
+		Disk:    l.Disk,
+		Net:     l.Net,
+		Bytes:   l.Bytes,
+		DbSpeed: l.DBSpeed,
+		DbSize:  l.DBSize,
+	}
+	return r, nil
 }

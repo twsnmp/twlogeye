@@ -19,16 +19,28 @@ service TWLogEyeService {
 	rpc SearchLog (LogRequest) returns (stream LogResponse);
   // Get Syslog Report
 	rpc GetSyslogReport (ReportRequest) returns (stream SyslogReportEnt);
+  // Get Last Syslog Report
+	rpc GetLastSyslogReport (Empty) returns (SyslogReportEnt);
   // Get Trap Report
 	rpc GetTrapReport (ReportRequest) returns (stream TrapReportEnt);
+  // Get Last Trap Report
+	rpc GetLastTrapReport (Empty) returns (TrapReportEnt);
   // Get Netflow Report
 	rpc GetNetflowReport (ReportRequest) returns (stream NetflowReportEnt);
+  // Get Last Netflow Report
+	rpc GetLastNetflowReport (Empty) returns (NetflowReportEnt);
   // Get Windows Event Report
 	rpc GetWindowsEventReport (ReportRequest) returns (stream WindowsEventReportEnt);
+  // Get Last Windows Event Report
+	rpc GetLastWindowsEventReport (Empty) returns (WindowsEventReportEnt);
   // Get Anomaly Report
 	rpc GetAnomalyReport (AnomalyReportRequest) returns (stream AnomalyReportEnt);
+  // Get Last Anomaly Report
+	rpc GetLastAnomalyReport (Empty) returns (LastAnomalyReportEnt);
   // Get Monitor Report
 	rpc GetMonitorReport (ReportRequest) returns (stream MonitorReportEnt);
+  // Get Last Monitor Report
+	rpc GetLastMonitorReport (Empty) returns (MonitorReportEnt);
 }
 
 message NofifyRequest {
@@ -171,6 +183,18 @@ message AnomalyReportEnt {
   int64 time = 1;
   double score = 2;
 }
+
+message LastAnomalyReportScore {
+  string type = 1;
+  int64 time = 2;
+  double score = 3;
+}
+
+message LastAnomalyReportEnt {
+  int64 time = 1;
+  repeated LastAnomalyReportScore score_list = 2;
+}
+
 
 message MonitorReportEnt {
   int64 time = 1;
