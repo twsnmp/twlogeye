@@ -1,5 +1,5 @@
 /*
-Copyright © 2025 Masayuki Yamai <twsnmp@gmail.com>
+Copyright © 2024 Masayuki Yamai <twsnmp@gmail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,17 +13,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package main
+package cmd
 
-import "github.com/twsnmp/twlogeye/cmd"
+import (
+	"fmt"
 
-var version = "0.0.0"
-var commit = "commit"
-var date = ""
+	"github.com/spf13/cobra"
+)
 
-func main() {
-	cmd.Version = version
-	cmd.Commit = commit
-	cmd.Date = date
-	cmd.Execute()
+var Version string
+var Commit string
+var Date string
+
+// versionCmd represents the version command
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Show twlogeye version",
+	Long:  `Show twlogeye version`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("twsla v%s(%s) %s\n", Version, Commit, Date)
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(versionCmd)
 }
