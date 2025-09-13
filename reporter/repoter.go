@@ -14,6 +14,9 @@ func Init() {
 	trapReporterCh = make(chan *datastore.TrapLogEnt, 20000)
 	netflowReporterCh = make(chan *datastore.NetflowLogEnt, 20000)
 	anomalyCh = make(chan *anomalyChannelData, 10)
+	if datastore.Config.ReportInterval < 1 {
+		datastore.Config.ReportInterval = 5
+	}
 }
 
 func Start(ctx context.Context, wg *sync.WaitGroup) {
@@ -32,12 +35,5 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func getIntervalTime() int {
-	switch datastore.Config.ReportInterval {
-	case "day":
-		return time.Now().Local().Day()
-	case "minute":
-		return time.Now().Minute()
-	default:
-		return time.Now().Hour()
-	}
+	return int(time.Now().Unix() / int64(datastore.Config.ReportInterval))
 }

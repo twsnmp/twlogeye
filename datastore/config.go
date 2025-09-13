@@ -27,8 +27,8 @@ type ConfigEnt struct {
 	NotifyRetention int `yaml:"notifyRetention"`
 	// Report retention period (days)
 	ReportRetention int `yaml:"reportRetention"`
-	// Report interval day,hour,minut
-	ReportInterval string `yaml:"reportInterval"`
+	// Report interval (minute)
+	ReportInterval int `yaml:"reportInterval"`
 	// Report Top N
 	ReportTopN int `yaml:"reportTopN"`
 	// Threshold for Anomaly Detection Report

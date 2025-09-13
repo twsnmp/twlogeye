@@ -75,7 +75,7 @@ func init() {
 	startCmd.Flags().IntVar(&datastore.Config.ReportTopN, "reportTopN", 10, "report top n")
 	startCmd.Flags().IntVar(&datastore.Config.AnomalyNotifyDelay, "anomalyNotifyDelay", 24, "Grace period for sending notifications when detecting anomalies")
 	startCmd.Flags().Float64Var(&datastore.Config.AnomalyReportThreshold, "anomalyReportThreshold", 0.0, "anomaly report threshold")
-	startCmd.Flags().StringVar(&datastore.Config.ReportInterval, "reportInterval", "hour", "report interval (day,hour,minute)")
+	startCmd.Flags().IntVar(&datastore.Config.ReportInterval, "reportInterval", 5, "report interval (minute)")
 	startCmd.Flags().StringVar(&syslogDst, "syslogDst", "", "syslog dst")
 	startCmd.Flags().StringVar(&syslogDst, "trapDst", "", "SNMP TRAP dst")
 	startCmd.Flags().StringVar(&webhookDst, "webhookDst", "", "Webhook dst URL")
