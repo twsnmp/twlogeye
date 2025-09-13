@@ -57,6 +57,7 @@ func makeMCPServer(cert, key string) (*server.StreamableHTTPServer, *echo.Echo) 
 	addSearchNotifyTool(s)
 	addGetReportTool(s)
 	addGetAnomalyReportTool(s)
+	addGetLastReportTool(s)
 	addGetSigmaRuleEvaluatorListTool(s)
 	addReloadSigmaRuleTool(s)
 	addGetSigmaRuleIDListTool(s)
@@ -300,6 +301,35 @@ func addGetReportTool(s *server.MCPServer) {
 	})
 }
 
+func addGetLastReportTool(s *server.MCPServer) {
+	tool := mcp.NewTool("get_last_report",
+		mcp.WithDescription("get last report from TwLogEye"),
+		mcp.WithString("type",
+			mcp.Description(`type of report. type can be "syslog","trap","netflow","winevent","anomaly","monitor"
+"winevent" is windows event log`),
+		),
+	)
+	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		reportType := request.GetString("type", "syslog")
+		r := ""
+		switch reportType {
+		case "trap":
+			r = getLastTrapReport()
+		case "netflow":
+			r = getLastNetflowReport()
+		case "winevent":
+			r = getLastWindowsEventReport()
+		case "monitor":
+			r = getLastMonitorReport()
+		case "anomaly":
+			r = getLastAnomalyReport()
+		default:
+			r = getLastSyslogReport()
+		}
+		return mcp.NewToolResultText(r), nil
+	})
+}
+
 type mcpSyslogReportEnt struct {
 	Time         string
 	Normal       int
@@ -334,6 +364,28 @@ func getSyslogReport(st, et int64) string {
 	return string(j)
 }
 
+func getLastSyslogReport() string {
+	l := datastore.GetLastSyslogReport()
+	if l == nil {
+		return "syslog report notfound"
+	}
+	r := &mcpSyslogReportEnt{
+		Time:         time.Unix(0, l.Time).Format(time.RFC3339),
+		Normal:       l.Normal,
+		Warn:         l.Warn,
+		Error:        l.Error,
+		Patterns:     l.Patterns,
+		ErrPatterns:  l.ErrPatterns,
+		TopList:      l.TopList,
+		TopErrorList: l.TopErrorList,
+	}
+	j, err := json.Marshal(r)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
 type mcpTrapReportEnt struct {
 	Time    string
 	Count   int
@@ -354,6 +406,24 @@ func getTrapReport(st, et int64) string {
 		return true
 	})
 	j, err := json.Marshal(&list)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
+func getLastTrapReport() string {
+	l := datastore.GetLastTrapReport()
+	if l == nil {
+		return "trap report not found"
+	}
+	r := &mcpTrapReportEnt{
+		Time:    time.Unix(0, l.Time).Format(time.RFC3339),
+		Count:   l.Count,
+		Types:   l.Types,
+		TopList: l.TopList,
+	}
+	j, err := json.Marshal(r)
 	if err != nil {
 		return (err.Error())
 	}
@@ -410,6 +480,36 @@ func getNetflowReport(st, et int64) string {
 	return string(j)
 }
 
+func getLastNetflowReport() string {
+	l := datastore.GetLastNetflowReport()
+	if l == nil {
+		return "netflow report not found"
+	}
+	r := &mcpNetflowReportEnt{
+		Time:               time.Unix(0, l.Time).Format(time.RFC3339),
+		Packets:            l.Packets,
+		Bytes:              l.Bytes,
+		MACs:               l.MACs,
+		IPs:                l.IPs,
+		Flows:              l.Flows,
+		Protocols:          l.Protocols,
+		Fumbles:            l.Fumbles,
+		TopMACPacketsList:  l.TopMACPacketsList,
+		TopMACBytesList:    l.TopMACBytesList,
+		TopIPPacketsList:   l.TopIPPacketsList,
+		TopIPBytesList:     l.TopIPBytesList,
+		TopFlowPacketsList: l.TopFlowPacketsList,
+		TopFlowBytesList:   l.TopFlowBytesList,
+		TopProtocolList:    l.TopProtocolList,
+		TopFumbleSrcList:   l.TopFumbleSrcList,
+	}
+	j, err := json.Marshal(r)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
 type mcpWindowsEventReportEnt struct {
 	Time         string
 	Normal       int
@@ -436,6 +536,26 @@ func getWindowsEventReport(st, et int64) string {
 		return true
 	})
 	j, err := json.Marshal(&list)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
+func getLastWindowsEventReport() string {
+	l := datastore.GetLastWindowsEventReport()
+	if l == nil {
+		return "windows event report not found"
+	}
+	r := &mcpWindowsEventReportEnt{
+		Time:         time.Unix(0, l.Time).Format(time.RFC3339),
+		Normal:       l.Normal,
+		Warn:         l.Warn,
+		Error:        l.Error,
+		TopList:      l.TopList,
+		TopErrorList: l.TopErrorList,
+	}
+	j, err := json.Marshal(&r)
 	if err != nil {
 		return (err.Error())
 	}
@@ -486,6 +606,38 @@ func getAnomalyReport(t string, st, et int64) string {
 	return string(j)
 }
 
+type mcpLastAnomalyReportScore struct {
+	Time  string
+	Type  string
+	Score float64
+}
+type mcpLastAnomalyReportEnt struct {
+	Time      string
+	ScoreList []*mcpLastAnomalyReportScore
+}
+
+func getLastAnomalyReport() string {
+	r := &mcpLastAnomalyReportEnt{
+		Time:      time.Now().Format(time.RFC3339),
+		ScoreList: []*mcpLastAnomalyReportScore{},
+	}
+	for _, t := range []string{"syslog", "trap", "netflow", "winevent", "monitor"} {
+		l := datastore.GetLastAnomalyReport(t)
+		if l != nil {
+			r.ScoreList = append(r.ScoreList, &mcpLastAnomalyReportScore{
+				Type:  t,
+				Time:  time.Unix(0, l.Time).Format(time.RFC3339),
+				Score: l.Score,
+			})
+		}
+	}
+	j, err := json.Marshal(&r)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
 type mcpMonitorReportEnt struct {
 	Time    string
 	CPU     float64
@@ -516,6 +668,29 @@ func getMonitorReport(st, et int64) string {
 		return true
 	})
 	j, err := json.Marshal(&list)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
+func getLastMonitorReport() string {
+	l := datastore.GetLastMonitorReport()
+	if l == nil {
+		return "monitor report not found"
+	}
+	r := &mcpMonitorReportEnt{
+		Time:    time.Unix(0, l.Time).Format(time.RFC3339),
+		CPU:     l.CPU,
+		Memory:  l.Memory,
+		Load:    l.Load,
+		Disk:    l.Disk,
+		Net:     l.Net,
+		Bytes:   l.Bytes,
+		DBSpeed: l.DBSpeed,
+		DBSize:  l.DBSize,
+	}
+	j, err := json.Marshal(r)
 	if err != nil {
 		return (err.Error())
 	}

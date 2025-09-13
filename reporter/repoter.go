@@ -35,5 +35,5 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func getIntervalTime() int {
-	return int(time.Now().Unix() / int64(datastore.Config.ReportInterval))
+	return int(time.Now().Unix() / int64(datastore.Config.ReportInterval*60))
 }
