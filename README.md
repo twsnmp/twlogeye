@@ -77,14 +77,17 @@ Install in.
 You can check the commands that support the Help command.
 
 ```terminal
-Eye-like log server to monitor threats in logs with sigma rules
+$twlogeye help
+AI-Native log server to monitor threats in logs with sigma rules
 Supported logs are
 - syslog
 - SNMP trap
 - NetFlow/IPFIX
-- Windows Event Log
+- Windows event log
 You can find sigma rule here.
 https://github.com/SigmaHQ/sigma
+
+Support MCP server and webhook notify for AI
 
 Usage:
   twlogeye [command]
@@ -92,6 +95,7 @@ Usage:
 Available Commands:
   clear       Clear DB of twlogeye
   completion  Generate the autocompletion script for the specified shell
+  dashboard   Display twlogeye dashboard
   gencert     Generate TLS private key and cert
   help        Help about any command
   log         Search log
@@ -101,6 +105,7 @@ Available Commands:
   sigma       Check sigma rules (list|stat|logsrc|field|check|test)
   start       Start twlogeye
   stop        Stop twlogeye
+  version     Show twlogeye version
   watch       Watch notify
 
 Flags:
@@ -147,7 +152,7 @@ Flags:
       --namedCaptures string           Named capture defs path
       --netflowPort int                netflow port 0=disable
       --notifyRetention int            notify retention(days) (default 7)
-      --reportInterval string          report interval (day,hour,minute) (default "hour")
+      --reportInterval int             report interval (minute) (default 5)
       --reportRetention int            report retention(days) (default 7)
       --reportTopN int                 report top n (default 10)
       --sigmaConfigs string            SIGMA config path
@@ -273,6 +278,41 @@ Flags:
   -h, --help           help for report
       --noList         report summary only
       --start string   start date and time
+
+Global Flags:
+  -p, --apiPort int         API Server port (default 8081)
+      --apiServer string    server IP or host name (default "localhost")
+      --caCert string       API CA cert
+      --clientCert string   API client cert
+      --clientKey string    API client private key
+      --config string       config file (default is ./twlogeye.yaml)
+      --serverCert string   API server cert
+      --serverKey string    API server private key
+```
+
+### dashboard command
+
+Display dashboard.
+
+![](images/dashboard.png)
+
+```terminal
+$twlogeye help dashboard
+Display twlogeye dashboard.
+<panel type> is
+        monitor | anomaly
+  syslog.count | syslog.pattern | syslog.error
+  trap.count | trap.type
+        netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte
+        netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
+        winevent.count | winevent.pattern | winevent.error
+
+Usage:
+  twlogeye dashboard <panel type>... [flags]
+
+Flags:
+  -h, --help          help for dashboard
+      --history int   Keep report history (default 100)
 
 Global Flags:
   -p, --apiPort int         API Server port (default 8081)
