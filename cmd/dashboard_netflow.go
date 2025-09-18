@@ -45,12 +45,12 @@ func (m dashboardModel) renderNetflowCount() string {
 		}
 		row = append(row, headerText)
 		row = append(row, formatNetflowCountLine("Fumble", fumbles, width, lipgloss.NewStyle().Foreground(ColorRed)))
-		row = append(row, formatNetflowCountLine("Packet", packets, width, lipgloss.NewStyle().Foreground(ColorBlue)))
+		row = append(row, formatNetflowPacketsLine("Packet", packets, width, lipgloss.NewStyle().Foreground(ColorBlue)))
 		row = append(row, formatNetflowBytesLine("Bytes(MB)", bytes, width, lipgloss.NewStyle().Foreground(ColorBlue)))
 		row = append(row, formatNetflowCountLine("IP", ips, width, lipgloss.NewStyle().Foreground(ColorGray)))
 		row = append(row, formatNetflowCountLine("MAC", macs, width, lipgloss.NewStyle().Foreground(ColorGray)))
-		row = append(row, formatNetflowCountLine("Flow", flows, width, lipgloss.NewStyle().Foreground(ColorGray)))
-		row = append(row, formatNetflowCountLine("Prot", prots, width, lipgloss.NewStyle().Foreground(ColorGray)))
+		row = append(row, formatNetflowCountLine("Flow", flows, width, lipgloss.NewStyle().Foreground(ColorWhite)))
+		row = append(row, formatNetflowCountLine("Prot", prots, width, lipgloss.NewStyle().Foreground(ColorWhite)))
 	} else {
 		row = append(row, titleStyle.Render("Netflow Count"))
 		row = append(row, "No netflow report")
@@ -63,6 +63,20 @@ func formatNetflowCountLine(l string, values []float64, width int, style lipglos
 	max, _ := stats.Max(values)
 	avg, _ := stats.Mean(values)
 	value := fmt.Sprintf("%7d/%7.1f/%7d", int64(c), avg, int64(max))
+	label := fmt.Sprintf(" %-10s", l)
+	text := style.Render(label + value)
+	sparklineWidth := width - lipgloss.Width(text) - 2
+	sl := sparkline.New(sparklineWidth, 1, sparkline.WithStyle(style))
+	sl.PushAll(values)
+	sl.Draw()
+	return lipgloss.JoinHorizontal(lipgloss.Top, sl.View(), text)
+}
+
+func formatNetflowPacketsLine(l string, values []float64, width int, style lipgloss.Style) string {
+	c := values[len(values)-1]
+	max, _ := stats.Max(values)
+	avg, _ := stats.Mean(values)
+	value := fmt.Sprintf("%7s/%7s/%7s", humanize.SIWithDigits(c, 1, ""), humanize.SIWithDigits(avg, 1, ""), humanize.SIWithDigits(max, 1, ""))
 	label := fmt.Sprintf(" %-10s", l)
 	text := style.Render(label + value)
 	sparklineWidth := width - lipgloss.Width(text) - 2
@@ -133,7 +147,7 @@ func (m dashboardModel) renderNetflowMAC(bytes bool) string {
 	if len(m.netflowReport) > 0 {
 		last := m.netflowReport[len(m.netflowReport)-1]
 		row = append(row, titleStyle.Render(fmt.Sprintf("Netflow %d MAC from %d packets",
-			last.Ips, last.Packets)))
+			last.Macs, last.Packets)))
 		patterns := []*netflowTopListEnt{}
 		if bytes {
 			for _, e := range last.TopMacBytesList {
@@ -168,8 +182,8 @@ func (m dashboardModel) renderNetflowFlow(bytes bool) string {
 	row := []string{}
 	if len(m.netflowReport) > 0 {
 		last := m.netflowReport[len(m.netflowReport)-1]
-		row = append(row, titleStyle.Render(fmt.Sprintf("Netflow %d Flows from %d packets",
-			last.Ips, last.Packets)))
+		row = append(row, titleStyle.Render(fmt.Sprintf("Netflow %d flows from %d packets",
+			last.Flows, last.Packets)))
 		patterns := []*netflowTopListEnt{}
 		if bytes {
 			for _, e := range last.TopFlowBytesList {
@@ -204,7 +218,7 @@ func (m dashboardModel) renderNetflowFumble() string {
 	row := []string{}
 	if len(m.netflowReport) > 0 {
 		last := m.netflowReport[len(m.netflowReport)-1]
-		row = append(row, titleStyle.Render(fmt.Sprintf("Netflow %d fumbles from %d packets",
+		row = append(row, titleStyle.Render(fmt.Sprintf("Netflow %d fumble src from %d packets",
 			last.Fumbles, last.Packets)))
 		patterns := []*netflowTopListEnt{}
 		for _, e := range last.TopFumbleSrcList {
