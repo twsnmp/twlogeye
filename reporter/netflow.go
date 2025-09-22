@@ -89,8 +89,6 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 		} else if ip, ok = l.Log["sourceIPv6Address"].(net.IP); ok {
 			srcIP = ip.String()
 		} else {
-			log.Printf("t=%T src=%s", l.Log["sourceIPv4Address"], l.Log["sourceIPv4Address"])
-			log.Panic()
 			return
 		}
 
@@ -99,16 +97,13 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 		} else if ip, ok = l.Log["destinationIPv6Address"].(net.IP); ok {
 			dstIP = ip.String()
 		} else {
-			log.Panic()
 			return
 		}
 		if _, ok = l.Log["packetDeltaCount"]; !ok {
-			log.Panic()
 			return
 		}
 		packets = getNetflowInt64(l.Log["packetDeltaCount"])
 		if _, ok = l.Log["octetDeltaCount"]; !ok {
-			log.Panic()
 			return
 		}
 		bytes = getNetflowInt64(l.Log["octetDeltaCount"])
@@ -130,12 +125,10 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 		} else if _, ok = l.Log["protocolIdentifier"]; ok {
 			pi = getNetflowInt(l.Log["protocolIdentifier"])
 			if _, ok = l.Log["sourceTransportPort"]; !ok {
-				log.Panic()
 				return
 			}
 			sp = getNetflowInt(l.Log["sourceTransportPort"])
 			if _, ok = l.Log["destinationTransportPort"]; !ok {
-				log.Panic()
 				return
 			}
 			dp = getNetflowInt(l.Log["destinationTransportPort"])
@@ -179,7 +172,6 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 		srcIP = ip.String()
 		// Netflow v5
 		if _, ok = l.Log["srcPort"]; !ok {
-			log.Panic()
 			return
 		}
 		sp = getNetflowInt(l.Log["srcPort"])
@@ -273,8 +265,6 @@ func getNetflowInt64(r interface{}) int64 {
 		return v
 	case float64:
 		return int64(v)
-	default:
-		log.Panicf("int64 type=%T", r)
 	}
 	return 0
 }
@@ -301,8 +291,6 @@ func getNetflowInt(r interface{}) int {
 		return int(v)
 	case int8:
 		return int(v)
-	default:
-		log.Panicf("int64 type=%T", r)
 	}
 	return 0
 
