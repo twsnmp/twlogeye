@@ -67,8 +67,6 @@ func SendNetflow(l *datastore.NetflowLogEnt) {
 	netflowReporterCh <- l
 }
 
-const tcpFlagData = "NCEUAPRSF"
-
 func processNetflowReport(l *datastore.NetflowLogEnt) {
 	var ok bool
 	var srcMAC string
@@ -79,9 +77,9 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 	var packets int64
 	var sp int
 	var dp int
-	var protocol string
-	var tcpFlags string
 	var ip net.IP
+	var protocol string
+	var pi int
 	if ip, ok = l.Log["srcAddr"].(net.IP); !ok {
 		// IPFIX
 		if ip, ok = l.Log["sourceIPv4Address"].(net.IP); ok {
@@ -109,7 +107,6 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 		bytes = getNetflowInt64(l.Log["octetDeltaCount"])
 		protocol = "unknown"
 		var icmpTypeCode int
-		var pi int
 		if _, ok = l.Log["icmpTypeCodeIPv6"]; ok {
 			icmpTypeCode = getNetflowInt(l.Log["icmpTypeCodeIPv6"])
 			protocol = "icmpv6"
@@ -134,24 +131,6 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 			dp = getNetflowInt(l.Log["destinationTransportPort"])
 			switch pi {
 			case 6:
-				if t, ok := l.Log["tcpflagsStr"]; !ok {
-					var tfb float64
-					if tfb, ok = l.Log["tcpControlBits"].(float64); ok {
-						f := uint8(tfb)
-						flags := []byte{}
-						for i := uint8(0); i < 8; i++ {
-							if f&0x01 > 0 {
-								flags = append(flags, tcpFlagData[8-i])
-							} else {
-								flags = append(flags, '.')
-							}
-							f >>= 1
-						}
-						tcpFlags = "[" + string(flags) + "]"
-					}
-				} else {
-					tcpFlags = t.(string)
-				}
 				protocol = "tcp"
 			case 17:
 				protocol = "udp"
@@ -209,12 +188,6 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 				}
 			}
 		}
-		if mac, ok := l.Log["sourceMacAddress"].(string); ok {
-			srcMAC = mac
-		}
-		if tcpFlags, ok = l.Log["tcpflagsStr"].(string); !ok {
-			tcpFlags = ""
-		}
 	}
 	netflowReport.Bytes += int64(bytes)
 	netflowReport.Packets += int64(packets)
@@ -252,7 +225,7 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 	netflowFlowMap[flow].Packets = int(packets)
 	protocol = getProtocolName(protocol, int(sp), int(dp))
 	netflowProtocolMap[protocol]++
-	if src := isFumble(srcIP, dstIP, protocol, tcpFlags, int(packets)); src != "" {
+	if src := isFumble(srcIP, dstIP, pi, sp, dp, int(packets)); src != "" {
 		netflowFumbleSrcMap[src]++
 	}
 }
@@ -456,16 +429,16 @@ func lessIP(ip1s, ip2s string) bool {
 	return true
 }
 
-func isFumble(src, dst, prot, tcpFlag string, pkt int) string {
-	if tcpFlag != "" {
-		// Urget,Ack,Push,Reset ,Syn & Fin
-		if strings.Contains(tcpFlag, "UAPRSF") || pkt < 5 {
-			return src
+func isFumble(src, dst string, prot, sp, dp, pkt int) string {
+	if pkt < 4 && prot == 6 {
+		return src
+	}
+	if prot == 1 {
+		switch sp {
+		case 3, 4, 5, 11, 12:
+			return dst
 		}
 	}
 	// ICMP 3
-	if strings.HasPrefix(prot, "3/icmp") {
-		return dst
-	}
 	return ""
 }
