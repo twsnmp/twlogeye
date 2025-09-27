@@ -13,6 +13,7 @@ func Init() {
 	syslogReporterCh = make(chan *datastore.SyslogEnt, 20000)
 	trapReporterCh = make(chan *datastore.TrapLogEnt, 20000)
 	netflowReporterCh = make(chan *datastore.NetflowLogEnt, 20000)
+	wineventReporterCh = make(chan *datastore.WindowsEventEnt, 20000)
 	anomalyCh = make(chan *anomalyChannelData, 10)
 	if datastore.Config.ReportInterval < 1 {
 		datastore.Config.ReportInterval = 5
