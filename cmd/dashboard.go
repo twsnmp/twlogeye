@@ -200,7 +200,12 @@ func loadOldReport() {
 }
 
 func checkDashboardReport() {
-	client := getClient()
+	conn, err := getClientConn()
+	if err != nil {
+		log.Fatalf("getClinetConn err=%v", err)
+	}
+	defer conn.Close()
+	client := api.NewTWLogEyeServiceClient(conn)
 	if _, ok := dashboardMap["syslog"]; ok {
 		sr, err := client.GetLastSyslogReport(context.Background(), &api.Empty{})
 		teaProg.Send(UpdateSyslogReportMsg{

@@ -16,12 +16,18 @@ import (
 )
 
 func getClient() api.TWLogEyeServiceClient {
-	var conn *grpc.ClientConn
-	var err error
+	conn, err := getClientConn()
+	if err != nil {
+		log.Fatalf("getClient err=%v", err)
+	}
+	return api.NewTWLogEyeServiceClient(conn)
+}
+
+func getClientConn() (*grpc.ClientConn, error) {
 	address := fmt.Sprintf("%s:%d", apiServer, apiServerPort)
 	if apiCACert == "" {
 		// not TLS
-		conn, err = grpc.NewClient(
+		return grpc.NewClient(
 			address,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
@@ -45,26 +51,16 @@ func getClient() api.TWLogEyeServiceClient {
 				Certificates: []tls.Certificate{cert},
 				RootCAs:      ca,
 			}
-			conn, err = grpc.NewClient(address, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
-			if err != nil {
-				log.Fatalf("failed to connect  err=%v", err)
-			}
+			return grpc.NewClient(address, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 		} else {
 			// TLS
 			creds, err := credentials.NewClientTLSFromFile(apiCACert, "")
 			if err != nil {
 				log.Fatalf("failed to load credentials: %v", err)
 			}
-			conn, err = grpc.NewClient(address, grpc.WithTransportCredentials(creds))
-			if err != nil {
-				log.Fatalf("did not connect: %v", err)
-			}
+			return grpc.NewClient(address, grpc.WithTransportCredentials(creds))
 		}
 	}
-	if err != nil {
-		log.Fatalf("getClient err=%v", err)
-	}
-	return api.NewTWLogEyeServiceClient(conn)
 }
 
 func getTimeStr(t int64) string {
