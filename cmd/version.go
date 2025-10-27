@@ -17,13 +17,18 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
+	"github.com/charmbracelet/lipgloss"
+	"github.com/common-nighthawk/go-figure"
 	"github.com/spf13/cobra"
 )
 
 var Version string
 var Commit string
 var Date string
+var versionColor string
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
@@ -31,10 +36,62 @@ var versionCmd = &cobra.Command{
 	Short: "Show twlogeye version",
 	Long:  `Show twlogeye version`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("twsla v%s(%s) %s\n", Version, Commit, Date)
+		printVersion()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
+	versionCmd.Flags().StringVar(&versionColor, "color", "", "Version color")
 }
+
+func printVersion() {
+	colors := []string{"39", "49", "214", "196", "15", "192"}
+	if versionColor == "" {
+		versionColor = colors[int(time.Now().Unix())%len(colors)]
+	}
+	f := figure.NewFigure("TwLogEye", "roman", true)
+	fs := f.String()
+	logoBlock := lipgloss.NewStyle().
+		MarginTop(1).
+		MarginLeft(5).
+		Padding(0, 1).
+		Background(lipgloss.Color("0")).
+		Foreground(lipgloss.Color(versionColor)).
+		Render(strings.TrimSpace(fs))
+
+	catBlock := lipgloss.NewStyle().
+		Padding(0, 1).
+		MarginBottom(1).
+		Background(lipgloss.Color("0")).
+		Foreground(lipgloss.Color(versionColor)).
+		Render(cat + fmt.Sprintf("twlogeye v%s(%s) %s\n", Version, Commit, Date))
+
+	fmt.Println(lipgloss.JoinVertical(lipgloss.Center, logoBlock, catBlock))
+}
+
+var cat = `@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@*++=##%%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@=   .......+%%@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@.  .... .**+*@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@:.. :-  ...:++.@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@:..-@#=:.... :*%@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@+:*%%**=...:*####-..::+#%@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@%##%%%#%%%#####=.  ....-@@@@@@@@@@@
+@@@@@@@@@@@@@@#*##%##%%#####%#*.   .... +@@@@@@@@@
+@@@@@@@@@@@@@@@@@%%%%%%%%%%###*.    ...  =@@@@@@@@
+@@@@@@@@@@@@@@@@@@@%%%%%%%%###-.   .:-:   +@@@@@@@
+@@@@@@@@@@@@@@@@@@@@%%%%%####+.  .:=*-..  .@@@@@@@
+@@@@@@@@@@@@@@@@@@%%%%%%##%###-:-*##=..    @@@@@@@
+@@@@@@@@@@@@@@@@%%%%%%%%%%##%%%%%%*=..     @@@@@@@
+@@@@@@@@@@@@@@@@%%%%%%%%%##%%%%%%*-..     -@@@@@@@
+@@@@@@@@@@@@@@@@@%%%%%%%#%%%%%%#-.        *@@@@@@@
+@@@@@@@@@@@@@@@@@@%%%%%%%%%%%+:.         .@@@@@@@@
+@@@@@@@@@@@@@@@@@@@%%%%%%%#*+=:.......   %@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@%%@@%%%%%##=.....  -@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@%@@@%%%%%%%####+. .#@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@%%@@@%%%%%%%%%%###*#@@@@@@@@@@
+@@@@@@@@@@@@@@@@@%%@%%%@@@%%%%%%######*@@@@@@@@@@@
+@@@@@@@@@@@@@@@@%@@%%#%@%%%%###%%%##*%#%@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@%%%@@%%%#**######**@@@@@@@@@@@@@
+`
