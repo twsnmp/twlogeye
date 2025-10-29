@@ -44,6 +44,9 @@ func (m dashboardModel) formatAnomalyScoreLine(l string, s float64, width int) s
 	scoreLabel := fmt.Sprintf(" %-10s", l)
 	scoreText := lipgloss.NewStyle().Foreground(ColorWhite).Render(scoreLabel) + scoreStyle.Render(scoreValue)
 	hmWidth := width - lipgloss.Width(scoreText) - 2
+	if hmWidth > len(e.Scores) {
+		hmWidth = len(e.Scores)
+	}
 	hm := heatmap.New(hmWidth, 1, heatmap.WithValueRange(min, max), heatmap.WithColorScale(anomalyColorScale))
 	for x, v := range e.Scores {
 		hm.Push(heatmap.NewHeatPoint(float64(x), 1, v))

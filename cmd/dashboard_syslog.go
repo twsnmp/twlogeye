@@ -118,8 +118,7 @@ func (m dashboardModel) renderSyslogPatternContent(chartWidth int, patterns []*a
 	if logPatternWidth < 20 {
 		logPatternWidth = 20
 	}
-	const displayLines = 5
-	for i := 0; i < displayLines; i++ {
+	for i := 0; i < topNLines; i++ {
 		if i < len(patterns) {
 			pattern := patterns[i]
 			barWidth := 10

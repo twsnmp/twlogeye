@@ -89,8 +89,7 @@ func (m dashboardModel) renderTrapTypesContent(chartWidth int) string {
 	if trapTypeWidth < 20 {
 		trapTypeWidth = 20
 	}
-	const displayLines = 5
-	for i := 0; i < displayLines; i++ {
+	for i := 0; i < topNLines; i++ {
 		if i < len(types) {
 			t := types[i]
 			barWidth := 10

@@ -30,6 +30,7 @@ import (
 )
 
 var dashboardHistory int
+var topNLines int
 var dashboardMap = make(map[string]bool)
 var dashboardPanel = []string{}
 
@@ -39,12 +40,12 @@ var dashboardCmd = &cobra.Command{
 	Short: "Display twlogeye dashboard",
 	Long: `Display twlogeye dashboard.
 <panel type> is
-	monitor | anomaly
+  monitor | anomaly
   syslog.count | syslog.pattern | syslog.error
   trap.count | trap.type 
-	netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte 
-	netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
-	winevent.count | winevent.pattern | winevent.error
+  netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte 
+  netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
+  winevent.count | winevent.pattern | winevent.error
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, p := range args {
@@ -81,6 +82,11 @@ var dashboardCmd = &cobra.Command{
 		if len(dashboardPanel) < 1 {
 			log.Fatalln("no panel")
 		}
+		if topNLines < 1 {
+			topNLines = 1
+		} else if topNLines > 10 {
+			topNLines = 10
+		}
 		dashboard()
 	},
 }
@@ -90,6 +96,7 @@ var teaProg *tea.Program
 func init() {
 	rootCmd.AddCommand(dashboardCmd)
 	dashboardCmd.Flags().IntVar(&dashboardHistory, "history", 100, "Keep report history")
+	dashboardCmd.Flags().IntVar(&topNLines, "topn", 5, "Number of top n lines.")
 }
 
 func dashboard() {

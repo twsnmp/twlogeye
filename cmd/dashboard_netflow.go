@@ -279,8 +279,7 @@ func (m dashboardModel) renderNetflowTopListContent(chartWidth int, patterns []*
 	if keyWidth < 20 {
 		keyWidth = 20
 	}
-	const displayLines = 5
-	for i := 0; i < displayLines; i++ {
+	for i := 0; i < topNLines; i++ {
 		if i < len(patterns) {
 			pattern := patterns[i]
 			barWidth := 10

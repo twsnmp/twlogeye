@@ -119,8 +119,7 @@ func (m dashboardModel) renderWindowsEventPatternContent(chartWidth int, pattern
 	if logPatternWidth < 20 {
 		logPatternWidth = 20
 	}
-	const displayLines = 5
-	for i := 0; i < displayLines; i++ {
+	for i := 0; i < topNLines; i++ {
 		if i < len(patterns) {
 			pattern := patterns[i]
 			barWidth := 10
