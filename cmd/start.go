@@ -127,7 +127,7 @@ func start() {
 	wg.Add(1)
 	go server.StartAPIServer(ctx, &wg, apiServerPort, apiServerCert, apiServerKey, apiCACert, sigterm)
 	wg.Add(1)
-	go server.StartMCPServer(ctx, &wg, apiServerCert, apiServerKey)
+	go server.StartMCPServer(ctx, &wg, apiServerCert, apiServerKey, Version)
 	<-sigterm
 	cancel()
 	wg.Wait()

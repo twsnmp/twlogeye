@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -16,8 +17,7 @@ import (
 	"github.com/araddon/dateparse"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
@@ -25,45 +25,33 @@ import (
 
 var mcpAllow sync.Map
 
-func StartMCPServer(ctx context.Context, wg *sync.WaitGroup, cert, key string) {
+func StartMCPServer(ctx context.Context, wg *sync.WaitGroup, cert, key, version string) {
 	defer wg.Done()
 	if datastore.Config.MCPEndpoint == "" {
 		return
 	}
 	log.Printf("start mcp server")
 	setMCPAllow()
-	mcpsv, e := makeMCPServer(cert, key)
+	e := makeMCPServer(cert, key, version)
 	<-ctx.Done()
 	log.Println("stop mcp server")
-	if mcpsv != nil {
-		mcpsv.Shutdown(ctx)
-	}
 	if e != nil {
 		e.Shutdown(ctx)
 	}
-
 }
 
-func makeMCPServer(cert, key string) (*server.StreamableHTTPServer, *echo.Echo) {
+func makeMCPServer(cert, key, version string) *echo.Echo {
 	// Create MCP Server
-	s := server.NewMCPServer(
-		"TwLogEye MCP Server",
-		"0.2.0",
-		server.WithToolCapabilities(true),
-		server.WithLogging(),
-	)
+	s := mcp.NewServer(
+		&mcp.Implementation{
+			Name:    "TwLogEye MCP Server",
+			Version: version,
+		}, nil)
 	// Add tools to MCP server
-	addSearchLogTool(s)
-	addSearchNotifyTool(s)
-	addGetReportTool(s)
-	addGetAnomalyReportTool(s)
-	addGetLastReportTool(s)
-	addGetSigmaRuleEvaluatorListTool(s)
-	addReloadSigmaRuleTool(s)
-	addGetSigmaRuleIDListTool(s)
-	addGetSigmaRuleTool(s)
-	addAddSigmaRuleTool(s)
-	addDeleteSigmaRuleTool(s)
+	addTools(s)
+	// Add prompts to MCP server
+	addPrompts(s)
+
 	sv := &http.Server{}
 	sv.Addr = datastore.Config.MCPEndpoint
 	if c, err := getMCPServerCert(cert, key); err == nil {
@@ -84,12 +72,15 @@ func makeMCPServer(cert, key string) (*server.StreamableHTTPServer, *echo.Echo) 
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
-	mcpsv := server.NewStreamableHTTPServer(s)
+	handler := mcp.NewStreamableHTTPHandler(func(req *http.Request) *mcp.Server {
+		return s
+	}, nil)
+
 	e.Any("/mcp", func(c echo.Context) error {
 		if !checkMCPACL(c) {
 			return echo.ErrUnauthorized
 		}
-		mcpsv.ServeHTTP(c.Response().Writer, c.Request())
+		handler.ServeHTTP(c.Response().Writer, c.Request())
 		return nil
 	})
 	log.Printf("start mcp server listening on %s", datastore.Config.MCPEndpoint)
@@ -98,7 +89,178 @@ func makeMCPServer(cert, key string) (*server.StreamableHTTPServer, *echo.Echo) 
 			log.Printf("start mcp server err=%v", err)
 		}
 	}()
-	return mcpsv, e
+	return e
+}
+
+func addTools(s *mcp.Server) {
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "search_log",
+		Description: "Search log from TwLogEye database.",
+	}, searchLog)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "search_notify",
+		Description: "Search notify from TwLogEye database.",
+	}, searchNotify)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_report",
+		Description: "Get report from TwLogEye database.",
+	}, getReport)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_last_report",
+		Description: "Get last report from TwLogEye database.",
+	}, getLastReport)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_anomaly_report",
+		Description: "Get anomaly report from TwLogEye database.",
+	}, getAnomalyReport)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_sigma_evaluator_list",
+		Description: "Get sigma rule evaluator list from TwLogEye.",
+	}, getSigmaRuleEvaluatorList)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_sigma_rule_id_list",
+		Description: "Get sigma rule id list from TwLogEye.",
+	}, getSigmaRuleIDList)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_sigma_rule",
+		Description: "Get sigma rule from TwLogEye.",
+	}, getSigmaRule)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "add_sigma_rule",
+		Description: "Add sigma rule to TwLogEye.",
+	}, addSigmaRule)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "delete_sigma_rule",
+		Description: "Delete sigma rule from TwLogEye",
+	}, deleteSigmaRule)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "reload_sigma_rule",
+		Description: "reload sigma rule",
+	}, ReloadSigmaRule)
+}
+
+// Add prompts
+func addPrompts(s *mcp.Server) {
+	s.AddPrompt(&mcp.Prompt{
+		Name:        "search_log",
+		Title:       "Search log",
+		Description: "Search log with filters.",
+		Arguments: []*mcp.PromptArgument{
+			{
+				Name:        "filter",
+				Title:       "Filter logs by regular expression. Empty is no filter.",
+				Description: "Filter logs by regular expression. Empty is no filter.",
+				Required:    false,
+			},
+			{
+				Name:        "type",
+				Title:       "Type of log to search.",
+				Description: "Type of log to search. type can be syslog,trap,netflow,winevent",
+				Required:    false,
+			},
+			{
+				Name:        "start",
+				Title:       "Start date and time for log search.",
+				Description: "Start date and time for log search. Example: 2025/10/26 11:00:00",
+				Required:    false,
+			},
+			{
+				Name:        "end",
+				Title:       "End date and time for log search.",
+				Description: "End date and time for log search. Example: 2025/10/26 11:00:00",
+				Required:    false,
+			},
+		},
+	}, searchLogPrompt)
+	s.AddPrompt(&mcp.Prompt{
+		Name:        "search_notify",
+		Title:       "Search notify",
+		Description: "Search notify with filters.",
+		Arguments: []*mcp.PromptArgument{
+			{
+				Name:        "level",
+				Title:       "Regular expression-based notify level filter.",
+				Description: "Regular expression-based notify level filter. level name is info,low,high,medium,critical empty is no filter.",
+				Required:    false,
+			},
+			{
+				Name:        "start",
+				Title:       "Start date and time for notify search.",
+				Description: "Start date and time for notify search. Example: 2025/10/26 11:00:00",
+				Required:    false,
+			},
+			{
+				Name:        "end",
+				Title:       "End date and time for notify search.",
+				Description: "End date and time for notify search. Example: 2025/10/26 11:00:00",
+				Required:    false,
+			},
+		},
+	}, searchNotifyPrompt)
+	s.AddPrompt(&mcp.Prompt{
+		Name:        "get_report",
+		Title:       "Get report from TwLogEye.",
+		Description: "Get report from TwLogEye database.",
+		Arguments: []*mcp.PromptArgument{
+			{
+				Name:        "type",
+				Title:       "Type of report.",
+				Description: "Type of report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log.",
+				Required:    false,
+			},
+			{
+				Name:        "start",
+				Title:       "Start date and time to get report.",
+				Description: "Start date and time for report search. Example: 2025/10/26 11:00:00",
+				Required:    false,
+			},
+			{
+				Name:        "end",
+				Title:       "End date and time to get report.",
+				Description: "End date and time to get report. Example: 2025/10/26 11:00:00",
+				Required:    false,
+			},
+		},
+	}, getReportPrompt)
+	s.AddPrompt(&mcp.Prompt{
+		Name:        "get_last_report",
+		Title:       "Get last report from TwLogEye.",
+		Description: "Get last report from TwLogEye database.",
+		Arguments: []*mcp.PromptArgument{
+			{
+				Name:        "type",
+				Title:       "Type of report.",
+				Description: "Type of report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log.",
+				Required:    false,
+			},
+		},
+	}, getLastReportPrompt)
+	s.AddPrompt(&mcp.Prompt{
+		Name:        "get_anomaly_report",
+		Title:       "Get anomaly report from TwLogEye.",
+		Description: "Get anomaly report from TwLogEye database.",
+		Arguments: []*mcp.PromptArgument{
+			{
+				Name:        "type",
+				Title:       "Type of anomaly report.",
+				Description: "Type of anomaly report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log.",
+				Required:    false,
+			},
+			{
+				Name:        "start",
+				Title:       "Start date and time to get anomaly report.",
+				Description: "Start date and time for anomaly report search. Example: 2025/10/26 11:00:00",
+				Required:    false,
+			},
+			{
+				Name:        "end",
+				Title:       "End date and time to get anomaly report.",
+				Description: "End date and time to get anomaly report. Example: 2025/10/26 11:00:00",
+				Required:    false,
+			},
+		},
+	}, getAnomalyReportPrompt)
+
 }
 
 func getMCPServerCert(cert, key string) (*tls.Certificate, error) {
@@ -155,46 +317,74 @@ type mcpLogEnt struct {
 	Log  string
 }
 
-func addSearchLogTool(s *server.MCPServer) {
-	tool := mcp.NewTool("search_log",
-		mcp.WithDescription("search log from TwLogEye"),
-		mcp.WithString("start",
-			mcp.Description(`start date and time to search log. ex. 2025/08/30 11:00:00. empty is 1970/01/01 00:00:00`),
-		),
-		mcp.WithString("end",
-			mcp.Description(`end date and time to search log. ex. 2025/08/30 11:00:00 empty is now.`),
-		),
-		mcp.WithString("type",
-			mcp.Description(`type is type of log. type can be "syslog","trap","netflow","winevent"`),
-		),
-		mcp.WithString("filter",
-			mcp.Description(`Log Filtering Using Regular Expressions`),
-		),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		st := getTime(request.GetString("start", ""), 0)
-		et := getTime(request.GetString("end", ""), time.Now().UnixNano())
-		logType := request.GetString("type", "syslog")
-		filter := makeRegexFilter(request.GetString("filter", ""))
-		list := []mcpLogEnt{}
-		datastore.ForEachLog(logType, st, et, func(l *datastore.LogEnt) bool {
-			if filter != nil && !filter.MatchString(l.Log) {
-				return true
-			}
-			list = append(list, mcpLogEnt{
-				Time: time.Unix(0, l.Time).Format(time.RFC3339Nano),
-				Type: l.Type.String(),
-				Src:  l.Src,
-				Log:  l.Log,
-			})
+type searchLogParams struct {
+	Filter string `json:"filter" jsonschema:"Filter logs by regular expression. Empty is no filter"`
+	Type   string `json:"type" jsonschema:"Type of log to search. type can be syslog,trap,netflow,winevent"`
+	Start  string `json:"start" jsonschema:"Start date and time for log search. Empty is 1970/1/1. Example: 2025/10/26 11:00:00"`
+	End    string `json:"end" jsonschema:"End date and time for log search. Empty is now. Example: 2025/10/26 11:00:00"`
+}
+
+func searchLog(ctx context.Context, req *mcp.CallToolRequest, args searchLogParams) (*mcp.CallToolResult, any, error) {
+	st := getTime(args.Start, 0)
+	et := getTime(args.End, time.Now().UnixNano())
+	logType := args.Type
+	if logType == "" {
+		logType = "syslog"
+	}
+	filter := makeRegexFilter(args.Filter)
+	list := []mcpLogEnt{}
+	datastore.ForEachLog(logType, st, et, func(l *datastore.LogEnt) bool {
+		if filter != nil && !filter.MatchString(l.Log) {
 			return true
-		})
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
 		}
-		return mcp.NewToolResultText(string(j)), nil
+		list = append(list, mcpLogEnt{
+			Time: time.Unix(0, l.Time).Format(time.RFC3339Nano),
+			Type: l.Type.String(),
+			Src:  l.Src,
+			Log:  l.Log,
+		})
+		return true
 	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		j = []byte(err.Error())
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
+}
+
+func searchLogPrompt(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+	c := []string{}
+	if filter, ok := req.Params.Arguments["filter"]; ok {
+		c = append(c, fmt.Sprintf("- Filter: %s", filter))
+	}
+	if limit, ok := req.Params.Arguments["limit"]; ok {
+		c = append(c, fmt.Sprintf("- Limit: %s", limit))
+	}
+	if start, ok := req.Params.Arguments["start"]; ok {
+		c = append(c, fmt.Sprintf("- Start: %s", start))
+	}
+	if end, ok := req.Params.Arguments["end"]; ok {
+		c = append(c, fmt.Sprintf("- End: %s", end))
+	}
+	p := "Search log in TWLogEye database by using search_log tool"
+	if len(c) > 0 {
+		p += " with following conditions.\n" + strings.Join(c, "\n")
+	} else {
+		p += "."
+	}
+	return &mcp.GetPromptResult{
+		Description: "search log prompt",
+		Messages: []*mcp.PromptMessage{
+			{
+				Role:    "user",
+				Content: &mcp.TextContent{Text: p},
+			},
+		},
+	}, nil
 }
 
 type mcpNotifyEnt struct {
@@ -207,47 +397,70 @@ type mcpNotifyEnt struct {
 	Tags  string
 	Level string
 }
+type searchNotifyParams struct {
+	Level string `json:"level" jsonschema:"Regular expression-based notify level filter. level name is info,low,high,medium,critical empty is no filter."`
+	Start string `json:"start" jsonschema:"Start date and time for notify search. Empty is 1970/1/1. Example: 2025/10/26 11:00:00"`
+	End   string `json:"end" jsonschema:"End date and time for notify search. Empty is now. Example: 2025/10/26 11:00:00"`
+}
 
-func addSearchNotifyTool(s *server.MCPServer) {
-	tool := mcp.NewTool("search_notify",
-		mcp.WithDescription("search notify from TwLogEye"),
-		mcp.WithString("start",
-			mcp.Description(`start date and time to search notify. ex. 2025/08/30 11:00:00. empty is 1970/01/01 00:00:00`),
-		),
-		mcp.WithString("end",
-			mcp.Description(`end date and time to search notify. ex. 2025/08/30 11:00:00 empty is now.`),
-		),
-		mcp.WithString("level",
-			mcp.Description(`Regular expression-based notify level filter. level name is "info","low","high","medium","critical" empty is no filter.`),
-		),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		st := getTime(request.GetString("start", ""), 0)
-		et := getTime(request.GetString("end", ""), time.Now().UnixNano())
-		level := makeRegexFilter(request.GetString("level", ""))
-		list := []mcpNotifyEnt{}
-		datastore.ForEachNotify(st, et, func(n *datastore.NotifyEnt) bool {
-			if level != nil && !level.MatchString(n.Level) {
-				return true
-			}
-			list = append(list, mcpNotifyEnt{
-				Time:  time.Unix(0, n.Time).Format(time.RFC3339Nano),
-				Type:  n.Type.String(),
-				Src:   n.Src,
-				Log:   n.Log,
-				ID:    n.ID,
-				Title: n.Title,
-				Tags:  n.Tags,
-				Level: n.Level,
-			})
+func searchNotify(ctx context.Context, req *mcp.CallToolRequest, args searchNotifyParams) (*mcp.CallToolResult, any, error) {
+	st := getTime(args.Start, 0)
+	et := getTime(args.End, time.Now().UnixNano())
+	level := makeRegexFilter(args.Level)
+	list := []mcpNotifyEnt{}
+	datastore.ForEachNotify(st, et, func(n *datastore.NotifyEnt) bool {
+		if level != nil && !level.MatchString(n.Level) {
 			return true
-		})
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
 		}
-		return mcp.NewToolResultText(string(j)), nil
+		list = append(list, mcpNotifyEnt{
+			Time:  time.Unix(0, n.Time).Format(time.RFC3339Nano),
+			Type:  n.Type.String(),
+			Src:   n.Src,
+			Log:   n.Log,
+			ID:    n.ID,
+			Title: n.Title,
+			Tags:  n.Tags,
+			Level: n.Level,
+		})
+		return true
 	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		j = []byte(err.Error())
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
+}
+
+func searchNotifyPrompt(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+	c := []string{}
+	if level, ok := req.Params.Arguments["level"]; ok {
+		c = append(c, fmt.Sprintf("- Level filter: %s", level))
+	}
+	if start, ok := req.Params.Arguments["start"]; ok {
+		c = append(c, fmt.Sprintf("- Start: %s", start))
+	}
+	if end, ok := req.Params.Arguments["end"]; ok {
+		c = append(c, fmt.Sprintf("- End: %s", end))
+	}
+	p := "Search notify in TWLogEye database by using search_notify tool"
+	if len(c) > 0 {
+		p += " with following conditions.\n" + strings.Join(c, "\n")
+	} else {
+		p += "."
+	}
+	return &mcp.GetPromptResult{
+		Description: "search notify prompt",
+		Messages: []*mcp.PromptMessage{
+			{
+				Role:    "user",
+				Content: &mcp.TextContent{Text: p},
+			},
+		},
+	}, nil
 }
 
 func getTime(s string, dt int64) int64 {
@@ -266,68 +479,88 @@ func makeRegexFilter(s string) *regexp.Regexp {
 	return nil
 }
 
-func addGetReportTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_report",
-		mcp.WithDescription("get report from TwLogEye"),
-		mcp.WithString("start",
-			mcp.Description(`start date and time to get report. ex. 2025/08/30 11:00:00. empty is 1970/01/01 00:00:00`),
-		),
-		mcp.WithString("end",
-			mcp.Description(`end date and time to get report. ex. 2025/08/30 11:00:00 empty is now.`),
-		),
-		mcp.WithString("type",
-			mcp.Description(`type of report. type can be "syslog","trap","netflow","winevent","anomaly","monitor"
-"winevent" is windows event log`),
-		),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		st := getTime(request.GetString("start", ""), 0)
-		et := getTime(request.GetString("end", ""), time.Now().UnixNano())
-		reportType := request.GetString("type", "syslog")
-		r := ""
-		switch reportType {
-		case "trap":
-			r = getTrapReport(st, et)
-		case "netflow":
-			r = getNetflowReport(st, et)
-		case "winevent":
-			r = getWindowsEventReport(st, et)
-		case "monitor":
-			r = getMonitorReport(st, et)
-		default:
-			r = getSyslogReport(st, et)
-		}
-		return mcp.NewToolResultText(r), nil
-	})
+type getReportParams struct {
+	Type  string `json:"type" jsonschema:"type of report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log"`
+	Start string `json:"start" jsonschema:"Start date and time to get report. Empty is 1970/1/1. Example: 2025/10/26 11:00:00"`
+	End   string `json:"end" jsonschema:"End date and time to get report. Empty is now. Example: 2025/10/26 11:00:00"`
 }
 
-func addGetLastReportTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_last_report",
-		mcp.WithDescription("get last report from TwLogEye"),
-		mcp.WithString("type",
-			mcp.Description(`type of report. type can be "syslog","trap","netflow","winevent","anomaly","monitor"
-"winevent" is windows event log`),
-		),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		reportType := request.GetString("type", "syslog")
-		r := ""
-		switch reportType {
-		case "trap":
-			r = getLastTrapReport()
-		case "netflow":
-			r = getLastNetflowReport()
-		case "winevent":
-			r = getLastWindowsEventReport()
-		case "monitor":
-			r = getLastMonitorReport()
-		case "anomaly":
-			r = getLastAnomalyReport()
-		default:
-			r = getLastSyslogReport()
-		}
-		return mcp.NewToolResultText(r), nil
-	})
+func getReport(ctx context.Context, req *mcp.CallToolRequest, args getReportParams) (*mcp.CallToolResult, any, error) {
+	st := getTime(args.Start, 0)
+	et := getTime(args.End, time.Now().UnixNano())
+	r := ""
+	switch args.Type {
+	case "trap":
+		r = getTrapReport(st, et)
+	case "netflow":
+		r = getNetflowReport(st, et)
+	case "winevent":
+		r = getWindowsEventReport(st, et)
+	case "monitor":
+		r = getMonitorReport(st, et)
+	default:
+		r = getSyslogReport(st, et)
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: r},
+		},
+	}, nil, nil
+}
+
+func getReportPrompt(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+	c := []string{}
+	if reportType, ok := req.Params.Arguments["type"]; ok {
+		c = append(c, fmt.Sprintf("- Report type: %s", reportType))
+	}
+	if start, ok := req.Params.Arguments["start"]; ok {
+		c = append(c, fmt.Sprintf("- Start: %s", start))
+	}
+	if end, ok := req.Params.Arguments["end"]; ok {
+		c = append(c, fmt.Sprintf("- End: %s", end))
+	}
+	p := "Get report from TWLogEye database by using get_report tool"
+	if len(c) > 0 {
+		p += " with following conditions.\n" + strings.Join(c, "\n")
+	} else {
+		p += "."
+	}
+	return &mcp.GetPromptResult{
+		Description: "get report prompt",
+		Messages: []*mcp.PromptMessage{
+			{
+				Role:    "user",
+				Content: &mcp.TextContent{Text: p},
+			},
+		},
+	}, nil
+}
+
+type getLastReportParams struct {
+	Type string `json:"type" jsonschema:"type of report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log"`
+}
+
+func getLastReport(ctx context.Context, req *mcp.CallToolRequest, args getLastReportParams) (*mcp.CallToolResult, any, error) {
+	r := ""
+	switch args.Type {
+	case "trap":
+		r = getLastTrapReport()
+	case "netflow":
+		r = getLastNetflowReport()
+	case "winevent":
+		r = getLastWindowsEventReport()
+	case "monitor":
+		r = getLastMonitorReport()
+	case "anomaly":
+		r = getLastAnomalyReport()
+	default:
+		r = getLastSyslogReport()
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: r},
+		},
+	}, nil, nil
 }
 
 type mcpSyslogReportEnt struct {
@@ -367,7 +600,7 @@ func getSyslogReport(st, et int64) string {
 func getLastSyslogReport() string {
 	l := datastore.GetLastSyslogReport()
 	if l == nil {
-		return "syslog report notfound"
+		return "syslog report not found"
 	}
 	r := &mcpSyslogReportEnt{
 		Time:         time.Unix(0, l.Time).Format(time.RFC3339),
@@ -562,39 +795,56 @@ func getLastWindowsEventReport() string {
 	return string(j)
 }
 
+func getLastReportPrompt(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+	c := []string{}
+	if reportType, ok := req.Params.Arguments["type"]; ok {
+		c = append(c, fmt.Sprintf("- Report type: %s", reportType))
+	}
+	p := "Get last report from TWLogEye database by using get_last_report tool"
+	if len(c) > 0 {
+		p += " with following conditions.\n" + strings.Join(c, "\n")
+	} else {
+		p += "."
+	}
+	return &mcp.GetPromptResult{
+		Description: "get last report prompt",
+		Messages: []*mcp.PromptMessage{
+			{
+				Role:    "user",
+				Content: &mcp.TextContent{Text: p},
+			},
+		},
+	}, nil
+}
+
 type mcpAnomalyReportEnt struct {
 	Time  string
 	Score float64
 }
 
-func addGetAnomalyReportTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_anomaly_report",
-		mcp.WithDescription("get anomaly report from TwLogEye"),
-		mcp.WithString("start",
-			mcp.Description(`start date and time to get report. ex. 2025/08/30 11:00:00. empty is 1970/01/01 00:00:00`),
-		),
-		mcp.WithString("end",
-			mcp.Description(`end date and time to get report. ex. 2025/08/30 11:00:00 empty is now.`),
-		),
-		mcp.WithString("type",
-			mcp.Description(`type of anomaly report. type can be "syslog","trap","netflow","winevent","monitor"
-"winevent" is windows event log`),
-		),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		st := getTime(request.GetString("start", ""), 0)
-		et := getTime(request.GetString("end", ""), time.Now().UnixNano())
-		t := request.GetString("type", "syslog")
-		r := getAnomalyReport(t, st, et)
-		return mcp.NewToolResultText(r), nil
-	})
+type getAnomalyReportParams struct {
+	Type  string `json:"type" jsonschema:"type of anomaly report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log"`
+	Start string `json:"start" jsonschema:"Start date and time to get report. Empty is 1970/1/1. Example: 2025/10/26 11:00:00"`
+	End   string `json:"end" jsonschema:"End date and time to get report. Empty is now. Example: 2025/10/26 11:00:00"`
 }
 
-func getAnomalyReport(t string, st, et int64) string {
+func getAnomalyReport(ctx context.Context, req *mcp.CallToolRequest, args getAnomalyReportParams) (*mcp.CallToolResult, any, error) {
+	st := getTime(args.Start, 0)
+	et := getTime(args.End, time.Now().UnixNano())
+	r := getAnomalyReportSub(args.Type, st, et)
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: r},
+		},
+	}, nil, nil
+}
+
+func getAnomalyReportSub(t string, st, et int64) string {
 	list := []mcpAnomalyReportEnt{}
 	datastore.ForEachAnomalyReport(t, st, et, func(r *datastore.AnomalyReportEnt) bool {
 		list = append(list,
 			mcpAnomalyReportEnt{
+				Time:  time.Unix(0, r.Time).Format(time.RFC3339),
 				Score: r.Score,
 			})
 		return true
@@ -604,6 +854,34 @@ func getAnomalyReport(t string, st, et int64) string {
 		return (err.Error())
 	}
 	return string(j)
+}
+
+func getAnomalyReportPrompt(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+	c := []string{}
+	if reportType, ok := req.Params.Arguments["type"]; ok {
+		c = append(c, fmt.Sprintf("- Report type: %s", reportType))
+	}
+	if start, ok := req.Params.Arguments["start"]; ok {
+		c = append(c, fmt.Sprintf("- Start: %s", start))
+	}
+	if end, ok := req.Params.Arguments["end"]; ok {
+		c = append(c, fmt.Sprintf("- End: %s", end))
+	}
+	p := "Get anomaly report from TWLogEye database by using get_anomaly_report tool"
+	if len(c) > 0 {
+		p += " with following conditions.\n" + strings.Join(c, "\n")
+	} else {
+		p += "."
+	}
+	return &mcp.GetPromptResult{
+		Description: "get anomaly report prompt",
+		Messages: []*mcp.PromptMessage{
+			{
+				Role:    "user",
+				Content: &mcp.TextContent{Text: p},
+			},
+		},
+	}, nil
 }
 
 type mcpLastAnomalyReportScore struct {
@@ -697,119 +975,118 @@ func getLastMonitorReport() string {
 	return string(j)
 }
 
-func addGetSigmaRuleEvaluatorListTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_sigma_evaluator_list",
-		mcp.WithDescription("get sigma rule evaluator list from TwLogEye"),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		list := auditor.GetEvaluators()
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
-		}
-		return mcp.NewToolResultText(string(j)), nil
-	})
+func getSigmaRuleEvaluatorList(ctx context.Context, req *mcp.CallToolRequest, _ any) (*mcp.CallToolResult, any, error) {
+
+	list := auditor.GetEvaluators()
+	j, err := json.Marshal(&list)
+	if err != nil {
+		j = []byte(err.Error())
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
 }
 
-func addGetSigmaRuleIDListTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_sigma_rule_id_list",
-		mcp.WithDescription("get sigma rule id list from TwLogEye"),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		list := []string{}
-		datastore.ForEachSigmaRuleOnDB(func(c []byte, k string) {
-			a := strings.SplitN(k, ":", 3)
-			if len(a) == 3 {
-				list = append(list, a[2])
-			}
-		})
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
+func getSigmaRuleIDList(ctx context.Context, req *mcp.CallToolRequest, _ any) (*mcp.CallToolResult, any, error) {
+	list := []string{}
+	datastore.ForEachSigmaRuleOnDB(func(c []byte, k string) {
+		a := strings.SplitN(k, ":", 3)
+		if len(a) == 3 {
+			list = append(list, a[2])
 		}
-		return mcp.NewToolResultText(string(j)), nil
 	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		j = []byte(err.Error())
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
 }
 
-func addGetSigmaRuleTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_sigma_rule",
-		mcp.WithDescription("get sigma rule from TwLogEye"),
-		mcp.WithString("id",
-			mcp.Description(`id of sigma rule`),
-		),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id := request.GetString("id", "")
-		r, err := datastore.GetSigmaRuleFromDB(id)
-		if err != nil {
-			log.Printf("get sigma rule id=%s err=%v", id, err)
-			r = err.Error()
-		}
-		return mcp.NewToolResultText(r), nil
-	})
+type getSigmaRuleParams struct {
+	ID string `json:"id" jsonschema:"id of sigma rule to get."`
 }
 
-func addAddSigmaRuleTool(s *server.MCPServer) {
-	tool := mcp.NewTool("add_sigma_rule",
-		mcp.WithDescription("add sigma rule to TwLogEye"),
-		mcp.WithString("rule",
-			mcp.Description(`YAML-formatted Sigma rule string.`),
-		),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		rule := request.GetString("rule", "")
-		if rule == "" {
-			return mcp.NewToolResultText("rule is empty"), nil
-		}
-		if !strings.Contains(rule, "id: ") {
-			// Auto generate ID
-			i := uuid.New()
-			rule = "id: " + i.String() + "\n" + rule
-		}
-		id, err := auditor.ParseSigmaRule(rule)
-		if id == "" {
-			log.Printf("id not found rule=%s", rule)
-			return mcp.NewToolResultText("id not found"), nil
-		}
-		if err != nil {
-			log.Printf("parse sigma rule err=%v", err)
-			log.Printf("rule=%s", rule)
-			return mcp.NewToolResultText(err.Error()), nil
-		}
-		err = datastore.AddSigmaRuleToDB(id, rule)
-		if err != nil {
-			return mcp.NewToolResultText(err.Error()), nil
-		}
-		return mcp.NewToolResultText("add sigma rule id=" + id), nil
-	})
+func getSigmaRule(ctx context.Context, req *mcp.CallToolRequest, args getSigmaRuleParams) (*mcp.CallToolResult, any, error) {
+
+	id := args.ID
+	r, err := datastore.GetSigmaRuleFromDB(id)
+	if err != nil {
+		log.Printf("get sigma rule id=%s err=%v", id, err)
+		r = err.Error()
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: r},
+		},
+	}, nil, nil
 }
 
-func addDeleteSigmaRuleTool(s *server.MCPServer) {
-	tool := mcp.NewTool("delete_sigma_rule",
-		mcp.WithDescription("delete sigma rule from TwLogEye"),
-		mcp.WithString("id",
-			mcp.Description(`id of sigma rule`),
-		),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id := request.GetString("id", "")
-		err := datastore.DeleteSigmaRuleFromDB(id)
-		if err != nil {
-			return mcp.NewToolResultText(err.Error()), nil
-		}
-		return mcp.NewToolResultText("delete sigma rule id=" + id), nil
-	})
+type addSigmaRuleParams struct {
+	Rule string `json:"rule" jsonschema:"YAML-formatted Sigma rule string."`
 }
 
-func addReloadSigmaRuleTool(s *server.MCPServer) {
-	tool := mcp.NewTool("reload_sigma_rule",
-		mcp.WithDescription("reload sigma rule"),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		go func() {
-			time.Sleep(time.Second)
-			auditor.Reload()
-		}()
-		return mcp.NewToolResultText("start reload"), nil
-	})
+func addSigmaRule(ctx context.Context, req *mcp.CallToolRequest, args addSigmaRuleParams) (*mcp.CallToolResult, any, error) {
+	rule := args.Rule
+	if rule == "" {
+		return nil, nil, fmt.Errorf("rule is required")
+	}
+	if !strings.Contains(rule, "id: ") {
+		// Auto generate ID
+		i := uuid.New()
+		rule = "id: " + i.String() + "\n" + rule
+	}
+	id, err := auditor.ParseSigmaRule(rule)
+	if id == "" {
+		return nil, nil, fmt.Errorf("invalid rule format")
+	}
+	if err != nil {
+		log.Printf("parse sigma rule err=%v", err)
+		log.Printf("rule=%s", rule)
+		return nil, nil, err
+	}
+	err = datastore.AddSigmaRuleToDB(id, rule)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: "add sigma rule id=" + id},
+		},
+	}, nil, nil
+}
+
+type deleteSigmaRuleParams struct {
+	ID string `json:"id" jsonschema:"ID of sigma rule to delete"`
+}
+
+func deleteSigmaRule(ctx context.Context, req *mcp.CallToolRequest, args deleteSigmaRuleParams) (*mcp.CallToolResult, any, error) {
+	id := args.ID
+	err := datastore.DeleteSigmaRuleFromDB(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: "delete sigma rule id=" + id},
+		},
+	}, nil, nil
+}
+
+func ReloadSigmaRule(ctx context.Context, req *mcp.CallToolRequest, _ any) (*mcp.CallToolResult, any, error) {
+
+	go func() {
+		time.Sleep(time.Second)
+		auditor.Reload()
+	}()
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: "start reload"},
+		},
+	}, nil, nil
 }

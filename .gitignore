@@ -27,3 +27,4 @@ go.work.sum
 dist/
 tmp/
 .DS_Store
+.gemini/
