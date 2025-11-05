@@ -155,7 +155,7 @@ func addPrompts(s *mcp.Server) {
 			{
 				Name:        "type",
 				Title:       "Type of log to search.",
-				Description: "Type of log to search. type can be syslog,trap,netflow,winevent",
+				Description: "Type of log to search. type can be syslog,trap,netflow,winevent.otel.",
 				Required:    false,
 			},
 			{
@@ -205,7 +205,7 @@ func addPrompts(s *mcp.Server) {
 			{
 				Name:        "type",
 				Title:       "Type of report.",
-				Description: "Type of report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log.",
+				Description: "Type of report. type can be syslog,trap,netflow,winevent,otel,anomaly,monitor.winevent is windows event log.",
 				Required:    false,
 			},
 			{
@@ -230,7 +230,7 @@ func addPrompts(s *mcp.Server) {
 			{
 				Name:        "type",
 				Title:       "Type of report.",
-				Description: "Type of report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log.",
+				Description: "Type of report. type can be syslog,trap,netflow,winevent,otel,anomaly,monitor.winevent is windows event log.",
 				Required:    false,
 			},
 		},
@@ -243,7 +243,7 @@ func addPrompts(s *mcp.Server) {
 			{
 				Name:        "type",
 				Title:       "Type of anomaly report.",
-				Description: "Type of anomaly report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log.",
+				Description: "Type of anomaly report. type can be syslog,trap,netflow,winevent,anomaly,otel,monitor.winevent is windows event log.",
 				Required:    false,
 			},
 			{
@@ -480,7 +480,7 @@ func makeRegexFilter(s string) *regexp.Regexp {
 }
 
 type getReportParams struct {
-	Type  string `json:"type" jsonschema:"type of report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log"`
+	Type  string `json:"type" jsonschema:"type of report. type can be syslog,trap,netflow,winevent,otel,monitor.winevent is windows event log"`
 	Start string `json:"start" jsonschema:"Start date and time to get report. Empty is 1970/1/1. Example: 2025/10/26 11:00:00"`
 	End   string `json:"end" jsonschema:"End date and time to get report. Empty is now. Example: 2025/10/26 11:00:00"`
 }
@@ -496,6 +496,8 @@ func getReport(ctx context.Context, req *mcp.CallToolRequest, args getReportPara
 		r = getNetflowReport(st, et)
 	case "winevent":
 		r = getWindowsEventReport(st, et)
+	case "otel":
+		r = getOTelReport(st, et)
 	case "monitor":
 		r = getMonitorReport(st, et)
 	default:
@@ -537,7 +539,7 @@ func getReportPrompt(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetPr
 }
 
 type getLastReportParams struct {
-	Type string `json:"type" jsonschema:"type of report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log"`
+	Type string `json:"type" jsonschema:"type of report. type can be syslog,trap,netflow,winevent,otel,anomaly,monitor.winevent is windows event log"`
 }
 
 func getLastReport(ctx context.Context, req *mcp.CallToolRequest, args getLastReportParams) (*mcp.CallToolResult, any, error) {
@@ -549,6 +551,8 @@ func getLastReport(ctx context.Context, req *mcp.CallToolRequest, args getLastRe
 		r = getLastNetflowReport()
 	case "winevent":
 		r = getLastWindowsEventReport()
+	case "otel":
+		r = getLastOTelReport()
 	case "monitor":
 		r = getLastMonitorReport()
 	case "anomaly":
@@ -795,6 +799,72 @@ func getLastWindowsEventReport() string {
 	return string(j)
 }
 
+type mcpOTelReportEnt struct {
+	Time         string
+	Normal       int
+	Warn         int
+	Error        int
+	Types        int
+	ErrorTypes   int
+	TopList      []datastore.OTelSummaryEnt
+	TopErrorList []datastore.OTelSummaryEnt
+	Hosts        int
+	TraceIDs     int
+	TraceCount   int
+	MericsCount  int
+}
+
+func getOTelReport(st, et int64) string {
+	list := []mcpOTelReportEnt{}
+	datastore.ForEachOTelReport(st, et, func(r *datastore.OTelReportEnt) bool {
+		list = append(list,
+			mcpOTelReportEnt{
+				Time:         time.Unix(0, r.Time).Format(time.RFC3339),
+				Normal:       r.Normal,
+				Warn:         r.Warn,
+				Error:        r.Error,
+				ErrorTypes:   r.ErrorTypes,
+				TopList:      r.TopList,
+				TopErrorList: r.TopErrorList,
+				Hosts:        r.Hosts,
+				TraceIDs:     r.TraceIDs,
+				TraceCount:   r.TraceCount,
+				MericsCount:  r.MericsCount,
+			})
+		return true
+	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
+func getLastOTelReport() string {
+	l := datastore.GetLastOTelReport()
+	if l == nil {
+		return "windows event report not found"
+	}
+	r := &mcpOTelReportEnt{
+		Time:         time.Unix(0, l.Time).Format(time.RFC3339),
+		Normal:       l.Normal,
+		Warn:         l.Warn,
+		Error:        l.Error,
+		ErrorTypes:   l.ErrorTypes,
+		TopList:      l.TopList,
+		TopErrorList: l.TopErrorList,
+		Hosts:        l.Hosts,
+		TraceIDs:     l.TraceIDs,
+		TraceCount:   l.TraceCount,
+		MericsCount:  l.MericsCount,
+	}
+	j, err := json.Marshal(&r)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
 func getLastReportPrompt(ctx context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
 	c := []string{}
 	if reportType, ok := req.Params.Arguments["type"]; ok {
@@ -823,7 +893,7 @@ type mcpAnomalyReportEnt struct {
 }
 
 type getAnomalyReportParams struct {
-	Type  string `json:"type" jsonschema:"type of anomaly report. type can be syslog,trap,netflow,winevent,anomaly,monitor.winevent is windows event log"`
+	Type  string `json:"type" jsonschema:"type of anomaly report. type can be syslog,trap,netflow,winevent,otel,monitor.winevent is windows event log"`
 	Start string `json:"start" jsonschema:"Start date and time to get report. Empty is 1970/1/1. Example: 2025/10/26 11:00:00"`
 	End   string `json:"end" jsonschema:"End date and time to get report. Empty is now. Example: 2025/10/26 11:00:00"`
 }
@@ -899,7 +969,7 @@ func getLastAnomalyReport() string {
 		Time:      time.Now().Format(time.RFC3339),
 		ScoreList: []*mcpLastAnomalyReportScore{},
 	}
-	for _, t := range []string{"syslog", "trap", "netflow", "winevent", "monitor"} {
+	for _, t := range []string{"syslog", "trap", "netflow", "winevent", "otel", "monitor"} {
 		l := datastore.GetLastAnomalyReport(t)
 		if l != nil {
 			r.ScoreList = append(r.ScoreList, &mcpLastAnomalyReportScore{
