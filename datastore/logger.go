@@ -18,7 +18,7 @@ const (
 	SnmpTrap
 	WindowsEventLog
 	AnomalyReport
-	OTelLog
+	OTel
 )
 
 func (t LogType) String() string {
@@ -33,8 +33,8 @@ func (t LogType) String() string {
 		return "windowsEvent"
 	case AnomalyReport:
 		return "anomalyReport"
-	case OTelLog:
-		return "otelLog"
+	case OTel:
+		return "otel"
 	}
 	return "unknown"
 }
@@ -45,13 +45,13 @@ func ClearLog(t string) {
 	case "netflow":
 	case "trap":
 	case "windows":
-	case "otelLog":
+	case "otel":
 	case "all":
 		db.DropPrefix([]byte("syslog:"))
 		db.DropPrefix([]byte("trap:"))
 		db.DropPrefix([]byte("netflow:"))
 		db.DropPrefix([]byte("windows:"))
-		db.DropPrefix([]byte("otelLog:"))
+		db.DropPrefix([]byte("otel:"))
 	default:
 		return
 	}

@@ -377,7 +377,7 @@ func handleLogs(ctx context.Context, ld plog.Logs) error {
 				if j, err := json.Marshal(&otelLogEnt); err == nil {
 					logEnt := &datastore.LogEnt{
 						Time: l.Timestamp().AsTime().UnixNano(),
-						Type: datastore.OTelLog,
+						Type: datastore.OTel,
 						Src:  host,
 						Log:  string(j),
 					}
@@ -390,7 +390,7 @@ func handleLogs(ctx context.Context, ld plog.Logs) error {
 	}
 	if len(logs) > 0 {
 		st := time.Now()
-		datastore.SaveLogs("otelLog", logs)
+		datastore.SaveLogs("otel", logs)
 		log.Printf("save otel logs len=%d dur=%v", len(logs), time.Since(st))
 	}
 	return nil

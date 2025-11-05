@@ -319,7 +319,7 @@ type mcpLogEnt struct {
 
 type searchLogParams struct {
 	Filter string `json:"filter" jsonschema:"Filter logs by regular expression. Empty is no filter"`
-	Type   string `json:"type" jsonschema:"Type of log to search. type can be syslog,trap,netflow,winevent"`
+	Type   string `json:"type" jsonschema:"Type of log to search. type can be syslog,trap,netflow,winevent,otel"`
 	Start  string `json:"start" jsonschema:"Start date and time for log search. Empty is 1970/1/1. Example: 2025/10/26 11:00:00"`
 	End    string `json:"end" jsonschema:"End date and time for log search. Empty is now. Example: 2025/10/26 11:00:00"`
 }
