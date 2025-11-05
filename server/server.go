@@ -127,6 +127,8 @@ func (s *apiServer) ClearDB(ctx context.Context, req *api.ClearRequest) (*api.Co
 		datastore.ClearLog(sub)
 	case "notify":
 		datastore.ClearNotify()
+	case "otel":
+		datastore.DeleteAllOTelData()
 	case "report":
 		datastore.ClearReport(sub)
 		if sub == "anomaly" {
@@ -534,6 +536,89 @@ func (s *apiServer) GetLastWindowsEventReport(ctx context.Context, req *api.Empt
 	return r, nil
 }
 
+func (s *apiServer) GetOTelReport(req *api.ReportRequest, stream api.TWLogEyeService_GetOTelReportServer) error {
+	datastore.ForEachOTelReport(req.GetStart(), req.GetEnd(), func(l *datastore.OTelReportEnt) bool {
+		r := &api.OTelReportEnt{
+			Time:         l.Time,
+			Normal:       int32(l.Normal),
+			Warn:         int32(l.Warn),
+			Error:        int32(l.Error),
+			Types:        int32(l.Types),
+			ErrorTypes:   int32(l.ErrorTypes),
+			TraceIds:     int32(l.TraceIDs),
+			TraceCount:   int32(l.TraceCount),
+			Hosts:        int32(l.Hosts),
+			MericsCount:  int32(l.MericsCount),
+			TopList:      []*api.OTelSummaryEnt{},
+			TopErrorList: []*api.OTelSummaryEnt{},
+		}
+		for _, t := range l.TopList {
+			r.TopList = append(r.TopList, &api.OTelSummaryEnt{
+				Host:     t.Host,
+				Service:  t.Service,
+				Scope:    t.Scope,
+				Severity: t.Severity,
+				Count:    int32(t.Count),
+			})
+		}
+		for _, t := range l.TopErrorList {
+			r.TopErrorList = append(r.TopErrorList, &api.OTelSummaryEnt{
+				Host:     t.Host,
+				Service:  t.Service,
+				Scope:    t.Scope,
+				Severity: t.Severity,
+				Count:    int32(t.Count),
+			})
+		}
+		if err := stream.Send(r); err != nil {
+			log.Printf("api get optel report err=%v", err)
+			return false
+		}
+		return true
+	})
+	return nil
+}
+
+func (s *apiServer) GetLastOTelReport(ctx context.Context, req *api.Empty) (*api.OTelReportEnt, error) {
+	l := datastore.GetLastOTelReport()
+	if l == nil {
+		return nil, fmt.Errorf("otel report not found")
+	}
+	r := &api.OTelReportEnt{
+		Time:         l.Time,
+		Normal:       int32(l.Normal),
+		Warn:         int32(l.Warn),
+		Error:        int32(l.Error),
+		Types:        int32(l.Types),
+		ErrorTypes:   int32(l.ErrorTypes),
+		TraceIds:     int32(l.TraceIDs),
+		TraceCount:   int32(l.TraceCount),
+		Hosts:        int32(l.Hosts),
+		MericsCount:  int32(l.MericsCount),
+		TopList:      []*api.OTelSummaryEnt{},
+		TopErrorList: []*api.OTelSummaryEnt{},
+	}
+	for _, t := range l.TopList {
+		r.TopList = append(r.TopList, &api.OTelSummaryEnt{
+			Host:     t.Host,
+			Service:  t.Service,
+			Scope:    t.Scope,
+			Severity: t.Severity,
+			Count:    int32(t.Count),
+		})
+	}
+	for _, t := range l.TopErrorList {
+		r.TopErrorList = append(r.TopErrorList, &api.OTelSummaryEnt{
+			Host:     t.Host,
+			Service:  t.Service,
+			Scope:    t.Scope,
+			Severity: t.Severity,
+			Count:    int32(t.Count),
+		})
+	}
+	return r, nil
+}
+
 func (s *apiServer) GetAnomalyReport(req *api.AnomalyReportRequest, stream api.TWLogEyeService_GetAnomalyReportServer) error {
 	datastore.ForEachAnomalyReport(req.GetType(), req.GetStart(), req.GetEnd(), func(l *datastore.AnomalyReportEnt) bool {
 		r := &api.AnomalyReportEnt{
@@ -554,7 +639,7 @@ func (s *apiServer) GetLastAnomalyReport(ctx context.Context, req *api.Empty) (*
 		Time:      time.Now().UnixNano(),
 		ScoreList: []*api.LastAnomalyReportScore{},
 	}
-	for _, t := range []string{"syslog", "trap", "netflow", "winevent", "monitor"} {
+	for _, t := range []string{"syslog", "trap", "netflow", "winevent", "otel", "monitor"} {
 		l := datastore.GetLastAnomalyReport(t)
 		if l != nil {
 			r.ScoreList = append(r.ScoreList, &api.LastAnomalyReportScore{
@@ -604,6 +689,118 @@ func (s *apiServer) GetLastMonitorReport(ctx context.Context, req *api.Empty) (*
 		Bytes:   l.Bytes,
 		DbSpeed: l.DBSpeed,
 		DbSize:  l.DBSize,
+	}
+	return r, nil
+}
+
+func (s *apiServer) GetOTelMetricList(req *api.Empty, stream api.TWLogEyeService_GetOTelMetricListServer) error {
+	datastore.ForEachOTelMetric(func(id string, m *datastore.OTelMetricEnt) bool {
+		r := &api.OTelMetricListEnt{
+			Id:          id,
+			Host:        m.Host,
+			Service:     m.Service,
+			Scope:       m.Scope,
+			Name:        m.Name,
+			Type:        m.Type,
+			Description: m.Description,
+			Unit:        m.Unit,
+			Count:       int32(m.Count),
+			First:       m.First,
+			Last:        m.Last,
+		}
+		if err := stream.Send(r); err != nil {
+			log.Printf("api get otel metric list err=%v", err)
+			return false
+		}
+		return true
+	})
+	return nil
+}
+
+func (s *apiServer) GetOTelMetric(ctx context.Context, req *api.IDRequest) (*api.OTelMetricEnt, error) {
+	m := datastore.GetOTelMetric(req.GetId())
+	if m == nil {
+		return nil, fmt.Errorf("otel metric not found")
+	}
+	r := &api.OTelMetricEnt{
+		Host:        m.Host,
+		Service:     m.Service,
+		Scope:       m.Scope,
+		Name:        m.Name,
+		Type:        m.Type,
+		Description: m.Description,
+		Unit:        m.Unit,
+		DataPoints:  []*api.OTelMetricDataPointEnt{},
+		Count:       int32(m.Count),
+		First:       m.First,
+		Last:        m.Last,
+	}
+	for _, d := range m.DataPoints {
+		r.DataPoints = append(r.DataPoints, &api.OTelMetricDataPointEnt{
+			Start:          d.Start,
+			Time:           d.Time,
+			Attributes:     d.Attributes,
+			Count:          d.Count,
+			BucketCounts:   d.BucketCounts,
+			ExplicitBounds: d.ExplicitBounds,
+			Sum:            d.Sum,
+			Min:            d.Min,
+			Max:            d.Max,
+			Gauge:          d.Gauge,
+			Positive:       d.Positive,
+			Negative:       d.Negative,
+			Scale:          d.Scale,
+			ZeroCount:      d.ZeroCount,
+			ZeroThreshold:  d.ZeroThreshold,
+		})
+	}
+	return r, nil
+}
+
+func (s *apiServer) GetOTelTraceList(req *api.Empty, stream api.TWLogEyeService_GetOTelTraceListServer) error {
+	datastore.ForEachOTelTrace(func(t *datastore.OTelTraceEnt) bool {
+		r := &api.OTelTraceListEnt{
+			TraceId: t.TraceID,
+			Start:   t.Start,
+			End:     t.End,
+			Dur:     t.Dur,
+			Last:    t.Last,
+		}
+		if err := stream.Send(r); err != nil {
+			log.Printf("api get otel trace list err=%v", err)
+			return false
+		}
+		return true
+	})
+	return nil
+}
+
+func (s *apiServer) GetOTelTrace(ctx context.Context, req *api.IDRequest) (*api.OTelTraceEnt, error) {
+	t := datastore.GetOTelTrace(req.GetId())
+	if t == nil {
+		return nil, fmt.Errorf("otel trace not found")
+	}
+	r := &api.OTelTraceEnt{
+		TraceId: t.TraceID,
+		Start:   t.Start,
+		End:     t.End,
+		Dur:     t.Dur,
+		Spans:   []*api.OTelTraceSpanEnt{},
+		Last:    t.Last,
+	}
+	for _, s := range t.Spans {
+		r.Spans = append(r.Spans, &api.OTelTraceSpanEnt{
+			SpanId:       s.SpanID,
+			ParentSpanId: s.ParentSpanID,
+			Host:         s.Host,
+			Service:      s.Service,
+			Scope:        s.Scope,
+			Name:         s.Name,
+			Start:        s.Start,
+			End:          s.End,
+			Dur:          s.Dur,
+			Attributes:   s.Attributes,
+		})
 	}
 	return r, nil
 }

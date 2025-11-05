@@ -99,6 +99,13 @@ func init() {
 	startCmd.Flags().BoolVar(&datastore.Config.Debug, "debug", false, "debug mode")
 	startCmd.Flags().BoolVar(&datastore.Config.WinLogSJIS, "sjis", false, "Windows eventlog SHIT-JIS mode")
 	startCmd.Flags().BoolVar(&datastore.Config.AnomalyUseTimeData, "anomayUseTime", false, "Include weekends and hours in the vector data for anomaly detection")
+	startCmd.Flags().IntVar(&datastore.Config.OTelHTTPPort, "otelHTTPPort", 0, "OpenTelemetry HTTP Port")
+	startCmd.Flags().IntVar(&datastore.Config.OTelgRPCPort, "otelgRPCPort", 0, "OpenTelemetry gRPC Port")
+	startCmd.Flags().StringVar(&datastore.Config.OTelFrom, "otelFrom", "", "OpenTelemetry clinet IPs")
+	startCmd.Flags().StringVar(&datastore.Config.OTelCert, "otelCert", "", "OpenTelemetry server sertficate")
+	startCmd.Flags().StringVar(&datastore.Config.OTelKey, "otelKey", "", "OpenTelemetry server private key")
+	startCmd.Flags().StringVar(&datastore.Config.OTelCA, "otelCA", "", "OpenTelemetry CA certficate")
+	startCmd.Flags().IntVar(&datastore.Config.OTelRetention, "otelRetention", 48, "log retention(hours)")
 }
 
 func start() {
@@ -122,6 +129,8 @@ func start() {
 	go logger.StartNetFlowd(ctx, &wg)
 	wg.Add(1)
 	go logger.StartWinEventLogd(ctx, &wg)
+	wg.Add(1)
+	go logger.StartOTeld(ctx, &wg)
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	wg.Add(1)

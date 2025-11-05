@@ -47,6 +47,8 @@ var reportCmd = &cobra.Command{
 			getNetflowReport(st, et)
 		case "winevent":
 			getWindowsEventReport(st, et)
+		case "otel":
+			getOTelReport(st, et)
 		case "anomaly":
 			if len(args) < 2 {
 				log.Fatalln("twlogeye report anomaly <type>")
@@ -65,6 +67,8 @@ var reportCmd = &cobra.Command{
 				getLastNetflowReport()
 			case "winevent":
 				getLastWindowsEventReport()
+			case "otel":
+				getLastOTelReport()
 			case "monitor":
 				getLastMonitorReport()
 			case "anomaly":
@@ -332,7 +336,7 @@ func getWindowsEventReport(st, et int64) {
 				fmt.Printf("%d\t%s\t%s\t%s\t%d\n", i+1, t.GetComputer(), t.GetProvider(), t.GetEventId(), t.GetCount())
 			}
 			fmt.Println("Top error windows event list")
-			fmt.Println("No.\tPattern\tCount")
+			fmt.Println("No.\tComputer\tProvider\tEventID\tCount")
 			for i, t := range r.GetTopErrorList() {
 				fmt.Printf("%d\t%s\t%s\t%s\t%d\n", i+1, t.GetComputer(), t.GetProvider(), t.GetEventId(), t.GetCount())
 			}
@@ -360,6 +364,63 @@ func getLastWindowsEventReport() {
 		fmt.Println("No.\tPattern\tCount")
 		for i, t := range r.GetTopErrorList() {
 			fmt.Printf("%d\t%s\t%s\t%s\t%d\n", i+1, t.GetComputer(), t.GetProvider(), t.GetEventId(), t.GetCount())
+		}
+		fmt.Println("===")
+	}
+}
+
+func getOTelReport(st, et int64) {
+	client := getClient()
+	s, err := client.GetOTelReport(context.Background(), &api.ReportRequest{Start: st, End: et})
+	if err != nil {
+		log.Fatalf("get otel report err=%v", err)
+	}
+	for {
+		r, err := s.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			log.Fatalf("get otel report err=%v", err)
+		}
+		fmt.Printf("%s otel normal=%d warn=%d error=%d types=%d error_types=%d,hosts=%d,metrics=%d,traces=%d,traceids=%d\n",
+			getReportTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError(),
+			r.GetTypes(), r.GetErrorTypes(), r.GetHosts(), r.GetMericsCount(), r.GetTraceCount(), r.GetTraceIds())
+		if len(r.GetTopList()) > 0 && !noList {
+			fmt.Println("Top otel log list")
+			fmt.Println("No.\tHost\tService\tScopre\tSeverity\tCount")
+			for i, t := range r.GetTopList() {
+				fmt.Printf("%d\t%s\t%s\t%s\t%s\t%d\n", i+1, t.GetHost(), t.GetService(), t.GetScope(), t.GetSeverity(), t.GetCount())
+			}
+			fmt.Println("Top error otel log list")
+			fmt.Println("No.\tHost\tService\tScopre\tSeverity\tCount")
+			for i, t := range r.GetTopErrorList() {
+				fmt.Printf("%d\t%s\t%s\t%s\t%s\t%d\n", i+1, t.GetHost(), t.GetService(), t.GetScope(), t.GetSeverity(), t.GetCount())
+			}
+			fmt.Println("===")
+		}
+	}
+}
+
+func getLastOTelReport() {
+	client := getClient()
+	r, err := client.GetLastOTelReport(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("get last otel report err=%v", err)
+	}
+	fmt.Printf("%s otel normal=%d warn=%d error=%d types=%d error_types=%d,hosts=%d,metrics=%d,traces=%d,traceids=%d\n",
+		getReportTimeStr(r.GetTime()), r.GetNormal(), r.GetWarn(), r.GetError(),
+		r.GetTypes(), r.GetErrorTypes(), r.GetHosts(), r.GetMericsCount(), r.GetTraceCount(), r.GetTraceIds())
+	if len(r.GetTopList()) > 0 && !noList {
+		fmt.Println("Top otel log list")
+		fmt.Println("No.\tHost\tService\tScopre\tSeverity\tCount")
+		for i, t := range r.GetTopList() {
+			fmt.Printf("%d\t%s\t%s\t%s\t%s\t%d\n", i+1, t.GetHost(), t.GetService(), t.GetScope(), t.GetSeverity(), t.GetCount())
+		}
+		fmt.Println("Top error otel log list")
+		fmt.Println("No.\tHost\tService\tScopre\tSeverity\tCount")
+		for i, t := range r.GetTopErrorList() {
+			fmt.Printf("%d\t%s\t%s\t%s\t%s\t%d\n", i+1, t.GetHost(), t.GetService(), t.GetScope(), t.GetSeverity(), t.GetCount())
 		}
 		fmt.Println("===")
 	}

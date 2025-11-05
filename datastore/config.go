@@ -7,6 +7,14 @@ type ConfigEnt struct {
 	SyslogTCPPort int    `yaml:"syslogTCPPort"`
 	NetFlowPort   int    `yaml:"netflowPort"`
 	SNMPTrapPort  int    `yaml:"snmpTrapPort"`
+	OTelHTTPPort  int    `yaml:"otelHTTPPort"`
+	OTelgRPCPort  int    `yaml:"otelgRPCPort"`
+	OTelRetention int    `yaml:"otelRetention"`
+	OTelFrom      string `yaml:"otelFrom"`
+	OTelCert      string `yaml:"otelCert"`
+	OTelKey       string `yaml:"otelgKey"`
+	OTelCA        string `yaml:"otelCA"`
+
 	// Windows log
 	WinEventLogChannel       string `yaml:"winEventLogChannel"`
 	WinEventLogCheckInterval int    `yaml:"winEventLogCheckInterval"`

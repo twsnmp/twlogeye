@@ -33,10 +33,16 @@ const (
 	TWLogEyeService_GetLastNetflowReport_FullMethodName      = "/twlogeye.TWLogEyeService/GetLastNetflowReport"
 	TWLogEyeService_GetWindowsEventReport_FullMethodName     = "/twlogeye.TWLogEyeService/GetWindowsEventReport"
 	TWLogEyeService_GetLastWindowsEventReport_FullMethodName = "/twlogeye.TWLogEyeService/GetLastWindowsEventReport"
+	TWLogEyeService_GetOTelReport_FullMethodName             = "/twlogeye.TWLogEyeService/GetOTelReport"
+	TWLogEyeService_GetLastOTelReport_FullMethodName         = "/twlogeye.TWLogEyeService/GetLastOTelReport"
 	TWLogEyeService_GetAnomalyReport_FullMethodName          = "/twlogeye.TWLogEyeService/GetAnomalyReport"
 	TWLogEyeService_GetLastAnomalyReport_FullMethodName      = "/twlogeye.TWLogEyeService/GetLastAnomalyReport"
 	TWLogEyeService_GetMonitorReport_FullMethodName          = "/twlogeye.TWLogEyeService/GetMonitorReport"
 	TWLogEyeService_GetLastMonitorReport_FullMethodName      = "/twlogeye.TWLogEyeService/GetLastMonitorReport"
+	TWLogEyeService_GetOTelMetricList_FullMethodName         = "/twlogeye.TWLogEyeService/GetOTelMetricList"
+	TWLogEyeService_GetOTelMetric_FullMethodName             = "/twlogeye.TWLogEyeService/GetOTelMetric"
+	TWLogEyeService_GetOTelTraceList_FullMethodName          = "/twlogeye.TWLogEyeService/GetOTelTraceList"
+	TWLogEyeService_GetOTelTrace_FullMethodName              = "/twlogeye.TWLogEyeService/GetOTelTrace"
 )
 
 // TWLogEyeServiceClient is the client API for TWLogEyeService service.
@@ -71,6 +77,10 @@ type TWLogEyeServiceClient interface {
 	GetWindowsEventReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[WindowsEventReportEnt], error)
 	// Get Last Windows Event Report
 	GetLastWindowsEventReport(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*WindowsEventReportEnt, error)
+	// Get OpenTelemetry Report
+	GetOTelReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[OTelReportEnt], error)
+	// Get Last OpenTelemetry Report
+	GetLastOTelReport(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*OTelReportEnt, error)
 	// Get Anomaly Report
 	GetAnomalyReport(ctx context.Context, in *AnomalyReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AnomalyReportEnt], error)
 	// Get Last Anomaly Report
@@ -79,6 +89,14 @@ type TWLogEyeServiceClient interface {
 	GetMonitorReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MonitorReportEnt], error)
 	// Get Last Monitor Report
 	GetLastMonitorReport(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*MonitorReportEnt, error)
+	// Get OpenTelemetry Metric List
+	GetOTelMetricList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[OTelMetricListEnt], error)
+	// Get OpenTelemetry Metric
+	GetOTelMetric(ctx context.Context, in *IDRequest, opts ...grpc.CallOption) (*OTelMetricEnt, error)
+	// Get OpenTelemetry Trace List
+	GetOTelTraceList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[OTelTraceListEnt], error)
+	// Get OpenTelemetry Trace
+	GetOTelTrace(ctx context.Context, in *IDRequest, opts ...grpc.CallOption) (*OTelTraceEnt, error)
 }
 
 type tWLogEyeServiceClient struct {
@@ -292,9 +310,38 @@ func (c *tWLogEyeServiceClient) GetLastWindowsEventReport(ctx context.Context, i
 	return out, nil
 }
 
+func (c *tWLogEyeServiceClient) GetOTelReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[OTelReportEnt], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[7], TWLogEyeService_GetOTelReport_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[ReportRequest, OTelReportEnt]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TWLogEyeService_GetOTelReportClient = grpc.ServerStreamingClient[OTelReportEnt]
+
+func (c *tWLogEyeServiceClient) GetLastOTelReport(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*OTelReportEnt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(OTelReportEnt)
+	err := c.cc.Invoke(ctx, TWLogEyeService_GetLastOTelReport_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tWLogEyeServiceClient) GetAnomalyReport(ctx context.Context, in *AnomalyReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AnomalyReportEnt], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[7], TWLogEyeService_GetAnomalyReport_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[8], TWLogEyeService_GetAnomalyReport_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +370,7 @@ func (c *tWLogEyeServiceClient) GetLastAnomalyReport(ctx context.Context, in *Em
 
 func (c *tWLogEyeServiceClient) GetMonitorReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MonitorReportEnt], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[8], TWLogEyeService_GetMonitorReport_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[9], TWLogEyeService_GetMonitorReport_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -344,6 +391,64 @@ func (c *tWLogEyeServiceClient) GetLastMonitorReport(ctx context.Context, in *Em
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MonitorReportEnt)
 	err := c.cc.Invoke(ctx, TWLogEyeService_GetLastMonitorReport_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tWLogEyeServiceClient) GetOTelMetricList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[OTelMetricListEnt], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[10], TWLogEyeService_GetOTelMetricList_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[Empty, OTelMetricListEnt]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TWLogEyeService_GetOTelMetricListClient = grpc.ServerStreamingClient[OTelMetricListEnt]
+
+func (c *tWLogEyeServiceClient) GetOTelMetric(ctx context.Context, in *IDRequest, opts ...grpc.CallOption) (*OTelMetricEnt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(OTelMetricEnt)
+	err := c.cc.Invoke(ctx, TWLogEyeService_GetOTelMetric_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tWLogEyeServiceClient) GetOTelTraceList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[OTelTraceListEnt], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[11], TWLogEyeService_GetOTelTraceList_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[Empty, OTelTraceListEnt]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TWLogEyeService_GetOTelTraceListClient = grpc.ServerStreamingClient[OTelTraceListEnt]
+
+func (c *tWLogEyeServiceClient) GetOTelTrace(ctx context.Context, in *IDRequest, opts ...grpc.CallOption) (*OTelTraceEnt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(OTelTraceEnt)
+	err := c.cc.Invoke(ctx, TWLogEyeService_GetOTelTrace_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -382,6 +487,10 @@ type TWLogEyeServiceServer interface {
 	GetWindowsEventReport(*ReportRequest, grpc.ServerStreamingServer[WindowsEventReportEnt]) error
 	// Get Last Windows Event Report
 	GetLastWindowsEventReport(context.Context, *Empty) (*WindowsEventReportEnt, error)
+	// Get OpenTelemetry Report
+	GetOTelReport(*ReportRequest, grpc.ServerStreamingServer[OTelReportEnt]) error
+	// Get Last OpenTelemetry Report
+	GetLastOTelReport(context.Context, *Empty) (*OTelReportEnt, error)
 	// Get Anomaly Report
 	GetAnomalyReport(*AnomalyReportRequest, grpc.ServerStreamingServer[AnomalyReportEnt]) error
 	// Get Last Anomaly Report
@@ -390,6 +499,14 @@ type TWLogEyeServiceServer interface {
 	GetMonitorReport(*ReportRequest, grpc.ServerStreamingServer[MonitorReportEnt]) error
 	// Get Last Monitor Report
 	GetLastMonitorReport(context.Context, *Empty) (*MonitorReportEnt, error)
+	// Get OpenTelemetry Metric List
+	GetOTelMetricList(*Empty, grpc.ServerStreamingServer[OTelMetricListEnt]) error
+	// Get OpenTelemetry Metric
+	GetOTelMetric(context.Context, *IDRequest) (*OTelMetricEnt, error)
+	// Get OpenTelemetry Trace List
+	GetOTelTraceList(*Empty, grpc.ServerStreamingServer[OTelTraceListEnt]) error
+	// Get OpenTelemetry Trace
+	GetOTelTrace(context.Context, *IDRequest) (*OTelTraceEnt, error)
 	mustEmbedUnimplementedTWLogEyeServiceServer()
 }
 
@@ -442,6 +559,12 @@ func (UnimplementedTWLogEyeServiceServer) GetWindowsEventReport(*ReportRequest, 
 func (UnimplementedTWLogEyeServiceServer) GetLastWindowsEventReport(context.Context, *Empty) (*WindowsEventReportEnt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLastWindowsEventReport not implemented")
 }
+func (UnimplementedTWLogEyeServiceServer) GetOTelReport(*ReportRequest, grpc.ServerStreamingServer[OTelReportEnt]) error {
+	return status.Errorf(codes.Unimplemented, "method GetOTelReport not implemented")
+}
+func (UnimplementedTWLogEyeServiceServer) GetLastOTelReport(context.Context, *Empty) (*OTelReportEnt, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLastOTelReport not implemented")
+}
 func (UnimplementedTWLogEyeServiceServer) GetAnomalyReport(*AnomalyReportRequest, grpc.ServerStreamingServer[AnomalyReportEnt]) error {
 	return status.Errorf(codes.Unimplemented, "method GetAnomalyReport not implemented")
 }
@@ -453,6 +576,18 @@ func (UnimplementedTWLogEyeServiceServer) GetMonitorReport(*ReportRequest, grpc.
 }
 func (UnimplementedTWLogEyeServiceServer) GetLastMonitorReport(context.Context, *Empty) (*MonitorReportEnt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLastMonitorReport not implemented")
+}
+func (UnimplementedTWLogEyeServiceServer) GetOTelMetricList(*Empty, grpc.ServerStreamingServer[OTelMetricListEnt]) error {
+	return status.Errorf(codes.Unimplemented, "method GetOTelMetricList not implemented")
+}
+func (UnimplementedTWLogEyeServiceServer) GetOTelMetric(context.Context, *IDRequest) (*OTelMetricEnt, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOTelMetric not implemented")
+}
+func (UnimplementedTWLogEyeServiceServer) GetOTelTraceList(*Empty, grpc.ServerStreamingServer[OTelTraceListEnt]) error {
+	return status.Errorf(codes.Unimplemented, "method GetOTelTraceList not implemented")
+}
+func (UnimplementedTWLogEyeServiceServer) GetOTelTrace(context.Context, *IDRequest) (*OTelTraceEnt, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOTelTrace not implemented")
 }
 func (UnimplementedTWLogEyeServiceServer) mustEmbedUnimplementedTWLogEyeServiceServer() {}
 func (UnimplementedTWLogEyeServiceServer) testEmbeddedByValue()                         {}
@@ -678,6 +813,35 @@ func _TWLogEyeService_GetLastWindowsEventReport_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TWLogEyeService_GetOTelReport_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ReportRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TWLogEyeServiceServer).GetOTelReport(m, &grpc.GenericServerStream[ReportRequest, OTelReportEnt]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TWLogEyeService_GetOTelReportServer = grpc.ServerStreamingServer[OTelReportEnt]
+
+func _TWLogEyeService_GetLastOTelReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TWLogEyeServiceServer).GetLastOTelReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TWLogEyeService_GetLastOTelReport_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TWLogEyeServiceServer).GetLastOTelReport(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _TWLogEyeService_GetAnomalyReport_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(AnomalyReportRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -736,6 +900,64 @@ func _TWLogEyeService_GetLastMonitorReport_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TWLogEyeService_GetOTelMetricList_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TWLogEyeServiceServer).GetOTelMetricList(m, &grpc.GenericServerStream[Empty, OTelMetricListEnt]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TWLogEyeService_GetOTelMetricListServer = grpc.ServerStreamingServer[OTelMetricListEnt]
+
+func _TWLogEyeService_GetOTelMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TWLogEyeServiceServer).GetOTelMetric(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TWLogEyeService_GetOTelMetric_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TWLogEyeServiceServer).GetOTelMetric(ctx, req.(*IDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TWLogEyeService_GetOTelTraceList_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TWLogEyeServiceServer).GetOTelTraceList(m, &grpc.GenericServerStream[Empty, OTelTraceListEnt]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TWLogEyeService_GetOTelTraceListServer = grpc.ServerStreamingServer[OTelTraceListEnt]
+
+func _TWLogEyeService_GetOTelTrace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TWLogEyeServiceServer).GetOTelTrace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TWLogEyeService_GetOTelTrace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TWLogEyeServiceServer).GetOTelTrace(ctx, req.(*IDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TWLogEyeService_ServiceDesc is the grpc.ServiceDesc for TWLogEyeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -772,12 +994,24 @@ var TWLogEyeService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TWLogEyeService_GetLastWindowsEventReport_Handler,
 		},
 		{
+			MethodName: "GetLastOTelReport",
+			Handler:    _TWLogEyeService_GetLastOTelReport_Handler,
+		},
+		{
 			MethodName: "GetLastAnomalyReport",
 			Handler:    _TWLogEyeService_GetLastAnomalyReport_Handler,
 		},
 		{
 			MethodName: "GetLastMonitorReport",
 			Handler:    _TWLogEyeService_GetLastMonitorReport_Handler,
+		},
+		{
+			MethodName: "GetOTelMetric",
+			Handler:    _TWLogEyeService_GetOTelMetric_Handler,
+		},
+		{
+			MethodName: "GetOTelTrace",
+			Handler:    _TWLogEyeService_GetOTelTrace_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -817,6 +1051,11 @@ var TWLogEyeService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 		{
+			StreamName:    "GetOTelReport",
+			Handler:       _TWLogEyeService_GetOTelReport_Handler,
+			ServerStreams: true,
+		},
+		{
 			StreamName:    "GetAnomalyReport",
 			Handler:       _TWLogEyeService_GetAnomalyReport_Handler,
 			ServerStreams: true,
@@ -824,6 +1063,16 @@ var TWLogEyeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "GetMonitorReport",
 			Handler:       _TWLogEyeService_GetMonitorReport_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetOTelMetricList",
+			Handler:       _TWLogEyeService_GetOTelMetricList_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetOTelTraceList",
+			Handler:       _TWLogEyeService_GetOTelTraceList_Handler,
 			ServerStreams: true,
 		},
 	},

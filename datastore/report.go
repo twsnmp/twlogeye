@@ -615,3 +615,99 @@ func ForEachMonitorReport(st, et int64, callBack func(r *MonitorReportEnt) bool)
 		return nil
 	})
 }
+
+type OTelSummaryEnt struct {
+	Host     string
+	Service  string
+	Scope    string
+	Severity string
+	Count    int
+}
+
+type OTelReportEnt struct {
+	Time         int64
+	Normal       int
+	Warn         int
+	Error        int
+	Types        int
+	ErrorTypes   int
+	TopList      []OTelSummaryEnt
+	TopErrorList []OTelSummaryEnt
+	Hosts        int
+	TraceIDs     int
+	TraceCount   int
+	MericsCount  int
+}
+
+func SaveOTelReport(r *OTelReportEnt) {
+	log.Printf("otel report=%+v", r)
+	db.Update(func(txn *badger.Txn) error {
+		k := fmt.Sprintf("report:otel:%016x", r.Time)
+		if v, err := json.Marshal(r); err == nil {
+			e := badger.NewEntry([]byte(k), []byte(v)).WithTTL(time.Hour * 24 * time.Duration(Config.ReportRetention))
+			if err := txn.SetEntry(e); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+		return nil
+	})
+}
+
+func GetLastOTelReport() *OTelReportEnt {
+	var r *OTelReportEnt
+	prefix := []byte("report:otel:")
+	db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		it.Seek([]byte("report:otel:z"))
+		if it.ValidForPrefix(prefix) {
+			item := it.Item()
+			var or OTelReportEnt
+			if err := item.Value(func(v []byte) error {
+				return json.Unmarshal(v, &or)
+			}); err == nil {
+				r = &or
+			} else {
+				log.Printf("err=%v", err)
+			}
+		}
+		return nil
+	})
+	return r
+}
+
+func ForEachOTelReport(st, et int64, callBack func(r *OTelReportEnt) bool) {
+	if et == 0 {
+		et = time.Now().UnixNano()
+	}
+	db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		for it.Seek([]byte(fmt.Sprintf("report:otel:%016x", st))); it.ValidForPrefix([]byte("report:otel:")); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			a := strings.SplitN(string(k), ":", 3)
+			if len(a) == 3 {
+				if t, err := strconv.ParseInt(a[2], 16, 64); err == nil {
+					if t > et {
+						break
+					}
+					var r OTelReportEnt
+					if err := item.Value(func(v []byte) error {
+						return json.Unmarshal(v, &r)
+					}); err == nil {
+						if !callBack(&r) {
+							break
+						}
+					}
+				}
+			}
+		}
+		return nil
+	})
+}

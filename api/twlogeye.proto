@@ -33,6 +33,10 @@ service TWLogEyeService {
 	rpc GetWindowsEventReport (ReportRequest) returns (stream WindowsEventReportEnt);
   // Get Last Windows Event Report
 	rpc GetLastWindowsEventReport (Empty) returns (WindowsEventReportEnt);
+  // Get OpenTelemetry Report
+	rpc GetOTelReport (ReportRequest) returns (stream OTelReportEnt);
+  // Get Last OpenTelemetry Report
+	rpc GetLastOTelReport (Empty) returns (OTelReportEnt);
   // Get Anomaly Report
 	rpc GetAnomalyReport (AnomalyReportRequest) returns (stream AnomalyReportEnt);
   // Get Last Anomaly Report
@@ -41,6 +45,14 @@ service TWLogEyeService {
 	rpc GetMonitorReport (ReportRequest) returns (stream MonitorReportEnt);
   // Get Last Monitor Report
 	rpc GetLastMonitorReport (Empty) returns (MonitorReportEnt);
+  // Get OpenTelemetry Metric List
+	rpc GetOTelMetricList (Empty) returns (stream OTelMetricListEnt);
+  // Get OpenTelemetry Metric
+  rpc GetOTelMetric (IDRequest) returns (OTelMetricEnt);
+  // Get OpenTelemetry Trace List
+	rpc GetOTelTraceList (Empty) returns (stream OTelTraceListEnt); 
+  // Get OpenTelemetry Trace
+  rpc GetOTelTrace (IDRequest) returns (OTelTraceEnt);
 }
 
 message NofifyRequest {
@@ -78,6 +90,11 @@ message ControlResponse {
 }
 
 message Empty {}
+
+message IDRequest {
+  string id = 1;
+}
+
 
 // Report
 
@@ -173,6 +190,29 @@ message WindowsEventReportEnt {
   repeated WindowsEventSummary top_error_list = 8;
 }
 
+message OTelSummaryEnt {
+  string host = 1;
+  string service = 2;
+  string scope = 3;
+  string severity = 4;
+  int32 count = 5;
+}
+
+message OTelReportEnt {
+  int64 time = 1;
+  int32 normal = 2;
+  int32 warn = 3;
+  int32 error = 4;
+  int32 types = 5;
+  int32 error_types = 6;
+  repeated OTelSummaryEnt top_list = 7;
+  repeated OTelSummaryEnt top_error_list = 8;
+  int32 hosts = 9;
+  int32 trace_ids = 10;
+  int32 trace_count = 11;
+  int32 merics_count = 12;
+}
+
 message AnomalyReportRequest {
   int64 start = 1;
 	int64 end = 2;
@@ -211,6 +251,88 @@ message MonitorReportEnt {
 message ClearRequest {
 	string type = 1;
 	string subtype = 2;
+}
+
+message OTelMetricDataPointEnt {
+  int64 start = 1;
+  int64 time = 2;
+  repeated string attributes = 3;
+
+  // Histogram Fields
+  uint64 count = 4;
+  repeated uint64 bucket_counts = 5;
+  repeated double explicit_bounds = 6;
+  double sum = 7;
+  double min = 8;
+  double max = 9;
+
+  // Gauge Fields
+  double gauge = 10;
+
+  // ExponentialHistogram Fields
+  repeated uint64 positive = 11;
+  repeated uint64 negative = 12;
+  int64 scale = 13;
+  int64 zero_count = 14;
+  double zero_threshold = 15;  
+}
+
+message OTelMetricEnt {
+  string host = 1;
+  string service = 2;
+  string scope = 3;
+  string name = 4;
+  string type = 5;
+  string description = 6;
+  string unit = 7;
+  repeated OTelMetricDataPointEnt data_points = 8;
+  int32 count = 9;
+  int64 first = 10;
+  int64 last = 11;
+}
+
+message OTelMetricListEnt {
+  string id = 1;
+  string host = 2;
+  string service = 3;
+  string scope = 4;
+  string name = 5;
+  string type = 6;
+  string description = 7;
+  string unit = 8;
+  int32 count = 9;
+  int64 first = 10;
+  int64 last = 11;
+}
+
+message OTelTraceSpanEnt {
+  string span_id = 1;
+  string parent_span_id = 2;
+  string host = 3;
+  string service = 4;
+  string scope = 5;
+  string name = 6;
+  int64 start = 7;
+  int64 end = 8;
+  double dur = 9;
+  repeated string attributes = 10;
+}
+
+message OTelTraceEnt {
+  string trace_id = 1;
+  int64 start = 2;
+  int64 end = 3;
+  double dur = 4;
+  repeated OTelTraceSpanEnt spans = 5;
+  int64 last = 6;
+}
+
+message OTelTraceListEnt {
+  string trace_id = 1;
+  int64 start = 2;
+  int64 end = 3;
+  double dur = 4;
+  int64 last = 5;
 }
 
 /*

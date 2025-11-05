@@ -32,6 +32,7 @@ var syslogAnomaly anomalyCheckDataEnt
 var trapAnomaly anomalyCheckDataEnt
 var netflowAnomaly anomalyCheckDataEnt
 var wineventAnomaly anomalyCheckDataEnt
+var otelAnomaly anomalyCheckDataEnt
 var monitorAnomaly anomalyCheckDataEnt
 var clearAnomalyDataCh = make(chan bool)
 
@@ -64,6 +65,10 @@ func startAnomaly(ctx context.Context, wg *sync.WaitGroup) {
 				wineventAnomaly.Times = append(wineventAnomaly.Times, a.Time)
 				wineventAnomaly.Vectors = append(wineventAnomaly.Vectors, a.Vector)
 				calcAnomalyScore("winevent", &wineventAnomaly)
+			case "otel":
+				otelAnomaly.Times = append(otelAnomaly.Times, a.Time)
+				otelAnomaly.Vectors = append(otelAnomaly.Vectors, a.Vector)
+				calcAnomalyScore("otel", &otelAnomaly)
 			case "monitor":
 				monitorAnomaly.Times = append(monitorAnomaly.Times, a.Time)
 				monitorAnomaly.Vectors = append(monitorAnomaly.Vectors, a.Vector)
@@ -100,6 +105,12 @@ func loadReportData() {
 	datastore.ForEachWindowsEventReport(0, time.Now().UnixNano(), func(r *datastore.WindowsEventReportEnt) bool {
 		wineventAnomaly.Times = append(wineventAnomaly.Times, r.Time)
 		wineventAnomaly.Vectors = append(wineventAnomaly.Vectors, wineventReportToVector(r))
+		return true
+	})
+	otelAnomaly = anomalyCheckDataEnt{}
+	datastore.ForEachOTelReport(0, time.Now().UnixNano(), func(r *datastore.OTelReportEnt) bool {
+		otelAnomaly.Times = append(otelAnomaly.Times, r.Time)
+		otelAnomaly.Vectors = append(otelAnomaly.Vectors, otelReportToVector(r))
 		return true
 	})
 	monitorAnomaly = anomalyCheckDataEnt{}
@@ -157,6 +168,20 @@ func monitorReportToVector(r *datastore.MonitorReportEnt) []float64 {
 		float64(r.Net),
 		float64(r.Disk),
 		float64(r.DBSpeed),
+	}
+}
+
+func otelReportToVector(r *datastore.OTelReportEnt) []float64 {
+	return []float64{
+		float64(r.Normal),
+		float64(r.Warn),
+		float64(r.Error),
+		float64(r.Types),
+		float64(r.ErrorTypes),
+		float64(r.Hosts),
+		float64(r.MericsCount),
+		float64(r.TraceCount),
+		float64(r.TraceIDs),
 	}
 }
 

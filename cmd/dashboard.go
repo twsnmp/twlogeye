@@ -33,6 +33,7 @@ var dashboardHistory int
 var topNLines int
 var dashboardMap = make(map[string]bool)
 var dashboardPanel = []string{}
+var dashboardOTelMetrics = []string{}
 
 // dashboardCmd represents the dashboard command
 var dashboardCmd = &cobra.Command{
@@ -46,6 +47,7 @@ var dashboardCmd = &cobra.Command{
   netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte 
   netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
   winevent.count | winevent.pattern | winevent.error
+  otel.count | otel.pattern | otel.error | otel.metric.<id>
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, p := range args {
@@ -54,8 +56,8 @@ var dashboardCmd = &cobra.Command{
 				dashboardPanel = append(dashboardPanel, p)
 				continue
 			}
-			a := strings.SplitN(p, ".", 2)
-			if len(a) != 2 {
+			a := strings.SplitN(p, ".", 3)
+			if len(a) < 2 {
 				continue
 			}
 			switch a[0] {
@@ -64,6 +66,14 @@ var dashboardCmd = &cobra.Command{
 				case "count", "pattern", "error":
 					dashboardMap[a[0]] = true
 					dashboardPanel = append(dashboardPanel, p)
+				}
+			case "otel":
+				switch a[1] {
+				case "count", "pattern", "error":
+					dashboardMap[a[0]] = true
+					dashboardPanel = append(dashboardPanel, p)
+				case "metric":
+					dashboardOTelMetrics = append(dashboardOTelMetrics, p)
 				}
 			case "trap":
 				switch a[1] {
@@ -79,7 +89,7 @@ var dashboardCmd = &cobra.Command{
 				}
 			}
 		}
-		if len(dashboardPanel) < 1 {
+		if len(dashboardPanel) < 1 && len(dashboardOTelMetrics) < 1 {
 			log.Fatalln("no panel")
 		}
 		if topNLines < 1 {
@@ -191,6 +201,21 @@ func loadOldReport() {
 			}
 		}
 	}
+	if _, ok := dashboardMap["otel"]; ok {
+		s, err := client.GetOTelReport(context.Background(), &api.ReportRequest{Start: 0, End: time.Now().UnixNano()})
+		if err == nil {
+			for {
+				r, err := s.Recv()
+				if err != nil {
+					break
+				}
+				teaProg.Send(UpdateOTelReportMsg{
+					err:    err,
+					report: r,
+				})
+			}
+		}
+	}
 	s, err := client.GetMonitorReport(context.Background(), &api.ReportRequest{Start: 0, End: time.Now().UnixNano()})
 	if err == nil {
 		for {
@@ -241,6 +266,24 @@ func checkDashboardReport() {
 			report: wr,
 		})
 	}
+	if _, ok := dashboardMap["otel"]; ok {
+		or, err := client.GetLastOTelReport(context.Background(), &api.Empty{})
+		teaProg.Send(UpdateOTelReportMsg{
+			err:    err,
+			report: or,
+		})
+	}
+	for _, om := range dashboardOTelMetrics {
+		a := strings.SplitAfterN(om, ".", 3)
+		if len(a) == 3 {
+			m, err := client.GetOTelMetric(context.Background(), &api.IDRequest{Id: a[2]})
+			teaProg.Send(UpdateOTelMetricMsg{
+				err:    err,
+				id:     a[2],
+				metric: m,
+			})
+		}
+	}
 	mr, err := client.GetLastMonitorReport(context.Background(), &api.Empty{})
 	teaProg.Send(UpdateMonitorReportMsg{
 		err:    err,
@@ -282,6 +325,8 @@ type dashboardModel struct {
 	trapReport         []*api.TrapReportEnt
 	netflowReport      []*api.NetflowReportEnt
 	windowsEventReport []*api.WindowsEventReportEnt
+	otelReport         []*api.OTelReportEnt
+	otelMetricMap      map[string]*api.OTelMetricEnt
 	monitorReport      []*api.MonitorReportEnt
 	anomalyReport      *api.LastAnomalyReportEnt
 	anomalyScoreMap    map[string]*AnomalyScoreEnt
@@ -305,10 +350,19 @@ type UpdateWindowsEventReportMsg struct {
 	err    error
 	report *api.WindowsEventReportEnt
 }
+type UpdateOTelReportMsg struct {
+	err    error
+	report *api.OTelReportEnt
+}
 
 type UpdateMonitorReportMsg struct {
 	err    error
 	report *api.MonitorReportEnt
+}
+type UpdateOTelMetricMsg struct {
+	err    error
+	id     string
+	metric *api.OTelMetricEnt
 }
 
 type UpdateAnomalyReportMsg struct {
@@ -323,7 +377,9 @@ type AnomalyScoreEnt struct {
 }
 
 func initDashboardModel() dashboardModel {
-	return dashboardModel{}
+	return dashboardModel{
+		otelMetricMap: make(map[string]*api.OTelMetricEnt),
+	}
 }
 
 func (m dashboardModel) Init() tea.Cmd {
@@ -391,6 +447,25 @@ func (m dashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.windowsEventReport = m.windowsEventReport[1:]
 				}
 			}
+		} else if msg.err != nil {
+			m.errMsg = msg.err.Error()
+		}
+		return m, nil
+	case UpdateOTelReportMsg:
+		if msg.report != nil {
+			if len(m.otelReport) < 1 || m.otelReport[len(m.otelReport)-1].Time < msg.report.Time {
+				m.otelReport = append(m.otelReport, msg.report)
+				if len(m.otelReport) > dashboardHistory {
+					m.otelReport = m.otelReport[1:]
+				}
+			}
+		} else if msg.err != nil {
+			m.errMsg = msg.err.Error()
+		}
+		return m, nil
+	case UpdateOTelMetricMsg:
+		if msg.metric != nil && msg.id != "" {
+			m.otelMetricMap[msg.id] = msg.metric
 		} else if msg.err != nil {
 			m.errMsg = msg.err.Error()
 		}
@@ -490,6 +565,13 @@ func (m dashboardModel) View() string {
 				col = []string{}
 			}
 		}
+		for id := range m.otelMetricMap {
+			col = append(col, m.renderOTelMetric(id))
+			if len(col) == 2 {
+				row = append(row, lipgloss.JoinHorizontal(lipgloss.Top, col...))
+				col = []string{}
+			}
+		}
 		if len(col) > 0 {
 			row = append(row, col[0])
 		}
@@ -542,6 +624,12 @@ func (m dashboardModel) renderPanel(p string) string {
 		return m.renderWindowsEventPattern()
 	case "winevent.error":
 		return m.renderWindowsEventErrorPattern()
+	case "otel.count":
+		return m.renderOTelCount()
+	case "otel.pattern":
+		return m.renderOTelPattern()
+	case "otel.error":
+		return m.renderOTelErrorPattern()
 	}
 	return "not implement"
 }
