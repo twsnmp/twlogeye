@@ -619,6 +619,51 @@ func (s *apiServer) GetLastOTelReport(ctx context.Context, req *api.Empty) (*api
 	return r, nil
 }
 
+func (s *apiServer) GetMqttReport(req *api.ReportRequest, stream api.TWLogEyeService_GetMqttReportServer) error {
+	datastore.ForEachMqttReport(req.GetStart(), req.GetEnd(), func(l *datastore.MqttReportEnt) bool {
+		r := &api.MqttReportEnt{
+			Time:    l.Time,
+			Count:   int32(l.Count),
+			Types:   int32(l.Types),
+			TopList: []*api.MqttSummaryEnt{},
+		}
+		for _, t := range l.TopList {
+			r.TopList = append(r.TopList, &api.MqttSummaryEnt{
+				ClientId: t.ClinetID,
+				Topic:    t.Topic,
+				Count:    int32(t.Count),
+			})
+		}
+		if err := stream.Send(r); err != nil {
+			log.Printf("api get mqtt report err=%v", err)
+			return false
+		}
+		return true
+	})
+	return nil
+}
+
+func (s *apiServer) GetLastMqttReport(ctx context.Context, req *api.Empty) (*api.MqttReportEnt, error) {
+	l := datastore.GetLastMqttReport()
+	if l == nil {
+		return nil, fmt.Errorf("mqtt report not found")
+	}
+	r := &api.MqttReportEnt{
+		Time:    l.Time,
+		Count:   int32(l.Count),
+		Types:   int32(l.Types),
+		TopList: []*api.MqttSummaryEnt{},
+	}
+	for _, t := range l.TopList {
+		r.TopList = append(r.TopList, &api.MqttSummaryEnt{
+			ClientId: t.ClinetID,
+			Topic:    t.Topic,
+			Count:    int32(t.Count),
+		})
+	}
+	return r, nil
+}
+
 func (s *apiServer) GetAnomalyReport(req *api.AnomalyReportRequest, stream api.TWLogEyeService_GetAnomalyReportServer) error {
 	datastore.ForEachAnomalyReport(req.GetType(), req.GetStart(), req.GetEnd(), func(l *datastore.AnomalyReportEnt) bool {
 		r := &api.AnomalyReportEnt{
@@ -639,7 +684,7 @@ func (s *apiServer) GetLastAnomalyReport(ctx context.Context, req *api.Empty) (*
 		Time:      time.Now().UnixNano(),
 		ScoreList: []*api.LastAnomalyReportScore{},
 	}
-	for _, t := range []string{"syslog", "trap", "netflow", "winevent", "otel", "monitor"} {
+	for _, t := range []string{"syslog", "trap", "netflow", "winevent", "otel", "mqtt", "monitor"} {
 		l := datastore.GetLastAnomalyReport(t)
 		if l != nil {
 			r.ScoreList = append(r.ScoreList, &api.LastAnomalyReportScore{

@@ -19,6 +19,7 @@ const (
 	WindowsEventLog
 	AnomalyReport
 	OTel
+	Mqtt
 )
 
 func (t LogType) String() string {
@@ -35,6 +36,8 @@ func (t LogType) String() string {
 		return "anomalyReport"
 	case OTel:
 		return "otel"
+	case Mqtt:
+		return "mqtt"
 	}
 	return "unknown"
 }
@@ -46,12 +49,14 @@ func ClearLog(t string) {
 	case "trap":
 	case "windows":
 	case "otel":
+	case "mqtt":
 	case "all":
 		db.DropPrefix([]byte("syslog:"))
 		db.DropPrefix([]byte("trap:"))
 		db.DropPrefix([]byte("netflow:"))
 		db.DropPrefix([]byte("windows:"))
 		db.DropPrefix([]byte("otel:"))
+		db.DropPrefix([]byte("mqtt:"))
 	default:
 		return
 	}

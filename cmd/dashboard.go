@@ -48,6 +48,7 @@ var dashboardCmd = &cobra.Command{
   netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
   winevent.count | winevent.pattern | winevent.error
   otel.count | otel.pattern | otel.error | otel.metric.<id>
+  mqtt.count | mqtt.type 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, p := range args {
@@ -77,7 +78,13 @@ var dashboardCmd = &cobra.Command{
 				}
 			case "trap":
 				switch a[1] {
-				case "count", "types":
+				case "count", "type":
+					dashboardMap[a[0]] = true
+					dashboardPanel = append(dashboardPanel, p)
+				}
+			case "mqtt":
+				switch a[1] {
+				case "count", "type":
 					dashboardMap[a[0]] = true
 					dashboardPanel = append(dashboardPanel, p)
 				}
@@ -216,6 +223,21 @@ func loadOldReport() {
 			}
 		}
 	}
+	if _, ok := dashboardMap["mqtt"]; ok {
+		s, err := client.GetMqttReport(context.Background(), &api.ReportRequest{Start: 0, End: time.Now().UnixNano()})
+		if err == nil {
+			for {
+				r, err := s.Recv()
+				if err != nil {
+					break
+				}
+				teaProg.Send(UpdateMqttReportMsg{
+					err:    err,
+					report: r,
+				})
+			}
+		}
+	}
 	s, err := client.GetMonitorReport(context.Background(), &api.ReportRequest{Start: 0, End: time.Now().UnixNano()})
 	if err == nil {
 		for {
@@ -273,6 +295,13 @@ func checkDashboardReport() {
 			report: or,
 		})
 	}
+	if _, ok := dashboardMap["mqtt"]; ok {
+		mr, err := client.GetLastMqttReport(context.Background(), &api.Empty{})
+		teaProg.Send(UpdateMqttReportMsg{
+			err:    err,
+			report: mr,
+		})
+	}
 	for _, om := range dashboardOTelMetrics {
 		a := strings.SplitAfterN(om, ".", 3)
 		if len(a) == 3 {
@@ -326,6 +355,7 @@ type dashboardModel struct {
 	netflowReport      []*api.NetflowReportEnt
 	windowsEventReport []*api.WindowsEventReportEnt
 	otelReport         []*api.OTelReportEnt
+	mqttReport         []*api.MqttReportEnt
 	otelMetricMap      map[string]*api.OTelMetricEnt
 	monitorReport      []*api.MonitorReportEnt
 	anomalyReport      *api.LastAnomalyReportEnt
@@ -353,6 +383,10 @@ type UpdateWindowsEventReportMsg struct {
 type UpdateOTelReportMsg struct {
 	err    error
 	report *api.OTelReportEnt
+}
+type UpdateMqttReportMsg struct {
+	err    error
+	report *api.MqttReportEnt
 }
 
 type UpdateMonitorReportMsg struct {
@@ -457,6 +491,18 @@ func (m dashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.otelReport = append(m.otelReport, msg.report)
 				if len(m.otelReport) > dashboardHistory {
 					m.otelReport = m.otelReport[1:]
+				}
+			}
+		} else if msg.err != nil {
+			m.errMsg = msg.err.Error()
+		}
+		return m, nil
+	case UpdateMqttReportMsg:
+		if msg.report != nil {
+			if len(m.mqttReport) < 1 || m.mqttReport[len(m.mqttReport)-1].Time < msg.report.Time {
+				m.mqttReport = append(m.mqttReport, msg.report)
+				if len(m.mqttReport) > dashboardHistory {
+					m.mqttReport = m.mqttReport[1:]
 				}
 			}
 		} else if msg.err != nil {
@@ -630,6 +676,10 @@ func (m dashboardModel) renderPanel(p string) string {
 		return m.renderOTelPattern()
 	case "otel.error":
 		return m.renderOTelErrorPattern()
+	case "mqtt.count":
+		return m.renderMqttCount()
+	case "mqtt.type":
+		return m.renderMqttTypes()
 	}
 	return "not implement"
 }

@@ -155,7 +155,7 @@ func addPrompts(s *mcp.Server) {
 			{
 				Name:        "type",
 				Title:       "Type of log to search.",
-				Description: "Type of log to search. type can be syslog,trap,netflow,winevent.otel.",
+				Description: "Type of log to search. type can be syslog,trap,netflow,winevent,otel,mqtt.",
 				Required:    false,
 			},
 			{
@@ -205,7 +205,7 @@ func addPrompts(s *mcp.Server) {
 			{
 				Name:        "type",
 				Title:       "Type of report.",
-				Description: "Type of report. type can be syslog,trap,netflow,winevent,otel,anomaly,monitor.winevent is windows event log.",
+				Description: "Type of report. type can be syslog,trap,netflow,winevent,otel,mqtt,anomaly,monitor.",
 				Required:    false,
 			},
 			{
@@ -230,7 +230,7 @@ func addPrompts(s *mcp.Server) {
 			{
 				Name:        "type",
 				Title:       "Type of report.",
-				Description: "Type of report. type can be syslog,trap,netflow,winevent,otel,anomaly,monitor.winevent is windows event log.",
+				Description: "Type of report. type can be syslog,trap,netflow,winevent,otel,mqtt,anomaly,monitor.",
 				Required:    false,
 			},
 		},
@@ -243,7 +243,7 @@ func addPrompts(s *mcp.Server) {
 			{
 				Name:        "type",
 				Title:       "Type of anomaly report.",
-				Description: "Type of anomaly report. type can be syslog,trap,netflow,winevent,anomaly,otel,monitor.winevent is windows event log.",
+				Description: "Type of anomaly report. type can be syslog,trap,netflow,winevent,anomaly,otel,mqtt,monitor.",
 				Required:    false,
 			},
 			{
@@ -319,7 +319,7 @@ type mcpLogEnt struct {
 
 type searchLogParams struct {
 	Filter string `json:"filter" jsonschema:"Filter logs by regular expression. Empty is no filter"`
-	Type   string `json:"type" jsonschema:"Type of log to search. type can be syslog,trap,netflow,winevent,otel"`
+	Type   string `json:"type" jsonschema:"Type of log to search. type can be syslog,trap,netflow,winevent,otel,mqtt"`
 	Start  string `json:"start" jsonschema:"Start date and time for log search. Empty is 1970/1/1. Example: 2025/10/26 11:00:00"`
 	End    string `json:"end" jsonschema:"End date and time for log search. Empty is now. Example: 2025/10/26 11:00:00"`
 }
@@ -498,6 +498,8 @@ func getReport(ctx context.Context, req *mcp.CallToolRequest, args getReportPara
 		r = getWindowsEventReport(st, et)
 	case "otel":
 		r = getOTelReport(st, et)
+	case "mqtt":
+		r = getMqttReport(st, et)
 	case "monitor":
 		r = getMonitorReport(st, et)
 	default:
@@ -553,6 +555,8 @@ func getLastReport(ctx context.Context, req *mcp.CallToolRequest, args getLastRe
 		r = getLastWindowsEventReport()
 	case "otel":
 		r = getLastOTelReport()
+	case "mqtt":
+		r = getLastMqttReport()
 	case "monitor":
 		r = getLastMonitorReport()
 	case "anomaly":
@@ -859,6 +863,50 @@ func getLastOTelReport() string {
 		MericsCount:  l.MericsCount,
 	}
 	j, err := json.Marshal(&r)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
+type mcpMqttReportEnt struct {
+	Time    string
+	Count   int
+	Types   int
+	TopList []datastore.MqttSummaryEnt
+}
+
+func getMqttReport(st, et int64) string {
+	list := []mcpMqttReportEnt{}
+	datastore.ForEachMqttReport(st, et, func(r *datastore.MqttReportEnt) bool {
+		list = append(list,
+			mcpMqttReportEnt{
+				Time:    time.Unix(0, r.Time).Format(time.RFC3339),
+				Count:   r.Count,
+				Types:   r.Types,
+				TopList: r.TopList,
+			})
+		return true
+	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		return (err.Error())
+	}
+	return string(j)
+}
+
+func getLastMqttReport() string {
+	l := datastore.GetLastMqttReport()
+	if l == nil {
+		return "mqtt report not found"
+	}
+	r := &mcpMqttReportEnt{
+		Time:    time.Unix(0, l.Time).Format(time.RFC3339),
+		Count:   l.Count,
+		Types:   l.Types,
+		TopList: l.TopList,
+	}
+	j, err := json.Marshal(r)
 	if err != nil {
 		return (err.Error())
 	}

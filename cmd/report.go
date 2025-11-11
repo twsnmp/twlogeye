@@ -49,6 +49,8 @@ var reportCmd = &cobra.Command{
 			getWindowsEventReport(st, et)
 		case "otel":
 			getOTelReport(st, et)
+		case "mqtt":
+			getMqttReport(st, et)
 		case "anomaly":
 			if len(args) < 2 {
 				log.Fatalln("twlogeye report anomaly <type>")
@@ -69,6 +71,8 @@ var reportCmd = &cobra.Command{
 				getLastWindowsEventReport()
 			case "otel":
 				getLastOTelReport()
+			case "mqtt":
+				getLastMqttReport()
 			case "monitor":
 				getLastMonitorReport()
 			case "anomaly":
@@ -421,6 +425,51 @@ func getLastOTelReport() {
 		fmt.Println("No.\tHost\tService\tScopre\tSeverity\tCount")
 		for i, t := range r.GetTopErrorList() {
 			fmt.Printf("%d\t%s\t%s\t%s\t%s\t%d\n", i+1, t.GetHost(), t.GetService(), t.GetScope(), t.GetSeverity(), t.GetCount())
+		}
+		fmt.Println("===")
+	}
+}
+
+func getMqttReport(st, et int64) {
+	client := getClient()
+	s, err := client.GetMqttReport(context.Background(), &api.ReportRequest{Start: st, End: et})
+	if err != nil {
+		log.Fatalf("get mqtt report err=%v", err)
+	}
+	for {
+		r, err := s.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			log.Fatalf("get mqtt report err=%v", err)
+		}
+		fmt.Printf("%s mqtt count=%d types=%d\n", getReportTimeStr(r.GetTime()), r.GetCount(), r.GetTypes())
+		list := r.GetTopList()
+		if len(list) > 0 && !noList {
+			fmt.Println("Top MQTT publish info type list")
+			fmt.Println("No.\tClinet ID\tTopic\tCount")
+			for i, t := range list {
+				fmt.Printf("%d\t%s\t%s\t%d\n", i+1, t.GetClientId(), t.GetTopic(), t.GetCount())
+			}
+			fmt.Println("===")
+		}
+	}
+}
+
+func getLastMqttReport() {
+	client := getClient()
+	r, err := client.GetLastMqttReport(context.Background(), &api.Empty{})
+	if err != nil {
+		log.Fatalf("get last mqtt report err=%v", err)
+	}
+	fmt.Printf("%s mqtt count=%d types=%d\n", getReportTimeStr(r.GetTime()), r.GetCount(), r.GetTypes())
+	list := r.GetTopList()
+	if len(list) > 0 && !noList {
+		fmt.Println("Top MQTT client topic list")
+		fmt.Println("No.\tClinet ID\tTopic\tCount")
+		for i, t := range list {
+			fmt.Printf("%d\t%s\t%s\t%d\n", i+1, t.GetClientId(), t.GetTopic(), t.GetCount())
 		}
 		fmt.Println("===")
 	}

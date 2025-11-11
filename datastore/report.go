@@ -640,7 +640,6 @@ type OTelReportEnt struct {
 }
 
 func SaveOTelReport(r *OTelReportEnt) {
-	log.Printf("otel report=%+v", r)
 	db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("report:otel:%016x", r.Time)
 		if v, err := json.Marshal(r); err == nil {
@@ -698,6 +697,97 @@ func ForEachOTelReport(st, et int64, callBack func(r *OTelReportEnt) bool) {
 						break
 					}
 					var r OTelReportEnt
+					if err := item.Value(func(v []byte) error {
+						return json.Unmarshal(v, &r)
+					}); err == nil {
+						if !callBack(&r) {
+							break
+						}
+					}
+				}
+			}
+		}
+		return nil
+	})
+}
+
+type MqttLogEnt struct {
+	Time     int64
+	ClientID string
+	Topic    string
+}
+
+type MqttSummaryEnt struct {
+	ClinetID string
+	Topic    string
+	Count    int
+}
+
+type MqttReportEnt struct {
+	Time    int64
+	Count   int
+	Types   int
+	TopList []MqttSummaryEnt
+}
+
+func SaveMqttReport(r *MqttReportEnt) {
+	db.Update(func(txn *badger.Txn) error {
+		k := fmt.Sprintf("report:mqtt:%016x", r.Time)
+		if v, err := json.Marshal(r); err == nil {
+			e := badger.NewEntry([]byte(k), []byte(v)).WithTTL(time.Hour * 24 * time.Duration(Config.ReportRetention))
+			if err := txn.SetEntry(e); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+		return nil
+	})
+}
+
+func GetLastMqttReport() *MqttReportEnt {
+	var r *MqttReportEnt
+	prefix := []byte("report:mqtt:")
+	db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+		opts.Reverse = true
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		it.Seek([]byte("report:mqtt:z"))
+		if it.ValidForPrefix(prefix) {
+			item := it.Item()
+			var tr MqttReportEnt
+			if err := item.Value(func(v []byte) error {
+				return json.Unmarshal(v, &tr)
+			}); err == nil {
+				r = &tr
+			} else {
+				log.Printf("err=%v", err)
+			}
+		}
+		return nil
+	})
+	return r
+}
+
+func ForEachMqttReport(st, et int64, callBack func(r *MqttReportEnt) bool) {
+	if et == 0 {
+		et = time.Now().UnixNano()
+	}
+	db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		for it.Seek([]byte(fmt.Sprintf("report:mqtt:%016x", st))); it.ValidForPrefix([]byte("report:mqtt:")); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			a := strings.SplitN(string(k), ":", 3)
+			if len(a) == 3 {
+				if t, err := strconv.ParseInt(a[2], 16, 64); err == nil {
+					if t > et {
+						break
+					}
+					var r MqttReportEnt
 					if err := item.Value(func(v []byte) error {
 						return json.Unmarshal(v, &r)
 					}); err == nil {

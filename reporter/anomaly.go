@@ -33,6 +33,7 @@ var trapAnomaly anomalyCheckDataEnt
 var netflowAnomaly anomalyCheckDataEnt
 var wineventAnomaly anomalyCheckDataEnt
 var otelAnomaly anomalyCheckDataEnt
+var mqttAnomaly anomalyCheckDataEnt
 var monitorAnomaly anomalyCheckDataEnt
 var clearAnomalyDataCh = make(chan bool)
 
@@ -69,6 +70,10 @@ func startAnomaly(ctx context.Context, wg *sync.WaitGroup) {
 				otelAnomaly.Times = append(otelAnomaly.Times, a.Time)
 				otelAnomaly.Vectors = append(otelAnomaly.Vectors, a.Vector)
 				calcAnomalyScore("otel", &otelAnomaly)
+			case "mqtt":
+				mqttAnomaly.Times = append(mqttAnomaly.Times, a.Time)
+				mqttAnomaly.Vectors = append(mqttAnomaly.Vectors, a.Vector)
+				calcAnomalyScore("mqtt", &mqttAnomaly)
 			case "monitor":
 				monitorAnomaly.Times = append(monitorAnomaly.Times, a.Time)
 				monitorAnomaly.Vectors = append(monitorAnomaly.Vectors, a.Vector)
@@ -132,6 +137,13 @@ func syslogReportToVector(r *datastore.SyslogReportEnt) []float64 {
 }
 
 func trapReportToVector(r *datastore.TrapReportEnt) []float64 {
+	return []float64{
+		float64(r.Count),
+		float64(r.Types),
+	}
+}
+
+func mqttReportToVector(r *datastore.MqttReportEnt) []float64 {
 	return []float64{
 		float64(r.Count),
 		float64(r.Types),

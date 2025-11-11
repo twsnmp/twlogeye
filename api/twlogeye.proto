@@ -37,6 +37,10 @@ service TWLogEyeService {
 	rpc GetOTelReport (ReportRequest) returns (stream OTelReportEnt);
   // Get Last OpenTelemetry Report
 	rpc GetLastOTelReport (Empty) returns (OTelReportEnt);
+  // Get MQTT Report
+	rpc GetMqttReport (ReportRequest) returns (stream MqttReportEnt);
+  // Get Last MQTT Report
+	rpc GetLastMqttReport (Empty) returns (MqttReportEnt);
   // Get Anomaly Report
 	rpc GetAnomalyReport (AnomalyReportRequest) returns (stream AnomalyReportEnt);
   // Get Last Anomaly Report
@@ -211,6 +215,19 @@ message OTelReportEnt {
   int32 trace_ids = 10;
   int32 trace_count = 11;
   int32 merics_count = 12;
+}
+
+message MqttSummaryEnt {
+  string client_id = 1;
+  string topic = 2;
+  int32 count = 3;
+}
+
+message MqttReportEnt {
+  int64 time = 1;
+  int32 count = 2;
+  int32 types = 3;
+  repeated MqttSummaryEnt top_list = 4;
 }
 
 message AnomalyReportRequest {

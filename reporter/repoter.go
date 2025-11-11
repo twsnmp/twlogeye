@@ -15,6 +15,7 @@ func Init() {
 	netflowReporterCh = make(chan *datastore.NetflowLogEnt, 20000)
 	wineventReporterCh = make(chan *datastore.WindowsEventEnt, 20000)
 	otelReporterCh = make(chan *datastore.OTelLogEnt, 20000)
+	mqttReporterCh = make(chan *datastore.MqttLogEnt, 20000)
 	otelCountCh = make(chan string, 20000)
 	anomalyCh = make(chan *anomalyChannelData, 10)
 	if datastore.Config.ReportInterval < 1 {
@@ -33,6 +34,8 @@ func Start(ctx context.Context, wg *sync.WaitGroup) {
 	go startWindowsEvent(ctx, wg)
 	wg.Add(1)
 	go startOTel(ctx, wg)
+	wg.Add(1)
+	go startMqtt(ctx, wg)
 	wg.Add(1)
 	go startAnomaly(ctx, wg)
 	wg.Add(1)

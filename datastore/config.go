@@ -7,6 +7,8 @@ type ConfigEnt struct {
 	SyslogTCPPort int    `yaml:"syslogTCPPort"`
 	NetFlowPort   int    `yaml:"netflowPort"`
 	SNMPTrapPort  int    `yaml:"snmpTrapPort"`
+
+	// Open Telemetry
 	OTelHTTPPort  int    `yaml:"otelHTTPPort"`
 	OTelgRPCPort  int    `yaml:"otelgRPCPort"`
 	OTelRetention int    `yaml:"otelRetention"`
@@ -14,6 +16,14 @@ type ConfigEnt struct {
 	OTelCert      string `yaml:"otelCert"`
 	OTelKey       string `yaml:"otelgKey"`
 	OTelCA        string `yaml:"otelCA"`
+
+	// MQTT Server
+	MqttTCPPort int    `yaml:"mqttTCPPort"`
+	MqttWSPort  int    `yaml:"mqttWDPort"`
+	MqttUsers   string `yaml:"mqttUsers"`
+	MqttFrom    string `yaml:"mqttFrom"`
+	MqttCert    string `yaml:"mqttCert"`
+	MqttKey     string `yaml:"mqttgKey"`
 
 	// Windows log
 	WinEventLogChannel       string `yaml:"winEventLogChannel"`
@@ -24,11 +34,14 @@ type ConfigEnt struct {
 	WinPassword              string `yaml:"winPassword"`
 	WinAuth                  string `yaml:"winAuth"`
 	WinLogSJIS               bool   `yaml:"winSJIS"`
-	// Dst
+
+	// Notify Dst
 	SyslogDst     []string `yaml:"syslogDst"`
 	TrapDst       []string `yaml:"trapDst"`
 	WebhookDst    []string `yaml:"webhookDst"`
+	MqttDst       []string `yaml:"mqttDst"`
 	TrapCommunity string   `yaml:"trapCommunity"`
+
 	// Log retention period (hours)
 	LogRetention int `yaml:"logRetention"`
 	// Notify retention period (days)

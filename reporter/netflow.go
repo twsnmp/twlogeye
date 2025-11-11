@@ -225,7 +225,7 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 	netflowFlowMap[flow].Packets = int(packets)
 	protocol = getProtocolName(protocol, int(sp), int(dp))
 	netflowProtocolMap[protocol]++
-	if src := isFumble(srcIP, dstIP, pi, sp, dp, int(packets)); src != "" {
+	if src := isFumble(srcIP, dstIP, pi, sp, int(packets)); src != "" {
 		netflowFumbleSrcMap[src]++
 	}
 }
@@ -429,7 +429,7 @@ func lessIP(ip1s, ip2s string) bool {
 	return true
 }
 
-func isFumble(src, dst string, prot, sp, dp, pkt int) string {
+func isFumble(src, dst string, prot, sp, pkt int) string {
 	if pkt < 4 && prot == 6 {
 		return src
 	}

@@ -42,6 +42,8 @@ Supported logs are
 - SNMP trap
 - NetFlow/IPFIX
 - Windows event log
+- OptenTelemetry
+- MQTT
 You can find sigma rule here.
 https://github.com/SigmaHQ/sigma
 

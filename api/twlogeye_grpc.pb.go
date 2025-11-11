@@ -35,6 +35,8 @@ const (
 	TWLogEyeService_GetLastWindowsEventReport_FullMethodName = "/twlogeye.TWLogEyeService/GetLastWindowsEventReport"
 	TWLogEyeService_GetOTelReport_FullMethodName             = "/twlogeye.TWLogEyeService/GetOTelReport"
 	TWLogEyeService_GetLastOTelReport_FullMethodName         = "/twlogeye.TWLogEyeService/GetLastOTelReport"
+	TWLogEyeService_GetMqttReport_FullMethodName             = "/twlogeye.TWLogEyeService/GetMqttReport"
+	TWLogEyeService_GetLastMqttReport_FullMethodName         = "/twlogeye.TWLogEyeService/GetLastMqttReport"
 	TWLogEyeService_GetAnomalyReport_FullMethodName          = "/twlogeye.TWLogEyeService/GetAnomalyReport"
 	TWLogEyeService_GetLastAnomalyReport_FullMethodName      = "/twlogeye.TWLogEyeService/GetLastAnomalyReport"
 	TWLogEyeService_GetMonitorReport_FullMethodName          = "/twlogeye.TWLogEyeService/GetMonitorReport"
@@ -81,6 +83,10 @@ type TWLogEyeServiceClient interface {
 	GetOTelReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[OTelReportEnt], error)
 	// Get Last OpenTelemetry Report
 	GetLastOTelReport(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*OTelReportEnt, error)
+	// Get MQTT Report
+	GetMqttReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MqttReportEnt], error)
+	// Get Last MQTT Report
+	GetLastMqttReport(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*MqttReportEnt, error)
 	// Get Anomaly Report
 	GetAnomalyReport(ctx context.Context, in *AnomalyReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AnomalyReportEnt], error)
 	// Get Last Anomaly Report
@@ -339,9 +345,38 @@ func (c *tWLogEyeServiceClient) GetLastOTelReport(ctx context.Context, in *Empty
 	return out, nil
 }
 
+func (c *tWLogEyeServiceClient) GetMqttReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MqttReportEnt], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[8], TWLogEyeService_GetMqttReport_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[ReportRequest, MqttReportEnt]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TWLogEyeService_GetMqttReportClient = grpc.ServerStreamingClient[MqttReportEnt]
+
+func (c *tWLogEyeServiceClient) GetLastMqttReport(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*MqttReportEnt, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MqttReportEnt)
+	err := c.cc.Invoke(ctx, TWLogEyeService_GetLastMqttReport_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tWLogEyeServiceClient) GetAnomalyReport(ctx context.Context, in *AnomalyReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AnomalyReportEnt], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[8], TWLogEyeService_GetAnomalyReport_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[9], TWLogEyeService_GetAnomalyReport_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +405,7 @@ func (c *tWLogEyeServiceClient) GetLastAnomalyReport(ctx context.Context, in *Em
 
 func (c *tWLogEyeServiceClient) GetMonitorReport(ctx context.Context, in *ReportRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MonitorReportEnt], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[9], TWLogEyeService_GetMonitorReport_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[10], TWLogEyeService_GetMonitorReport_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +434,7 @@ func (c *tWLogEyeServiceClient) GetLastMonitorReport(ctx context.Context, in *Em
 
 func (c *tWLogEyeServiceClient) GetOTelMetricList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[OTelMetricListEnt], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[10], TWLogEyeService_GetOTelMetricList_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[11], TWLogEyeService_GetOTelMetricList_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +463,7 @@ func (c *tWLogEyeServiceClient) GetOTelMetric(ctx context.Context, in *IDRequest
 
 func (c *tWLogEyeServiceClient) GetOTelTraceList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[OTelTraceListEnt], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[11], TWLogEyeService_GetOTelTraceList_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &TWLogEyeService_ServiceDesc.Streams[12], TWLogEyeService_GetOTelTraceList_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -491,6 +526,10 @@ type TWLogEyeServiceServer interface {
 	GetOTelReport(*ReportRequest, grpc.ServerStreamingServer[OTelReportEnt]) error
 	// Get Last OpenTelemetry Report
 	GetLastOTelReport(context.Context, *Empty) (*OTelReportEnt, error)
+	// Get MQTT Report
+	GetMqttReport(*ReportRequest, grpc.ServerStreamingServer[MqttReportEnt]) error
+	// Get Last MQTT Report
+	GetLastMqttReport(context.Context, *Empty) (*MqttReportEnt, error)
 	// Get Anomaly Report
 	GetAnomalyReport(*AnomalyReportRequest, grpc.ServerStreamingServer[AnomalyReportEnt]) error
 	// Get Last Anomaly Report
@@ -564,6 +603,12 @@ func (UnimplementedTWLogEyeServiceServer) GetOTelReport(*ReportRequest, grpc.Ser
 }
 func (UnimplementedTWLogEyeServiceServer) GetLastOTelReport(context.Context, *Empty) (*OTelReportEnt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLastOTelReport not implemented")
+}
+func (UnimplementedTWLogEyeServiceServer) GetMqttReport(*ReportRequest, grpc.ServerStreamingServer[MqttReportEnt]) error {
+	return status.Errorf(codes.Unimplemented, "method GetMqttReport not implemented")
+}
+func (UnimplementedTWLogEyeServiceServer) GetLastMqttReport(context.Context, *Empty) (*MqttReportEnt, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLastMqttReport not implemented")
 }
 func (UnimplementedTWLogEyeServiceServer) GetAnomalyReport(*AnomalyReportRequest, grpc.ServerStreamingServer[AnomalyReportEnt]) error {
 	return status.Errorf(codes.Unimplemented, "method GetAnomalyReport not implemented")
@@ -842,6 +887,35 @@ func _TWLogEyeService_GetLastOTelReport_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TWLogEyeService_GetMqttReport_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ReportRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TWLogEyeServiceServer).GetMqttReport(m, &grpc.GenericServerStream[ReportRequest, MqttReportEnt]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TWLogEyeService_GetMqttReportServer = grpc.ServerStreamingServer[MqttReportEnt]
+
+func _TWLogEyeService_GetLastMqttReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TWLogEyeServiceServer).GetLastMqttReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TWLogEyeService_GetLastMqttReport_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TWLogEyeServiceServer).GetLastMqttReport(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _TWLogEyeService_GetAnomalyReport_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(AnomalyReportRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -998,6 +1072,10 @@ var TWLogEyeService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TWLogEyeService_GetLastOTelReport_Handler,
 		},
 		{
+			MethodName: "GetLastMqttReport",
+			Handler:    _TWLogEyeService_GetLastMqttReport_Handler,
+		},
+		{
 			MethodName: "GetLastAnomalyReport",
 			Handler:    _TWLogEyeService_GetLastAnomalyReport_Handler,
 		},
@@ -1053,6 +1131,11 @@ var TWLogEyeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "GetOTelReport",
 			Handler:       _TWLogEyeService_GetOTelReport_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetMqttReport",
+			Handler:       _TWLogEyeService_GetMqttReport_Handler,
 			ServerStreams: true,
 		},
 		{
