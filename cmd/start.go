@@ -102,10 +102,16 @@ func init() {
 	startCmd.Flags().IntVar(&datastore.Config.OTelHTTPPort, "otelHTTPPort", 0, "OpenTelemetry HTTP Port")
 	startCmd.Flags().IntVar(&datastore.Config.OTelgRPCPort, "otelgRPCPort", 0, "OpenTelemetry gRPC Port")
 	startCmd.Flags().StringVar(&datastore.Config.OTelFrom, "otelFrom", "", "OpenTelemetry clinet IPs")
-	startCmd.Flags().StringVar(&datastore.Config.OTelCert, "otelCert", "", "OpenTelemetry server sertficate")
+	startCmd.Flags().StringVar(&datastore.Config.OTelCert, "otelCert", "", "OpenTelemetry server certficate")
 	startCmd.Flags().StringVar(&datastore.Config.OTelKey, "otelKey", "", "OpenTelemetry server private key")
 	startCmd.Flags().StringVar(&datastore.Config.OTelCA, "otelCA", "", "OpenTelemetry CA certficate")
 	startCmd.Flags().IntVar(&datastore.Config.OTelRetention, "otelRetention", 48, "log retention(hours)")
+	startCmd.Flags().IntVar(&datastore.Config.MqttTCPPort, "mqttTCPPort", 0, "MQTT TCP Port")
+	startCmd.Flags().IntVar(&datastore.Config.MqttWSPort, "mqttWSPort", 0, "MQTT Websock Port")
+	startCmd.Flags().StringVar(&datastore.Config.MqttFrom, "mqttFrom", "", "MQTT clinet IPs")
+	startCmd.Flags().StringVar(&datastore.Config.MqttFrom, "mqttUsers", "", "MQTT user and password")
+	startCmd.Flags().StringVar(&datastore.Config.MqttCert, "mqttCert", "", "MQTT server certficate")
+	startCmd.Flags().StringVar(&datastore.Config.MqttKey, "mqttKey", "", "MQTT server private key")
 }
 
 func start() {
