@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-  VERSION: v0.3.3
+  VERSION: 0.4.0
   COMMIT:
     sh: git rev-parse --short HEAD
 
@@ -47,3 +47,6 @@ tasks:
   clean:
     cmds:
       - rm -rf dist/*
+  docker:
+    cmds:
+      - docker build -t twsnmp/twlogeye  --build-arg VERSION={{.VERSION}} --build-arg COMMIT={{.COMMIT}} .
