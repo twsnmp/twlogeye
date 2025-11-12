@@ -112,6 +112,8 @@ func init() {
 	startCmd.Flags().StringVar(&datastore.Config.MqttFrom, "mqttUsers", "", "MQTT user and password")
 	startCmd.Flags().StringVar(&datastore.Config.MqttCert, "mqttCert", "", "MQTT server certficate")
 	startCmd.Flags().StringVar(&datastore.Config.MqttKey, "mqttKey", "", "MQTT server private key")
+	startCmd.Flags().StringVar(&datastore.Config.GeoIPDB, "geoIPDB", "", "Geo IP Database Path")
+	startCmd.Flags().BoolVar(&datastore.Config.ResolveHostName, "resolveHostName", false, "Resolve Host Name")
 }
 
 func start() {

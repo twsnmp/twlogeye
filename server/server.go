@@ -331,8 +331,8 @@ func (s *apiServer) GetNetflowReport(req *api.ReportRequest, stream api.TWLogEye
 			TopIpBytesList:     []*api.NetflowBytesSummaryEnt{},
 			TopFlowPacketsList: []*api.NetflowPacketsSummaryEnt{},
 			TopFlowBytesList:   []*api.NetflowBytesSummaryEnt{},
-			TopProtocolList:    []*api.NetflowProtocolCountEnt{},
-			TopFumbleSrcList:   []*api.NetflowIPCountEnt{},
+			TopProtocolList:    []*api.NetflowKeyCountEnt{},
+			TopFumbleSrcList:   []*api.NetflowKeyCountEnt{},
 		}
 		for _, t := range l.TopMACPacketsList {
 			r.TopMacPacketsList = append(r.TopMacPacketsList, &api.NetflowPacketsSummaryEnt{
@@ -371,14 +371,14 @@ func (s *apiServer) GetNetflowReport(req *api.ReportRequest, stream api.TWLogEye
 			})
 		}
 		for _, t := range l.TopProtocolList {
-			r.TopProtocolList = append(r.TopProtocolList, &api.NetflowProtocolCountEnt{
-				Protocol: t.Protocol,
-				Count:    int32(t.Count),
+			r.TopProtocolList = append(r.TopProtocolList, &api.NetflowKeyCountEnt{
+				Key:   t.Key,
+				Count: int32(t.Count),
 			})
 		}
 		for _, t := range l.TopFumbleSrcList {
-			r.TopFumbleSrcList = append(r.TopFumbleSrcList, &api.NetflowIPCountEnt{
-				Ip:    t.IP,
+			r.TopFumbleSrcList = append(r.TopFumbleSrcList, &api.NetflowKeyCountEnt{
+				Key:   t.Key,
 				Count: int32(t.Count),
 			})
 		}
@@ -405,14 +405,17 @@ func (s *apiServer) GetLastNetflowReport(ctx context.Context, req *api.Empty) (*
 		Flows:              int32(l.Flows),
 		Protocols:          int32(l.Protocols),
 		Fumbles:            int32(l.Fumbles),
+		Hosts:              int32(l.Hosts),
+		Locs:               int32(l.Locs),
+		Country:            int32(l.Country),
 		TopMacPacketsList:  []*api.NetflowPacketsSummaryEnt{},
 		TopMacBytesList:    []*api.NetflowBytesSummaryEnt{},
 		TopIpPacketsList:   []*api.NetflowPacketsSummaryEnt{},
 		TopIpBytesList:     []*api.NetflowBytesSummaryEnt{},
 		TopFlowPacketsList: []*api.NetflowPacketsSummaryEnt{},
 		TopFlowBytesList:   []*api.NetflowBytesSummaryEnt{},
-		TopProtocolList:    []*api.NetflowProtocolCountEnt{},
-		TopFumbleSrcList:   []*api.NetflowIPCountEnt{},
+		TopProtocolList:    []*api.NetflowKeyCountEnt{},
+		TopFumbleSrcList:   []*api.NetflowKeyCountEnt{},
 	}
 	for _, t := range l.TopMACPacketsList {
 		r.TopMacPacketsList = append(r.TopMacPacketsList, &api.NetflowPacketsSummaryEnt{
@@ -451,14 +454,32 @@ func (s *apiServer) GetLastNetflowReport(ctx context.Context, req *api.Empty) (*
 		})
 	}
 	for _, t := range l.TopProtocolList {
-		r.TopProtocolList = append(r.TopProtocolList, &api.NetflowProtocolCountEnt{
-			Protocol: t.Protocol,
-			Count:    int32(t.Count),
+		r.TopProtocolList = append(r.TopProtocolList, &api.NetflowKeyCountEnt{
+			Key:   t.Key,
+			Count: int32(t.Count),
 		})
 	}
 	for _, t := range l.TopFumbleSrcList {
-		r.TopFumbleSrcList = append(r.TopFumbleSrcList, &api.NetflowIPCountEnt{
-			Ip:    t.IP,
+		r.TopFumbleSrcList = append(r.TopFumbleSrcList, &api.NetflowKeyCountEnt{
+			Key:   t.Key,
+			Count: int32(t.Count),
+		})
+	}
+	for _, t := range l.TopHostList {
+		r.TopHostList = append(r.TopHostList, &api.NetflowKeyCountEnt{
+			Key:   t.Key,
+			Count: int32(t.Count),
+		})
+	}
+	for _, t := range l.TopLocList {
+		r.TopLocList = append(r.TopLocList, &api.NetflowKeyCountEnt{
+			Key:   t.Key,
+			Count: int32(t.Count),
+		})
+	}
+	for _, t := range l.TopCountryList {
+		r.TopCountryList = append(r.TopCountryList, &api.NetflowKeyCountEnt{
+			Key:   t.Key,
 			Count: int32(t.Count),
 		})
 	}

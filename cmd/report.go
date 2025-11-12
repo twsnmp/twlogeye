@@ -250,12 +250,12 @@ func getNetflowReport(st, et int64) {
 			fmt.Println("Top protocol list")
 			fmt.Println("No.\tProcottol\tCount")
 			for i, t := range r.GetTopProtocolList() {
-				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetProtocol(), t.GetCount())
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetCount())
 			}
 			fmt.Println("Top Fumble src list")
 			fmt.Println("No.\tSrc\tCount")
 			for i, t := range r.GetTopFumbleSrcList() {
-				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetIp(), t.GetCount())
+				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetCount())
 			}
 			fmt.Println("===")
 		}
@@ -305,12 +305,12 @@ func getLastNetflowReport() {
 		fmt.Println("Top protocol list")
 		fmt.Println("No.\tProcottol\tCount")
 		for i, t := range r.GetTopProtocolList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetProtocol(), t.GetCount())
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetCount())
 		}
 		fmt.Println("Top Fumble src list")
 		fmt.Println("No.\tSrc\tCount")
 		for i, t := range r.GetTopFumbleSrcList() {
-			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetIp(), t.GetCount())
+			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetCount())
 		}
 		fmt.Println("===")
 	}

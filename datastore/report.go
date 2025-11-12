@@ -257,12 +257,8 @@ type NetflowBytesSummaryEnt struct {
 	Bytes int64
 }
 
-type NetflowProtocolCountEnt struct {
-	Protocol string
-	Count    int
-}
-type NetflowIPCountEnt struct {
-	IP    string
+type NetflowKeyCountEnt struct {
+	Key   string
 	Count int
 }
 
@@ -275,14 +271,20 @@ type NetflowReportEnt struct {
 	Flows              int
 	Protocols          int
 	Fumbles            int
+	Hosts              int
+	Locs               int
+	Country            int
 	TopMACPacketsList  []NetflowPacketsSummaryEnt
 	TopMACBytesList    []NetflowBytesSummaryEnt
 	TopIPPacketsList   []NetflowPacketsSummaryEnt
 	TopIPBytesList     []NetflowBytesSummaryEnt
 	TopFlowPacketsList []NetflowPacketsSummaryEnt
 	TopFlowBytesList   []NetflowBytesSummaryEnt
-	TopProtocolList    []NetflowProtocolCountEnt
-	TopFumbleSrcList   []NetflowIPCountEnt
+	TopProtocolList    []NetflowKeyCountEnt
+	TopFumbleSrcList   []NetflowKeyCountEnt
+	TopHostList        []NetflowKeyCountEnt
+	TopLocList         []NetflowKeyCountEnt
+	TopCountryList     []NetflowKeyCountEnt
 }
 
 func SaveNetflowReport(r *NetflowReportEnt) {

@@ -45,7 +45,8 @@ var dashboardCmd = &cobra.Command{
   syslog.count | syslog.pattern | syslog.error
   trap.count | trap.type 
   netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte 
-  netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
+  netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot 
+  netflow.host | netflow.loc | netflow.country 
   winevent.count | winevent.pattern | winevent.error
   otel.count | otel.pattern | otel.error | otel.metric.<id>
   mqtt.count | mqtt.type 
@@ -90,7 +91,7 @@ var dashboardCmd = &cobra.Command{
 				}
 			case "netflow":
 				switch a[1] {
-				case "count", "ip.packet", "ip.byte", "mac.packet", "mac.byte", "flow.packet", "flow.byte", "fumble", "prot":
+				case "count", "ip.packet", "ip.byte", "mac.packet", "mac.byte", "flow.packet", "flow.byte", "fumble", "prot", "host", "loc", "country":
 					dashboardMap[a[0]] = true
 					dashboardPanel = append(dashboardPanel, p)
 				}
@@ -664,6 +665,12 @@ func (m dashboardModel) renderPanel(p string) string {
 		return m.renderNetflowProt()
 	case "netflow.fumble":
 		return m.renderNetflowFumble()
+	case "netflow.host":
+		return m.renderNetflowHost()
+	case "netflow.loc":
+		return m.renderNetflowLoc()
+	case "netflow.country":
+		return m.renderNetflowCountry()
 	case "winevent.count":
 		return m.renderWindowsEventCount()
 	case "winevent.pattern":

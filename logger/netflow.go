@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"strings"
 	"sync"
 
 	"fmt"
@@ -23,6 +24,8 @@ import (
 )
 
 var netflowCh = make(chan *datastore.LogEnt, 20000)
+var useGeoip bool
+var useDNS bool
 
 func StartNetFlowd(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -30,6 +33,7 @@ func StartNetFlowd(ctx context.Context, wg *sync.WaitGroup) {
 		return
 	}
 	log.Printf("start netflowd")
+	useGeoip, useDNS = datastore.SetupIPInfoDB()
 	var readSize = 2 << 16
 	var addr *net.UDPAddr
 	var err error
@@ -129,6 +133,68 @@ func logIPFIX(p *ipfix.Message, src string) {
 					record["raw"] = f.Bytes
 				}
 			}
+			if useDNS {
+				if ip, ok := record["sourceIPv4Address"].(net.IP); ok {
+					if h := datastore.GetHostByIP(ip.String()); h != "" {
+						record["srcHost"] = h
+					}
+					if ip, ok := record["destinationIPv4Address"].(net.IP); ok {
+						if h := datastore.GetHostByIP(ip.String()); h != "" {
+							record["dstHost"] = h
+						}
+					}
+				} else if ip, ok := record["sourceIPv6Address"].(net.IP); ok {
+					if h := datastore.GetHostByIP(ip.String()); h != "" {
+						record["srcHost"] = h
+					}
+					if ip, ok := record["destinationIPv6Address"].(net.IP); ok {
+						if h := datastore.GetHostByIP(ip.String()); h != "" {
+							record["dstHost"] = h
+						}
+					}
+				}
+			}
+			if useGeoip {
+				if ip, ok := record["sourceIPv4Address"].(net.IP); ok {
+					loc := datastore.GetLocByIP(ip.String())
+					if loc != "" {
+						a := strings.SplitN(loc, ":", 2)
+						if len(a) == 2 {
+							record["srcLoc"] = loc
+							record["srcCountry"] = a[0]
+						}
+					}
+					if ip, ok := record["destinationIPv4Address"].(net.IP); ok {
+						loc := datastore.GetLocByIP(ip.String())
+						if loc != "" {
+							a := strings.SplitN(loc, ":", 2)
+							if len(a) == 2 {
+								record["dstLoc"] = loc
+								record["dstCountry"] = a[0]
+							}
+						}
+					}
+				} else if ip, ok := record["sourceIPv6Address"].(net.IP); ok {
+					loc := datastore.GetLocByIP(ip.String())
+					if loc != "" {
+						a := strings.SplitN(loc, ":", 2)
+						if len(a) == 2 {
+							record["srcLoc"] = loc
+							record["srcCountry"] = a[0]
+						}
+					}
+					if ip, ok := record["destinationIPv6Address"].(net.IP); ok {
+						loc := datastore.GetLocByIP(ip.String())
+						if loc != "" {
+							a := strings.SplitN(loc, ":", 2)
+							if len(a) == 2 {
+								record["dstLoc"] = loc
+								record["dstCountry"] = a[0]
+							}
+						}
+					}
+				}
+			}
 			s, err := json.Marshal(record)
 			if err != nil {
 				continue
@@ -168,6 +234,28 @@ func logNetflow(p *netflow5.Packet, src string) {
 		record["dstAs"] = r.DstAS
 		record["srcMask"] = r.SrcMask
 		record["dstMask"] = r.DstMask
+		if useDNS {
+			record["srcHost"] = datastore.GetHostByIP(r.SrcAddr.String())
+			record["dstHost"] = datastore.GetHostByIP(r.DstAddr.String())
+		}
+		if useGeoip {
+			loc := datastore.GetLocByIP(r.SrcAddr.String())
+			if loc != "" {
+				a := strings.SplitN(loc, ":", 2)
+				if len(a) == 2 {
+					record["srcLoc"] = loc
+					record["srcCountry"] = a[0]
+				}
+			}
+			loc = datastore.GetLocByIP(r.DstAddr.String())
+			if loc != "" {
+				a := strings.SplitN(loc, ":", 2)
+				if len(a) == 2 {
+					record["dstLoc"] = loc
+					record["dstCountry"] = a[0]
+				}
+			}
+		}
 		s, err := json.Marshal(record)
 		if err != nil {
 			log.Println(err)
@@ -215,6 +303,68 @@ func logNetflow9(p *netflow9.Packet, src string) {
 					}
 				} else {
 					record["raw"] = f.Bytes
+				}
+			}
+			if useDNS {
+				if ip, ok := record["sourceIPv4Address"].(net.IP); ok {
+					if h := datastore.GetHostByIP(ip.String()); h != "" {
+						record["srcHost"] = h
+					}
+					if ip, ok := record["destinationIPv4Address"].(net.IP); ok {
+						if h := datastore.GetHostByIP(ip.String()); h != "" {
+							record["dstHost"] = h
+						}
+					}
+				} else if ip, ok := record["sourceIPv6Address"].(net.IP); ok {
+					if h := datastore.GetHostByIP(ip.String()); h != "" {
+						record["srcHost"] = h
+					}
+					if ip, ok := record["destinationIPv6Address"].(net.IP); ok {
+						if h := datastore.GetHostByIP(ip.String()); h != "" {
+							record["dstHost"] = h
+						}
+					}
+				}
+			}
+			if useGeoip {
+				if ip, ok := record["sourceIPv4Address"].(net.IP); ok {
+					loc := datastore.GetLocByIP(ip.String())
+					if loc != "" {
+						a := strings.SplitN(loc, ":", 2)
+						if len(a) == 2 {
+							record["srcLoc"] = loc
+							record["srcCountry"] = a[0]
+						}
+					}
+					if ip, ok := record["destinationIPv4Address"].(net.IP); ok {
+						loc := datastore.GetLocByIP(ip.String())
+						if loc != "" {
+							a := strings.SplitN(loc, ":", 2)
+							if len(a) == 2 {
+								record["dstLoc"] = loc
+								record["dstCountry"] = a[0]
+							}
+						}
+					}
+				} else if ip, ok := record["sourceIPv6Address"].(net.IP); ok {
+					loc := datastore.GetLocByIP(ip.String())
+					if loc != "" {
+						a := strings.SplitN(loc, ":", 2)
+						if len(a) == 2 {
+							record["srcLoc"] = loc
+							record["srcCountry"] = a[0]
+						}
+					}
+					if ip, ok := record["destinationIPv6Address"].(net.IP); ok {
+						loc := datastore.GetLocByIP(ip.String())
+						if loc != "" {
+							a := strings.SplitN(loc, ":", 2)
+							if len(a) == 2 {
+								record["dstLoc"] = loc
+								record["dstCountry"] = a[0]
+							}
+						}
+					}
 				}
 			}
 			s, err := json.Marshal(record)

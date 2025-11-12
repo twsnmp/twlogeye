@@ -146,13 +146,8 @@ message NetflowBytesSummaryEnt {
   int64 bytes = 2;
 }
 
-message NetflowProtocolCountEnt {
-  string protocol = 1;
-  int32 count = 2;
-}
-
-message NetflowIPCountEnt {
-  string ip = 1;
+message NetflowKeyCountEnt {
+  string key = 1;
   int32 count = 2;
 }
 
@@ -165,14 +160,20 @@ message NetflowReportEnt {
   int32 flows = 6;
   int32 protocols = 7;
   int32 fumbles = 8;
-  repeated NetflowPacketsSummaryEnt top_mac_packets_list = 9;
-  repeated NetflowBytesSummaryEnt top_mac_bytes_list = 10;
-  repeated NetflowPacketsSummaryEnt top_ip_packets_list = 11;
-  repeated NetflowBytesSummaryEnt top_ip_bytes_list = 12;
-  repeated NetflowPacketsSummaryEnt top_flow_packets_list = 13;
-  repeated NetflowBytesSummaryEnt top_flow_bytes_list = 14;
-  repeated NetflowProtocolCountEnt top_protocol_list = 15;
-  repeated NetflowIPCountEnt top_fumble_src_list = 16;
+  int32 hosts = 9;
+  int32 locs = 10;
+  int32 country = 11;
+  repeated NetflowPacketsSummaryEnt top_mac_packets_list = 12;
+  repeated NetflowBytesSummaryEnt top_mac_bytes_list = 13;
+  repeated NetflowPacketsSummaryEnt top_ip_packets_list = 14;
+  repeated NetflowBytesSummaryEnt top_ip_bytes_list = 15;
+  repeated NetflowPacketsSummaryEnt top_flow_packets_list = 16;
+  repeated NetflowBytesSummaryEnt top_flow_bytes_list = 17;
+  repeated NetflowKeyCountEnt top_protocol_list = 18;
+  repeated NetflowKeyCountEnt top_fumble_src_list = 19;
+  repeated NetflowKeyCountEnt top_host_list = 20;
+  repeated NetflowKeyCountEnt top_loc_list = 21;
+  repeated NetflowKeyCountEnt top_country_list = 22;
 }
 
 

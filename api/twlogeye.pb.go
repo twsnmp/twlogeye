@@ -869,28 +869,28 @@ func (x *NetflowBytesSummaryEnt) GetBytes() int64 {
 	return 0
 }
 
-type NetflowProtocolCountEnt struct {
+type NetflowKeyCountEnt struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Protocol      string                 `protobuf:"bytes,1,opt,name=protocol,proto3" json:"protocol,omitempty"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Count         int32                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *NetflowProtocolCountEnt) Reset() {
-	*x = NetflowProtocolCountEnt{}
+func (x *NetflowKeyCountEnt) Reset() {
+	*x = NetflowKeyCountEnt{}
 	mi := &file_twlogeye_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *NetflowProtocolCountEnt) String() string {
+func (x *NetflowKeyCountEnt) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NetflowProtocolCountEnt) ProtoMessage() {}
+func (*NetflowKeyCountEnt) ProtoMessage() {}
 
-func (x *NetflowProtocolCountEnt) ProtoReflect() protoreflect.Message {
+func (x *NetflowKeyCountEnt) ProtoReflect() protoreflect.Message {
 	mi := &file_twlogeye_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -902,71 +902,19 @@ func (x *NetflowProtocolCountEnt) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use NetflowProtocolCountEnt.ProtoReflect.Descriptor instead.
-func (*NetflowProtocolCountEnt) Descriptor() ([]byte, []int) {
+// Deprecated: Use NetflowKeyCountEnt.ProtoReflect.Descriptor instead.
+func (*NetflowKeyCountEnt) Descriptor() ([]byte, []int) {
 	return file_twlogeye_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *NetflowProtocolCountEnt) GetProtocol() string {
+func (x *NetflowKeyCountEnt) GetKey() string {
 	if x != nil {
-		return x.Protocol
+		return x.Key
 	}
 	return ""
 }
 
-func (x *NetflowProtocolCountEnt) GetCount() int32 {
-	if x != nil {
-		return x.Count
-	}
-	return 0
-}
-
-type NetflowIPCountEnt struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ip            string                 `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
-	Count         int32                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *NetflowIPCountEnt) Reset() {
-	*x = NetflowIPCountEnt{}
-	mi := &file_twlogeye_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *NetflowIPCountEnt) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NetflowIPCountEnt) ProtoMessage() {}
-
-func (x *NetflowIPCountEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use NetflowIPCountEnt.ProtoReflect.Descriptor instead.
-func (*NetflowIPCountEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *NetflowIPCountEnt) GetIp() string {
-	if x != nil {
-		return x.Ip
-	}
-	return ""
-}
-
-func (x *NetflowIPCountEnt) GetCount() int32 {
+func (x *NetflowKeyCountEnt) GetCount() int32 {
 	if x != nil {
 		return x.Count
 	}
@@ -983,21 +931,27 @@ type NetflowReportEnt struct {
 	Flows              int32                       `protobuf:"varint,6,opt,name=flows,proto3" json:"flows,omitempty"`
 	Protocols          int32                       `protobuf:"varint,7,opt,name=protocols,proto3" json:"protocols,omitempty"`
 	Fumbles            int32                       `protobuf:"varint,8,opt,name=fumbles,proto3" json:"fumbles,omitempty"`
-	TopMacPacketsList  []*NetflowPacketsSummaryEnt `protobuf:"bytes,9,rep,name=top_mac_packets_list,json=topMacPacketsList,proto3" json:"top_mac_packets_list,omitempty"`
-	TopMacBytesList    []*NetflowBytesSummaryEnt   `protobuf:"bytes,10,rep,name=top_mac_bytes_list,json=topMacBytesList,proto3" json:"top_mac_bytes_list,omitempty"`
-	TopIpPacketsList   []*NetflowPacketsSummaryEnt `protobuf:"bytes,11,rep,name=top_ip_packets_list,json=topIpPacketsList,proto3" json:"top_ip_packets_list,omitempty"`
-	TopIpBytesList     []*NetflowBytesSummaryEnt   `protobuf:"bytes,12,rep,name=top_ip_bytes_list,json=topIpBytesList,proto3" json:"top_ip_bytes_list,omitempty"`
-	TopFlowPacketsList []*NetflowPacketsSummaryEnt `protobuf:"bytes,13,rep,name=top_flow_packets_list,json=topFlowPacketsList,proto3" json:"top_flow_packets_list,omitempty"`
-	TopFlowBytesList   []*NetflowBytesSummaryEnt   `protobuf:"bytes,14,rep,name=top_flow_bytes_list,json=topFlowBytesList,proto3" json:"top_flow_bytes_list,omitempty"`
-	TopProtocolList    []*NetflowProtocolCountEnt  `protobuf:"bytes,15,rep,name=top_protocol_list,json=topProtocolList,proto3" json:"top_protocol_list,omitempty"`
-	TopFumbleSrcList   []*NetflowIPCountEnt        `protobuf:"bytes,16,rep,name=top_fumble_src_list,json=topFumbleSrcList,proto3" json:"top_fumble_src_list,omitempty"`
+	Hosts              int32                       `protobuf:"varint,9,opt,name=hosts,proto3" json:"hosts,omitempty"`
+	Locs               int32                       `protobuf:"varint,10,opt,name=locs,proto3" json:"locs,omitempty"`
+	Country            int32                       `protobuf:"varint,11,opt,name=country,proto3" json:"country,omitempty"`
+	TopMacPacketsList  []*NetflowPacketsSummaryEnt `protobuf:"bytes,12,rep,name=top_mac_packets_list,json=topMacPacketsList,proto3" json:"top_mac_packets_list,omitempty"`
+	TopMacBytesList    []*NetflowBytesSummaryEnt   `protobuf:"bytes,13,rep,name=top_mac_bytes_list,json=topMacBytesList,proto3" json:"top_mac_bytes_list,omitempty"`
+	TopIpPacketsList   []*NetflowPacketsSummaryEnt `protobuf:"bytes,14,rep,name=top_ip_packets_list,json=topIpPacketsList,proto3" json:"top_ip_packets_list,omitempty"`
+	TopIpBytesList     []*NetflowBytesSummaryEnt   `protobuf:"bytes,15,rep,name=top_ip_bytes_list,json=topIpBytesList,proto3" json:"top_ip_bytes_list,omitempty"`
+	TopFlowPacketsList []*NetflowPacketsSummaryEnt `protobuf:"bytes,16,rep,name=top_flow_packets_list,json=topFlowPacketsList,proto3" json:"top_flow_packets_list,omitempty"`
+	TopFlowBytesList   []*NetflowBytesSummaryEnt   `protobuf:"bytes,17,rep,name=top_flow_bytes_list,json=topFlowBytesList,proto3" json:"top_flow_bytes_list,omitempty"`
+	TopProtocolList    []*NetflowKeyCountEnt       `protobuf:"bytes,18,rep,name=top_protocol_list,json=topProtocolList,proto3" json:"top_protocol_list,omitempty"`
+	TopFumbleSrcList   []*NetflowKeyCountEnt       `protobuf:"bytes,19,rep,name=top_fumble_src_list,json=topFumbleSrcList,proto3" json:"top_fumble_src_list,omitempty"`
+	TopHostList        []*NetflowKeyCountEnt       `protobuf:"bytes,20,rep,name=top_host_list,json=topHostList,proto3" json:"top_host_list,omitempty"`
+	TopLocList         []*NetflowKeyCountEnt       `protobuf:"bytes,21,rep,name=top_loc_list,json=topLocList,proto3" json:"top_loc_list,omitempty"`
+	TopCountryList     []*NetflowKeyCountEnt       `protobuf:"bytes,22,rep,name=top_country_list,json=topCountryList,proto3" json:"top_country_list,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
 func (x *NetflowReportEnt) Reset() {
 	*x = NetflowReportEnt{}
-	mi := &file_twlogeye_proto_msgTypes[16]
+	mi := &file_twlogeye_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1009,7 +963,7 @@ func (x *NetflowReportEnt) String() string {
 func (*NetflowReportEnt) ProtoMessage() {}
 
 func (x *NetflowReportEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[16]
+	mi := &file_twlogeye_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1022,7 +976,7 @@ func (x *NetflowReportEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetflowReportEnt.ProtoReflect.Descriptor instead.
 func (*NetflowReportEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{16}
+	return file_twlogeye_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *NetflowReportEnt) GetTime() int64 {
@@ -1081,6 +1035,27 @@ func (x *NetflowReportEnt) GetFumbles() int32 {
 	return 0
 }
 
+func (x *NetflowReportEnt) GetHosts() int32 {
+	if x != nil {
+		return x.Hosts
+	}
+	return 0
+}
+
+func (x *NetflowReportEnt) GetLocs() int32 {
+	if x != nil {
+		return x.Locs
+	}
+	return 0
+}
+
+func (x *NetflowReportEnt) GetCountry() int32 {
+	if x != nil {
+		return x.Country
+	}
+	return 0
+}
+
 func (x *NetflowReportEnt) GetTopMacPacketsList() []*NetflowPacketsSummaryEnt {
 	if x != nil {
 		return x.TopMacPacketsList
@@ -1123,16 +1098,37 @@ func (x *NetflowReportEnt) GetTopFlowBytesList() []*NetflowBytesSummaryEnt {
 	return nil
 }
 
-func (x *NetflowReportEnt) GetTopProtocolList() []*NetflowProtocolCountEnt {
+func (x *NetflowReportEnt) GetTopProtocolList() []*NetflowKeyCountEnt {
 	if x != nil {
 		return x.TopProtocolList
 	}
 	return nil
 }
 
-func (x *NetflowReportEnt) GetTopFumbleSrcList() []*NetflowIPCountEnt {
+func (x *NetflowReportEnt) GetTopFumbleSrcList() []*NetflowKeyCountEnt {
 	if x != nil {
 		return x.TopFumbleSrcList
+	}
+	return nil
+}
+
+func (x *NetflowReportEnt) GetTopHostList() []*NetflowKeyCountEnt {
+	if x != nil {
+		return x.TopHostList
+	}
+	return nil
+}
+
+func (x *NetflowReportEnt) GetTopLocList() []*NetflowKeyCountEnt {
+	if x != nil {
+		return x.TopLocList
+	}
+	return nil
+}
+
+func (x *NetflowReportEnt) GetTopCountryList() []*NetflowKeyCountEnt {
+	if x != nil {
+		return x.TopCountryList
 	}
 	return nil
 }
@@ -1149,7 +1145,7 @@ type WindowsEventSummary struct {
 
 func (x *WindowsEventSummary) Reset() {
 	*x = WindowsEventSummary{}
-	mi := &file_twlogeye_proto_msgTypes[17]
+	mi := &file_twlogeye_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1161,7 +1157,7 @@ func (x *WindowsEventSummary) String() string {
 func (*WindowsEventSummary) ProtoMessage() {}
 
 func (x *WindowsEventSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[17]
+	mi := &file_twlogeye_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1174,7 +1170,7 @@ func (x *WindowsEventSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WindowsEventSummary.ProtoReflect.Descriptor instead.
 func (*WindowsEventSummary) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{17}
+	return file_twlogeye_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *WindowsEventSummary) GetComputer() string {
@@ -1221,7 +1217,7 @@ type WindowsEventReportEnt struct {
 
 func (x *WindowsEventReportEnt) Reset() {
 	*x = WindowsEventReportEnt{}
-	mi := &file_twlogeye_proto_msgTypes[18]
+	mi := &file_twlogeye_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1233,7 +1229,7 @@ func (x *WindowsEventReportEnt) String() string {
 func (*WindowsEventReportEnt) ProtoMessage() {}
 
 func (x *WindowsEventReportEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[18]
+	mi := &file_twlogeye_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1246,7 +1242,7 @@ func (x *WindowsEventReportEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WindowsEventReportEnt.ProtoReflect.Descriptor instead.
 func (*WindowsEventReportEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{18}
+	return file_twlogeye_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *WindowsEventReportEnt) GetTime() int64 {
@@ -1318,7 +1314,7 @@ type OTelSummaryEnt struct {
 
 func (x *OTelSummaryEnt) Reset() {
 	*x = OTelSummaryEnt{}
-	mi := &file_twlogeye_proto_msgTypes[19]
+	mi := &file_twlogeye_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1330,7 +1326,7 @@ func (x *OTelSummaryEnt) String() string {
 func (*OTelSummaryEnt) ProtoMessage() {}
 
 func (x *OTelSummaryEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[19]
+	mi := &file_twlogeye_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1343,7 +1339,7 @@ func (x *OTelSummaryEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OTelSummaryEnt.ProtoReflect.Descriptor instead.
 func (*OTelSummaryEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{19}
+	return file_twlogeye_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *OTelSummaryEnt) GetHost() string {
@@ -1401,7 +1397,7 @@ type OTelReportEnt struct {
 
 func (x *OTelReportEnt) Reset() {
 	*x = OTelReportEnt{}
-	mi := &file_twlogeye_proto_msgTypes[20]
+	mi := &file_twlogeye_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1413,7 +1409,7 @@ func (x *OTelReportEnt) String() string {
 func (*OTelReportEnt) ProtoMessage() {}
 
 func (x *OTelReportEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[20]
+	mi := &file_twlogeye_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1426,7 +1422,7 @@ func (x *OTelReportEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OTelReportEnt.ProtoReflect.Descriptor instead.
 func (*OTelReportEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{20}
+	return file_twlogeye_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *OTelReportEnt) GetTime() int64 {
@@ -1524,7 +1520,7 @@ type MqttSummaryEnt struct {
 
 func (x *MqttSummaryEnt) Reset() {
 	*x = MqttSummaryEnt{}
-	mi := &file_twlogeye_proto_msgTypes[21]
+	mi := &file_twlogeye_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1536,7 +1532,7 @@ func (x *MqttSummaryEnt) String() string {
 func (*MqttSummaryEnt) ProtoMessage() {}
 
 func (x *MqttSummaryEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[21]
+	mi := &file_twlogeye_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1549,7 +1545,7 @@ func (x *MqttSummaryEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MqttSummaryEnt.ProtoReflect.Descriptor instead.
 func (*MqttSummaryEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{21}
+	return file_twlogeye_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *MqttSummaryEnt) GetClientId() string {
@@ -1585,7 +1581,7 @@ type MqttReportEnt struct {
 
 func (x *MqttReportEnt) Reset() {
 	*x = MqttReportEnt{}
-	mi := &file_twlogeye_proto_msgTypes[22]
+	mi := &file_twlogeye_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1597,7 +1593,7 @@ func (x *MqttReportEnt) String() string {
 func (*MqttReportEnt) ProtoMessage() {}
 
 func (x *MqttReportEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[22]
+	mi := &file_twlogeye_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1610,7 +1606,7 @@ func (x *MqttReportEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MqttReportEnt.ProtoReflect.Descriptor instead.
 func (*MqttReportEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{22}
+	return file_twlogeye_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *MqttReportEnt) GetTime() int64 {
@@ -1652,7 +1648,7 @@ type AnomalyReportRequest struct {
 
 func (x *AnomalyReportRequest) Reset() {
 	*x = AnomalyReportRequest{}
-	mi := &file_twlogeye_proto_msgTypes[23]
+	mi := &file_twlogeye_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1664,7 +1660,7 @@ func (x *AnomalyReportRequest) String() string {
 func (*AnomalyReportRequest) ProtoMessage() {}
 
 func (x *AnomalyReportRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[23]
+	mi := &file_twlogeye_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1677,7 +1673,7 @@ func (x *AnomalyReportRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnomalyReportRequest.ProtoReflect.Descriptor instead.
 func (*AnomalyReportRequest) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{23}
+	return file_twlogeye_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *AnomalyReportRequest) GetStart() int64 {
@@ -1711,7 +1707,7 @@ type AnomalyReportEnt struct {
 
 func (x *AnomalyReportEnt) Reset() {
 	*x = AnomalyReportEnt{}
-	mi := &file_twlogeye_proto_msgTypes[24]
+	mi := &file_twlogeye_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1723,7 +1719,7 @@ func (x *AnomalyReportEnt) String() string {
 func (*AnomalyReportEnt) ProtoMessage() {}
 
 func (x *AnomalyReportEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[24]
+	mi := &file_twlogeye_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1736,7 +1732,7 @@ func (x *AnomalyReportEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AnomalyReportEnt.ProtoReflect.Descriptor instead.
 func (*AnomalyReportEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{24}
+	return file_twlogeye_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *AnomalyReportEnt) GetTime() int64 {
@@ -1764,7 +1760,7 @@ type LastAnomalyReportScore struct {
 
 func (x *LastAnomalyReportScore) Reset() {
 	*x = LastAnomalyReportScore{}
-	mi := &file_twlogeye_proto_msgTypes[25]
+	mi := &file_twlogeye_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1776,7 +1772,7 @@ func (x *LastAnomalyReportScore) String() string {
 func (*LastAnomalyReportScore) ProtoMessage() {}
 
 func (x *LastAnomalyReportScore) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[25]
+	mi := &file_twlogeye_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1789,7 +1785,7 @@ func (x *LastAnomalyReportScore) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LastAnomalyReportScore.ProtoReflect.Descriptor instead.
 func (*LastAnomalyReportScore) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{25}
+	return file_twlogeye_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *LastAnomalyReportScore) GetType() string {
@@ -1823,7 +1819,7 @@ type LastAnomalyReportEnt struct {
 
 func (x *LastAnomalyReportEnt) Reset() {
 	*x = LastAnomalyReportEnt{}
-	mi := &file_twlogeye_proto_msgTypes[26]
+	mi := &file_twlogeye_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1835,7 +1831,7 @@ func (x *LastAnomalyReportEnt) String() string {
 func (*LastAnomalyReportEnt) ProtoMessage() {}
 
 func (x *LastAnomalyReportEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[26]
+	mi := &file_twlogeye_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1848,7 +1844,7 @@ func (x *LastAnomalyReportEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LastAnomalyReportEnt.ProtoReflect.Descriptor instead.
 func (*LastAnomalyReportEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{26}
+	return file_twlogeye_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *LastAnomalyReportEnt) GetTime() int64 {
@@ -1882,7 +1878,7 @@ type MonitorReportEnt struct {
 
 func (x *MonitorReportEnt) Reset() {
 	*x = MonitorReportEnt{}
-	mi := &file_twlogeye_proto_msgTypes[27]
+	mi := &file_twlogeye_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1894,7 +1890,7 @@ func (x *MonitorReportEnt) String() string {
 func (*MonitorReportEnt) ProtoMessage() {}
 
 func (x *MonitorReportEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[27]
+	mi := &file_twlogeye_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1907,7 +1903,7 @@ func (x *MonitorReportEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonitorReportEnt.ProtoReflect.Descriptor instead.
 func (*MonitorReportEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{27}
+	return file_twlogeye_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *MonitorReportEnt) GetTime() int64 {
@@ -1983,7 +1979,7 @@ type ClearRequest struct {
 
 func (x *ClearRequest) Reset() {
 	*x = ClearRequest{}
-	mi := &file_twlogeye_proto_msgTypes[28]
+	mi := &file_twlogeye_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1995,7 +1991,7 @@ func (x *ClearRequest) String() string {
 func (*ClearRequest) ProtoMessage() {}
 
 func (x *ClearRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[28]
+	mi := &file_twlogeye_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2008,7 +2004,7 @@ func (x *ClearRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClearRequest.ProtoReflect.Descriptor instead.
 func (*ClearRequest) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{28}
+	return file_twlogeye_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ClearRequest) GetType() string {
@@ -2051,7 +2047,7 @@ type OTelMetricDataPointEnt struct {
 
 func (x *OTelMetricDataPointEnt) Reset() {
 	*x = OTelMetricDataPointEnt{}
-	mi := &file_twlogeye_proto_msgTypes[29]
+	mi := &file_twlogeye_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2063,7 +2059,7 @@ func (x *OTelMetricDataPointEnt) String() string {
 func (*OTelMetricDataPointEnt) ProtoMessage() {}
 
 func (x *OTelMetricDataPointEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[29]
+	mi := &file_twlogeye_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2076,7 +2072,7 @@ func (x *OTelMetricDataPointEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OTelMetricDataPointEnt.ProtoReflect.Descriptor instead.
 func (*OTelMetricDataPointEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{29}
+	return file_twlogeye_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *OTelMetricDataPointEnt) GetStart() int64 {
@@ -2203,7 +2199,7 @@ type OTelMetricEnt struct {
 
 func (x *OTelMetricEnt) Reset() {
 	*x = OTelMetricEnt{}
-	mi := &file_twlogeye_proto_msgTypes[30]
+	mi := &file_twlogeye_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2215,7 +2211,7 @@ func (x *OTelMetricEnt) String() string {
 func (*OTelMetricEnt) ProtoMessage() {}
 
 func (x *OTelMetricEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[30]
+	mi := &file_twlogeye_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2228,7 +2224,7 @@ func (x *OTelMetricEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OTelMetricEnt.ProtoReflect.Descriptor instead.
 func (*OTelMetricEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{30}
+	return file_twlogeye_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *OTelMetricEnt) GetHost() string {
@@ -2327,7 +2323,7 @@ type OTelMetricListEnt struct {
 
 func (x *OTelMetricListEnt) Reset() {
 	*x = OTelMetricListEnt{}
-	mi := &file_twlogeye_proto_msgTypes[31]
+	mi := &file_twlogeye_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2339,7 +2335,7 @@ func (x *OTelMetricListEnt) String() string {
 func (*OTelMetricListEnt) ProtoMessage() {}
 
 func (x *OTelMetricListEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[31]
+	mi := &file_twlogeye_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2352,7 +2348,7 @@ func (x *OTelMetricListEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OTelMetricListEnt.ProtoReflect.Descriptor instead.
 func (*OTelMetricListEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{31}
+	return file_twlogeye_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *OTelMetricListEnt) GetId() string {
@@ -2450,7 +2446,7 @@ type OTelTraceSpanEnt struct {
 
 func (x *OTelTraceSpanEnt) Reset() {
 	*x = OTelTraceSpanEnt{}
-	mi := &file_twlogeye_proto_msgTypes[32]
+	mi := &file_twlogeye_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2462,7 +2458,7 @@ func (x *OTelTraceSpanEnt) String() string {
 func (*OTelTraceSpanEnt) ProtoMessage() {}
 
 func (x *OTelTraceSpanEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[32]
+	mi := &file_twlogeye_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2475,7 +2471,7 @@ func (x *OTelTraceSpanEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OTelTraceSpanEnt.ProtoReflect.Descriptor instead.
 func (*OTelTraceSpanEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{32}
+	return file_twlogeye_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *OTelTraceSpanEnt) GetSpanId() string {
@@ -2562,7 +2558,7 @@ type OTelTraceEnt struct {
 
 func (x *OTelTraceEnt) Reset() {
 	*x = OTelTraceEnt{}
-	mi := &file_twlogeye_proto_msgTypes[33]
+	mi := &file_twlogeye_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2574,7 +2570,7 @@ func (x *OTelTraceEnt) String() string {
 func (*OTelTraceEnt) ProtoMessage() {}
 
 func (x *OTelTraceEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[33]
+	mi := &file_twlogeye_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2587,7 +2583,7 @@ func (x *OTelTraceEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OTelTraceEnt.ProtoReflect.Descriptor instead.
 func (*OTelTraceEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{33}
+	return file_twlogeye_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *OTelTraceEnt) GetTraceId() string {
@@ -2645,7 +2641,7 @@ type OTelTraceListEnt struct {
 
 func (x *OTelTraceListEnt) Reset() {
 	*x = OTelTraceListEnt{}
-	mi := &file_twlogeye_proto_msgTypes[34]
+	mi := &file_twlogeye_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2657,7 +2653,7 @@ func (x *OTelTraceListEnt) String() string {
 func (*OTelTraceListEnt) ProtoMessage() {}
 
 func (x *OTelTraceListEnt) ProtoReflect() protoreflect.Message {
-	mi := &file_twlogeye_proto_msgTypes[34]
+	mi := &file_twlogeye_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2670,7 +2666,7 @@ func (x *OTelTraceListEnt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OTelTraceListEnt.ProtoReflect.Descriptor instead.
 func (*OTelTraceListEnt) Descriptor() ([]byte, []int) {
-	return file_twlogeye_proto_rawDescGZIP(), []int{34}
+	return file_twlogeye_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *OTelTraceListEnt) GetTraceId() string {
@@ -2793,68 +2789,80 @@ var file_twlogeye_proto_rawDesc = string([]byte{
 	0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x62,
 	0x79, 0x74, 0x65, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x62, 0x79, 0x74, 0x65,
-	0x73, 0x22, 0x4b, 0x0a, 0x17, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x63, 0x6f, 0x6c, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x45, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x39,
-	0x0a, 0x11, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x49, 0x50, 0x43, 0x6f, 0x75, 0x6e, 0x74,
-	0x45, 0x6e, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x02, 0x69, 0x70, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x05, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xd1, 0x06, 0x0a, 0x10, 0x4e, 0x65,
-	0x74, 0x66, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x45, 0x6e, 0x74, 0x12, 0x12,
-	0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x74, 0x69,
-	0x6d, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x07, 0x70, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x12, 0x14, 0x0a, 0x05,
-	0x62, 0x79, 0x74, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x62, 0x79, 0x74,
-	0x65, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6d, 0x61, 0x63, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05,
-	0x52, 0x04, 0x6d, 0x61, 0x63, 0x73, 0x12, 0x10, 0x0a, 0x03, 0x69, 0x70, 0x73, 0x18, 0x05, 0x20,
-	0x01, 0x28, 0x05, 0x52, 0x03, 0x69, 0x70, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x66, 0x6c, 0x6f, 0x77,
-	0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x66, 0x6c, 0x6f, 0x77, 0x73, 0x12, 0x1c,
-	0x0a, 0x09, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x73, 0x18, 0x07, 0x20, 0x01, 0x28,
-	0x05, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x73, 0x12, 0x18, 0x0a, 0x07,
-	0x66, 0x75, 0x6d, 0x62, 0x6c, 0x65, 0x73, 0x18, 0x08, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x66,
-	0x75, 0x6d, 0x62, 0x6c, 0x65, 0x73, 0x12, 0x53, 0x0a, 0x14, 0x74, 0x6f, 0x70, 0x5f, 0x6d, 0x61,
-	0x63, 0x5f, 0x70, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x09,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e,
-	0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x53, 0x75,
-	0x6d, 0x6d, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x52, 0x11, 0x74, 0x6f, 0x70, 0x4d, 0x61, 0x63,
-	0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x4d, 0x0a, 0x12, 0x74,
-	0x6f, 0x70, 0x5f, 0x6d, 0x61, 0x63, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x5f, 0x6c, 0x69, 0x73,
-	0x74, 0x18, 0x0a, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65,
-	0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x53,
-	0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x52, 0x0f, 0x74, 0x6f, 0x70, 0x4d, 0x61,
-	0x63, 0x42, 0x79, 0x74, 0x65, 0x73, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x51, 0x0a, 0x13, 0x74, 0x6f,
-	0x70, 0x5f, 0x69, 0x70, 0x5f, 0x70, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x5f, 0x6c, 0x69, 0x73,
-	0x74, 0x18, 0x0b, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65,
-	0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74,
-	0x73, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x52, 0x10, 0x74, 0x6f, 0x70,
-	0x49, 0x70, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x4b, 0x0a,
-	0x11, 0x74, 0x6f, 0x70, 0x5f, 0x69, 0x70, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x5f, 0x6c, 0x69,
-	0x73, 0x74, 0x18, 0x0c, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67,
+	0x73, 0x22, 0x3c, 0x0a, 0x12, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x4b, 0x65, 0x79, 0x43,
+	0x6f, 0x75, 0x6e, 0x74, 0x45, 0x6e, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x22,
+	0xdb, 0x08, 0x0a, 0x10, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x45, 0x6e, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x63, 0x6b,
+	0x65, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x70, 0x61, 0x63, 0x6b, 0x65,
+	0x74, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x05, 0x62, 0x79, 0x74, 0x65, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6d, 0x61, 0x63, 0x73,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x6d, 0x61, 0x63, 0x73, 0x12, 0x10, 0x0a, 0x03,
+	0x69, 0x70, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x69, 0x70, 0x73, 0x12, 0x14,
+	0x0a, 0x05, 0x66, 0x6c, 0x6f, 0x77, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x66,
+	0x6c, 0x6f, 0x77, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
+	0x73, 0x18, 0x07, 0x20, 0x01, 0x28, 0x05, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
+	0x6c, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x66, 0x75, 0x6d, 0x62, 0x6c, 0x65, 0x73, 0x18, 0x08, 0x20,
+	0x01, 0x28, 0x05, 0x52, 0x07, 0x66, 0x75, 0x6d, 0x62, 0x6c, 0x65, 0x73, 0x12, 0x14, 0x0a, 0x05,
+	0x68, 0x6f, 0x73, 0x74, 0x73, 0x18, 0x09, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x68, 0x6f, 0x73,
+	0x74, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6c, 0x6f, 0x63, 0x73, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x05,
+	0x52, 0x04, 0x6c, 0x6f, 0x63, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x72,
+	0x79, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x72, 0x79,
+	0x12, 0x53, 0x0a, 0x14, 0x74, 0x6f, 0x70, 0x5f, 0x6d, 0x61, 0x63, 0x5f, 0x70, 0x61, 0x63, 0x6b,
+	0x65, 0x74, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0c, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22,
+	0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f,
+	0x77, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x45,
+	0x6e, 0x74, 0x52, 0x11, 0x74, 0x6f, 0x70, 0x4d, 0x61, 0x63, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74,
+	0x73, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x4d, 0x0a, 0x12, 0x74, 0x6f, 0x70, 0x5f, 0x6d, 0x61, 0x63,
+	0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0d, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x20, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74,
+	0x66, 0x6c, 0x6f, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79,
+	0x45, 0x6e, 0x74, 0x52, 0x0f, 0x74, 0x6f, 0x70, 0x4d, 0x61, 0x63, 0x42, 0x79, 0x74, 0x65, 0x73,
+	0x4c, 0x69, 0x73, 0x74, 0x12, 0x51, 0x0a, 0x13, 0x74, 0x6f, 0x70, 0x5f, 0x69, 0x70, 0x5f, 0x70,
+	0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0e, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x22, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74,
+	0x66, 0x6c, 0x6f, 0x77, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x53, 0x75, 0x6d, 0x6d, 0x61,
+	0x72, 0x79, 0x45, 0x6e, 0x74, 0x52, 0x10, 0x74, 0x6f, 0x70, 0x49, 0x70, 0x50, 0x61, 0x63, 0x6b,
+	0x65, 0x74, 0x73, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x4b, 0x0a, 0x11, 0x74, 0x6f, 0x70, 0x5f, 0x69,
+	0x70, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0f, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x20, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65,
+	0x74, 0x66, 0x6c, 0x6f, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72,
+	0x79, 0x45, 0x6e, 0x74, 0x52, 0x0e, 0x74, 0x6f, 0x70, 0x49, 0x70, 0x42, 0x79, 0x74, 0x65, 0x73,
+	0x4c, 0x69, 0x73, 0x74, 0x12, 0x55, 0x0a, 0x15, 0x74, 0x6f, 0x70, 0x5f, 0x66, 0x6c, 0x6f, 0x77,
+	0x5f, 0x70, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x10, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e,
+	0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x53, 0x75, 0x6d,
+	0x6d, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x52, 0x12, 0x74, 0x6f, 0x70, 0x46, 0x6c, 0x6f, 0x77,
+	0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x4f, 0x0a, 0x13, 0x74,
+	0x6f, 0x70, 0x5f, 0x66, 0x6c, 0x6f, 0x77, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x5f, 0x6c, 0x69,
+	0x73, 0x74, 0x18, 0x11, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67,
 	0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73,
-	0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x52, 0x0e, 0x74, 0x6f, 0x70, 0x49,
-	0x70, 0x42, 0x79, 0x74, 0x65, 0x73, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x55, 0x0a, 0x15, 0x74, 0x6f,
-	0x70, 0x5f, 0x66, 0x6c, 0x6f, 0x77, 0x5f, 0x70, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x5f, 0x6c,
-	0x69, 0x73, 0x74, 0x18, 0x0d, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x77, 0x6c, 0x6f,
-	0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x50, 0x61, 0x63, 0x6b,
-	0x65, 0x74, 0x73, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x52, 0x12, 0x74,
-	0x6f, 0x70, 0x46, 0x6c, 0x6f, 0x77, 0x50, 0x61, 0x63, 0x6b, 0x65, 0x74, 0x73, 0x4c, 0x69, 0x73,
-	0x74, 0x12, 0x4f, 0x0a, 0x13, 0x74, 0x6f, 0x70, 0x5f, 0x66, 0x6c, 0x6f, 0x77, 0x5f, 0x62, 0x79,
-	0x74, 0x65, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0e, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20,
-	0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f,
-	0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74,
-	0x52, 0x10, 0x74, 0x6f, 0x70, 0x46, 0x6c, 0x6f, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x4c, 0x69,
-	0x73, 0x74, 0x12, 0x4d, 0x0a, 0x11, 0x74, 0x6f, 0x70, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63,
-	0x6f, 0x6c, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0f, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e,
-	0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77,
-	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x45, 0x6e, 0x74,
-	0x52, 0x0f, 0x74, 0x6f, 0x70, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x4c, 0x69, 0x73,
-	0x74, 0x12, 0x4a, 0x0a, 0x13, 0x74, 0x6f, 0x70, 0x5f, 0x66, 0x75, 0x6d, 0x62, 0x6c, 0x65, 0x5f,
-	0x73, 0x72, 0x63, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x10, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1b,
-	0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f,
-	0x77, 0x49, 0x50, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x45, 0x6e, 0x74, 0x52, 0x10, 0x74, 0x6f, 0x70,
-	0x46, 0x75, 0x6d, 0x62, 0x6c, 0x65, 0x53, 0x72, 0x63, 0x4c, 0x69, 0x73, 0x74, 0x22, 0x7e, 0x0a,
+	0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x52, 0x10, 0x74, 0x6f, 0x70, 0x46,
+	0x6c, 0x6f, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x48, 0x0a, 0x11,
+	0x74, 0x6f, 0x70, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x5f, 0x6c, 0x69, 0x73,
+	0x74, 0x18, 0x12, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65,
+	0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x4b, 0x65, 0x79, 0x43, 0x6f, 0x75,
+	0x6e, 0x74, 0x45, 0x6e, 0x74, 0x52, 0x0f, 0x74, 0x6f, 0x70, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63,
+	0x6f, 0x6c, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x4b, 0x0a, 0x13, 0x74, 0x6f, 0x70, 0x5f, 0x66, 0x75,
+	0x6d, 0x62, 0x6c, 0x65, 0x5f, 0x73, 0x72, 0x63, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x13, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e,
+	0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x4b, 0x65, 0x79, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x45, 0x6e,
+	0x74, 0x52, 0x10, 0x74, 0x6f, 0x70, 0x46, 0x75, 0x6d, 0x62, 0x6c, 0x65, 0x53, 0x72, 0x63, 0x4c,
+	0x69, 0x73, 0x74, 0x12, 0x40, 0x0a, 0x0d, 0x74, 0x6f, 0x70, 0x5f, 0x68, 0x6f, 0x73, 0x74, 0x5f,
+	0x6c, 0x69, 0x73, 0x74, 0x18, 0x14, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x74, 0x77, 0x6c,
+	0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x4b, 0x65, 0x79,
+	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x45, 0x6e, 0x74, 0x52, 0x0b, 0x74, 0x6f, 0x70, 0x48, 0x6f, 0x73,
+	0x74, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x3e, 0x0a, 0x0c, 0x74, 0x6f, 0x70, 0x5f, 0x6c, 0x6f, 0x63,
+	0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x15, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x74, 0x77,
+	0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x4b, 0x65,
+	0x79, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x45, 0x6e, 0x74, 0x52, 0x0a, 0x74, 0x6f, 0x70, 0x4c, 0x6f,
+	0x63, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x10, 0x74, 0x6f, 0x70, 0x5f, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x72, 0x79, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x16, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x1c, 0x2e, 0x74, 0x77, 0x6c, 0x6f, 0x67, 0x65, 0x79, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x66, 0x6c,
+	0x6f, 0x77, 0x4b, 0x65, 0x79, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x45, 0x6e, 0x74, 0x52, 0x0e, 0x74,
+	0x6f, 0x70, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x72, 0x79, 0x4c, 0x69, 0x73, 0x74, 0x22, 0x7e, 0x0a,
 	0x13, 0x57, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x73, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53, 0x75, 0x6d,
 	0x6d, 0x61, 0x72, 0x79, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x6f, 0x6d, 0x70, 0x75, 0x74, 0x65, 0x72,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63, 0x6f, 0x6d, 0x70, 0x75, 0x74, 0x65, 0x72,
@@ -3193,7 +3201,7 @@ func file_twlogeye_proto_rawDescGZIP() []byte {
 	return file_twlogeye_proto_rawDescData
 }
 
-var file_twlogeye_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
+var file_twlogeye_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
 var file_twlogeye_proto_goTypes = []any{
 	(*NofifyRequest)(nil),            // 0: twlogeye.NofifyRequest
 	(*NotifyResponse)(nil),           // 1: twlogeye.NotifyResponse
@@ -3209,27 +3217,26 @@ var file_twlogeye_proto_goTypes = []any{
 	(*TrapReportEnt)(nil),            // 11: twlogeye.TrapReportEnt
 	(*NetflowPacketsSummaryEnt)(nil), // 12: twlogeye.NetflowPacketsSummaryEnt
 	(*NetflowBytesSummaryEnt)(nil),   // 13: twlogeye.NetflowBytesSummaryEnt
-	(*NetflowProtocolCountEnt)(nil),  // 14: twlogeye.NetflowProtocolCountEnt
-	(*NetflowIPCountEnt)(nil),        // 15: twlogeye.NetflowIPCountEnt
-	(*NetflowReportEnt)(nil),         // 16: twlogeye.NetflowReportEnt
-	(*WindowsEventSummary)(nil),      // 17: twlogeye.WindowsEventSummary
-	(*WindowsEventReportEnt)(nil),    // 18: twlogeye.WindowsEventReportEnt
-	(*OTelSummaryEnt)(nil),           // 19: twlogeye.OTelSummaryEnt
-	(*OTelReportEnt)(nil),            // 20: twlogeye.OTelReportEnt
-	(*MqttSummaryEnt)(nil),           // 21: twlogeye.MqttSummaryEnt
-	(*MqttReportEnt)(nil),            // 22: twlogeye.MqttReportEnt
-	(*AnomalyReportRequest)(nil),     // 23: twlogeye.AnomalyReportRequest
-	(*AnomalyReportEnt)(nil),         // 24: twlogeye.AnomalyReportEnt
-	(*LastAnomalyReportScore)(nil),   // 25: twlogeye.LastAnomalyReportScore
-	(*LastAnomalyReportEnt)(nil),     // 26: twlogeye.LastAnomalyReportEnt
-	(*MonitorReportEnt)(nil),         // 27: twlogeye.MonitorReportEnt
-	(*ClearRequest)(nil),             // 28: twlogeye.ClearRequest
-	(*OTelMetricDataPointEnt)(nil),   // 29: twlogeye.OTelMetricDataPointEnt
-	(*OTelMetricEnt)(nil),            // 30: twlogeye.OTelMetricEnt
-	(*OTelMetricListEnt)(nil),        // 31: twlogeye.OTelMetricListEnt
-	(*OTelTraceSpanEnt)(nil),         // 32: twlogeye.OTelTraceSpanEnt
-	(*OTelTraceEnt)(nil),             // 33: twlogeye.OTelTraceEnt
-	(*OTelTraceListEnt)(nil),         // 34: twlogeye.OTelTraceListEnt
+	(*NetflowKeyCountEnt)(nil),       // 14: twlogeye.NetflowKeyCountEnt
+	(*NetflowReportEnt)(nil),         // 15: twlogeye.NetflowReportEnt
+	(*WindowsEventSummary)(nil),      // 16: twlogeye.WindowsEventSummary
+	(*WindowsEventReportEnt)(nil),    // 17: twlogeye.WindowsEventReportEnt
+	(*OTelSummaryEnt)(nil),           // 18: twlogeye.OTelSummaryEnt
+	(*OTelReportEnt)(nil),            // 19: twlogeye.OTelReportEnt
+	(*MqttSummaryEnt)(nil),           // 20: twlogeye.MqttSummaryEnt
+	(*MqttReportEnt)(nil),            // 21: twlogeye.MqttReportEnt
+	(*AnomalyReportRequest)(nil),     // 22: twlogeye.AnomalyReportRequest
+	(*AnomalyReportEnt)(nil),         // 23: twlogeye.AnomalyReportEnt
+	(*LastAnomalyReportScore)(nil),   // 24: twlogeye.LastAnomalyReportScore
+	(*LastAnomalyReportEnt)(nil),     // 25: twlogeye.LastAnomalyReportEnt
+	(*MonitorReportEnt)(nil),         // 26: twlogeye.MonitorReportEnt
+	(*ClearRequest)(nil),             // 27: twlogeye.ClearRequest
+	(*OTelMetricDataPointEnt)(nil),   // 28: twlogeye.OTelMetricDataPointEnt
+	(*OTelMetricEnt)(nil),            // 29: twlogeye.OTelMetricEnt
+	(*OTelMetricListEnt)(nil),        // 30: twlogeye.OTelMetricListEnt
+	(*OTelTraceSpanEnt)(nil),         // 31: twlogeye.OTelTraceSpanEnt
+	(*OTelTraceEnt)(nil),             // 32: twlogeye.OTelTraceEnt
+	(*OTelTraceListEnt)(nil),         // 33: twlogeye.OTelTraceListEnt
 }
 var file_twlogeye_proto_depIdxs = []int32{
 	8,  // 0: twlogeye.SyslogReportEnt.top_list:type_name -> twlogeye.LogSummaryEnt
@@ -3241,73 +3248,76 @@ var file_twlogeye_proto_depIdxs = []int32{
 	13, // 6: twlogeye.NetflowReportEnt.top_ip_bytes_list:type_name -> twlogeye.NetflowBytesSummaryEnt
 	12, // 7: twlogeye.NetflowReportEnt.top_flow_packets_list:type_name -> twlogeye.NetflowPacketsSummaryEnt
 	13, // 8: twlogeye.NetflowReportEnt.top_flow_bytes_list:type_name -> twlogeye.NetflowBytesSummaryEnt
-	14, // 9: twlogeye.NetflowReportEnt.top_protocol_list:type_name -> twlogeye.NetflowProtocolCountEnt
-	15, // 10: twlogeye.NetflowReportEnt.top_fumble_src_list:type_name -> twlogeye.NetflowIPCountEnt
-	17, // 11: twlogeye.WindowsEventReportEnt.top_list:type_name -> twlogeye.WindowsEventSummary
-	17, // 12: twlogeye.WindowsEventReportEnt.top_error_list:type_name -> twlogeye.WindowsEventSummary
-	19, // 13: twlogeye.OTelReportEnt.top_list:type_name -> twlogeye.OTelSummaryEnt
-	19, // 14: twlogeye.OTelReportEnt.top_error_list:type_name -> twlogeye.OTelSummaryEnt
-	21, // 15: twlogeye.MqttReportEnt.top_list:type_name -> twlogeye.MqttSummaryEnt
-	25, // 16: twlogeye.LastAnomalyReportEnt.score_list:type_name -> twlogeye.LastAnomalyReportScore
-	29, // 17: twlogeye.OTelMetricEnt.data_points:type_name -> twlogeye.OTelMetricDataPointEnt
-	32, // 18: twlogeye.OTelTraceEnt.spans:type_name -> twlogeye.OTelTraceSpanEnt
-	5,  // 19: twlogeye.TWLogEyeService.Stop:input_type -> twlogeye.Empty
-	5,  // 20: twlogeye.TWLogEyeService.Reload:input_type -> twlogeye.Empty
-	28, // 21: twlogeye.TWLogEyeService.ClearDB:input_type -> twlogeye.ClearRequest
-	5,  // 22: twlogeye.TWLogEyeService.WatchNotify:input_type -> twlogeye.Empty
-	0,  // 23: twlogeye.TWLogEyeService.SearchNotify:input_type -> twlogeye.NofifyRequest
-	2,  // 24: twlogeye.TWLogEyeService.SearchLog:input_type -> twlogeye.LogRequest
-	7,  // 25: twlogeye.TWLogEyeService.GetSyslogReport:input_type -> twlogeye.ReportRequest
-	5,  // 26: twlogeye.TWLogEyeService.GetLastSyslogReport:input_type -> twlogeye.Empty
-	7,  // 27: twlogeye.TWLogEyeService.GetTrapReport:input_type -> twlogeye.ReportRequest
-	5,  // 28: twlogeye.TWLogEyeService.GetLastTrapReport:input_type -> twlogeye.Empty
-	7,  // 29: twlogeye.TWLogEyeService.GetNetflowReport:input_type -> twlogeye.ReportRequest
-	5,  // 30: twlogeye.TWLogEyeService.GetLastNetflowReport:input_type -> twlogeye.Empty
-	7,  // 31: twlogeye.TWLogEyeService.GetWindowsEventReport:input_type -> twlogeye.ReportRequest
-	5,  // 32: twlogeye.TWLogEyeService.GetLastWindowsEventReport:input_type -> twlogeye.Empty
-	7,  // 33: twlogeye.TWLogEyeService.GetOTelReport:input_type -> twlogeye.ReportRequest
-	5,  // 34: twlogeye.TWLogEyeService.GetLastOTelReport:input_type -> twlogeye.Empty
-	7,  // 35: twlogeye.TWLogEyeService.GetMqttReport:input_type -> twlogeye.ReportRequest
-	5,  // 36: twlogeye.TWLogEyeService.GetLastMqttReport:input_type -> twlogeye.Empty
-	23, // 37: twlogeye.TWLogEyeService.GetAnomalyReport:input_type -> twlogeye.AnomalyReportRequest
-	5,  // 38: twlogeye.TWLogEyeService.GetLastAnomalyReport:input_type -> twlogeye.Empty
-	7,  // 39: twlogeye.TWLogEyeService.GetMonitorReport:input_type -> twlogeye.ReportRequest
-	5,  // 40: twlogeye.TWLogEyeService.GetLastMonitorReport:input_type -> twlogeye.Empty
-	5,  // 41: twlogeye.TWLogEyeService.GetOTelMetricList:input_type -> twlogeye.Empty
-	6,  // 42: twlogeye.TWLogEyeService.GetOTelMetric:input_type -> twlogeye.IDRequest
-	5,  // 43: twlogeye.TWLogEyeService.GetOTelTraceList:input_type -> twlogeye.Empty
-	6,  // 44: twlogeye.TWLogEyeService.GetOTelTrace:input_type -> twlogeye.IDRequest
-	4,  // 45: twlogeye.TWLogEyeService.Stop:output_type -> twlogeye.ControlResponse
-	4,  // 46: twlogeye.TWLogEyeService.Reload:output_type -> twlogeye.ControlResponse
-	4,  // 47: twlogeye.TWLogEyeService.ClearDB:output_type -> twlogeye.ControlResponse
-	1,  // 48: twlogeye.TWLogEyeService.WatchNotify:output_type -> twlogeye.NotifyResponse
-	1,  // 49: twlogeye.TWLogEyeService.SearchNotify:output_type -> twlogeye.NotifyResponse
-	3,  // 50: twlogeye.TWLogEyeService.SearchLog:output_type -> twlogeye.LogResponse
-	9,  // 51: twlogeye.TWLogEyeService.GetSyslogReport:output_type -> twlogeye.SyslogReportEnt
-	9,  // 52: twlogeye.TWLogEyeService.GetLastSyslogReport:output_type -> twlogeye.SyslogReportEnt
-	11, // 53: twlogeye.TWLogEyeService.GetTrapReport:output_type -> twlogeye.TrapReportEnt
-	11, // 54: twlogeye.TWLogEyeService.GetLastTrapReport:output_type -> twlogeye.TrapReportEnt
-	16, // 55: twlogeye.TWLogEyeService.GetNetflowReport:output_type -> twlogeye.NetflowReportEnt
-	16, // 56: twlogeye.TWLogEyeService.GetLastNetflowReport:output_type -> twlogeye.NetflowReportEnt
-	18, // 57: twlogeye.TWLogEyeService.GetWindowsEventReport:output_type -> twlogeye.WindowsEventReportEnt
-	18, // 58: twlogeye.TWLogEyeService.GetLastWindowsEventReport:output_type -> twlogeye.WindowsEventReportEnt
-	20, // 59: twlogeye.TWLogEyeService.GetOTelReport:output_type -> twlogeye.OTelReportEnt
-	20, // 60: twlogeye.TWLogEyeService.GetLastOTelReport:output_type -> twlogeye.OTelReportEnt
-	22, // 61: twlogeye.TWLogEyeService.GetMqttReport:output_type -> twlogeye.MqttReportEnt
-	22, // 62: twlogeye.TWLogEyeService.GetLastMqttReport:output_type -> twlogeye.MqttReportEnt
-	24, // 63: twlogeye.TWLogEyeService.GetAnomalyReport:output_type -> twlogeye.AnomalyReportEnt
-	26, // 64: twlogeye.TWLogEyeService.GetLastAnomalyReport:output_type -> twlogeye.LastAnomalyReportEnt
-	27, // 65: twlogeye.TWLogEyeService.GetMonitorReport:output_type -> twlogeye.MonitorReportEnt
-	27, // 66: twlogeye.TWLogEyeService.GetLastMonitorReport:output_type -> twlogeye.MonitorReportEnt
-	31, // 67: twlogeye.TWLogEyeService.GetOTelMetricList:output_type -> twlogeye.OTelMetricListEnt
-	30, // 68: twlogeye.TWLogEyeService.GetOTelMetric:output_type -> twlogeye.OTelMetricEnt
-	34, // 69: twlogeye.TWLogEyeService.GetOTelTraceList:output_type -> twlogeye.OTelTraceListEnt
-	33, // 70: twlogeye.TWLogEyeService.GetOTelTrace:output_type -> twlogeye.OTelTraceEnt
-	45, // [45:71] is the sub-list for method output_type
-	19, // [19:45] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	14, // 9: twlogeye.NetflowReportEnt.top_protocol_list:type_name -> twlogeye.NetflowKeyCountEnt
+	14, // 10: twlogeye.NetflowReportEnt.top_fumble_src_list:type_name -> twlogeye.NetflowKeyCountEnt
+	14, // 11: twlogeye.NetflowReportEnt.top_host_list:type_name -> twlogeye.NetflowKeyCountEnt
+	14, // 12: twlogeye.NetflowReportEnt.top_loc_list:type_name -> twlogeye.NetflowKeyCountEnt
+	14, // 13: twlogeye.NetflowReportEnt.top_country_list:type_name -> twlogeye.NetflowKeyCountEnt
+	16, // 14: twlogeye.WindowsEventReportEnt.top_list:type_name -> twlogeye.WindowsEventSummary
+	16, // 15: twlogeye.WindowsEventReportEnt.top_error_list:type_name -> twlogeye.WindowsEventSummary
+	18, // 16: twlogeye.OTelReportEnt.top_list:type_name -> twlogeye.OTelSummaryEnt
+	18, // 17: twlogeye.OTelReportEnt.top_error_list:type_name -> twlogeye.OTelSummaryEnt
+	20, // 18: twlogeye.MqttReportEnt.top_list:type_name -> twlogeye.MqttSummaryEnt
+	24, // 19: twlogeye.LastAnomalyReportEnt.score_list:type_name -> twlogeye.LastAnomalyReportScore
+	28, // 20: twlogeye.OTelMetricEnt.data_points:type_name -> twlogeye.OTelMetricDataPointEnt
+	31, // 21: twlogeye.OTelTraceEnt.spans:type_name -> twlogeye.OTelTraceSpanEnt
+	5,  // 22: twlogeye.TWLogEyeService.Stop:input_type -> twlogeye.Empty
+	5,  // 23: twlogeye.TWLogEyeService.Reload:input_type -> twlogeye.Empty
+	27, // 24: twlogeye.TWLogEyeService.ClearDB:input_type -> twlogeye.ClearRequest
+	5,  // 25: twlogeye.TWLogEyeService.WatchNotify:input_type -> twlogeye.Empty
+	0,  // 26: twlogeye.TWLogEyeService.SearchNotify:input_type -> twlogeye.NofifyRequest
+	2,  // 27: twlogeye.TWLogEyeService.SearchLog:input_type -> twlogeye.LogRequest
+	7,  // 28: twlogeye.TWLogEyeService.GetSyslogReport:input_type -> twlogeye.ReportRequest
+	5,  // 29: twlogeye.TWLogEyeService.GetLastSyslogReport:input_type -> twlogeye.Empty
+	7,  // 30: twlogeye.TWLogEyeService.GetTrapReport:input_type -> twlogeye.ReportRequest
+	5,  // 31: twlogeye.TWLogEyeService.GetLastTrapReport:input_type -> twlogeye.Empty
+	7,  // 32: twlogeye.TWLogEyeService.GetNetflowReport:input_type -> twlogeye.ReportRequest
+	5,  // 33: twlogeye.TWLogEyeService.GetLastNetflowReport:input_type -> twlogeye.Empty
+	7,  // 34: twlogeye.TWLogEyeService.GetWindowsEventReport:input_type -> twlogeye.ReportRequest
+	5,  // 35: twlogeye.TWLogEyeService.GetLastWindowsEventReport:input_type -> twlogeye.Empty
+	7,  // 36: twlogeye.TWLogEyeService.GetOTelReport:input_type -> twlogeye.ReportRequest
+	5,  // 37: twlogeye.TWLogEyeService.GetLastOTelReport:input_type -> twlogeye.Empty
+	7,  // 38: twlogeye.TWLogEyeService.GetMqttReport:input_type -> twlogeye.ReportRequest
+	5,  // 39: twlogeye.TWLogEyeService.GetLastMqttReport:input_type -> twlogeye.Empty
+	22, // 40: twlogeye.TWLogEyeService.GetAnomalyReport:input_type -> twlogeye.AnomalyReportRequest
+	5,  // 41: twlogeye.TWLogEyeService.GetLastAnomalyReport:input_type -> twlogeye.Empty
+	7,  // 42: twlogeye.TWLogEyeService.GetMonitorReport:input_type -> twlogeye.ReportRequest
+	5,  // 43: twlogeye.TWLogEyeService.GetLastMonitorReport:input_type -> twlogeye.Empty
+	5,  // 44: twlogeye.TWLogEyeService.GetOTelMetricList:input_type -> twlogeye.Empty
+	6,  // 45: twlogeye.TWLogEyeService.GetOTelMetric:input_type -> twlogeye.IDRequest
+	5,  // 46: twlogeye.TWLogEyeService.GetOTelTraceList:input_type -> twlogeye.Empty
+	6,  // 47: twlogeye.TWLogEyeService.GetOTelTrace:input_type -> twlogeye.IDRequest
+	4,  // 48: twlogeye.TWLogEyeService.Stop:output_type -> twlogeye.ControlResponse
+	4,  // 49: twlogeye.TWLogEyeService.Reload:output_type -> twlogeye.ControlResponse
+	4,  // 50: twlogeye.TWLogEyeService.ClearDB:output_type -> twlogeye.ControlResponse
+	1,  // 51: twlogeye.TWLogEyeService.WatchNotify:output_type -> twlogeye.NotifyResponse
+	1,  // 52: twlogeye.TWLogEyeService.SearchNotify:output_type -> twlogeye.NotifyResponse
+	3,  // 53: twlogeye.TWLogEyeService.SearchLog:output_type -> twlogeye.LogResponse
+	9,  // 54: twlogeye.TWLogEyeService.GetSyslogReport:output_type -> twlogeye.SyslogReportEnt
+	9,  // 55: twlogeye.TWLogEyeService.GetLastSyslogReport:output_type -> twlogeye.SyslogReportEnt
+	11, // 56: twlogeye.TWLogEyeService.GetTrapReport:output_type -> twlogeye.TrapReportEnt
+	11, // 57: twlogeye.TWLogEyeService.GetLastTrapReport:output_type -> twlogeye.TrapReportEnt
+	15, // 58: twlogeye.TWLogEyeService.GetNetflowReport:output_type -> twlogeye.NetflowReportEnt
+	15, // 59: twlogeye.TWLogEyeService.GetLastNetflowReport:output_type -> twlogeye.NetflowReportEnt
+	17, // 60: twlogeye.TWLogEyeService.GetWindowsEventReport:output_type -> twlogeye.WindowsEventReportEnt
+	17, // 61: twlogeye.TWLogEyeService.GetLastWindowsEventReport:output_type -> twlogeye.WindowsEventReportEnt
+	19, // 62: twlogeye.TWLogEyeService.GetOTelReport:output_type -> twlogeye.OTelReportEnt
+	19, // 63: twlogeye.TWLogEyeService.GetLastOTelReport:output_type -> twlogeye.OTelReportEnt
+	21, // 64: twlogeye.TWLogEyeService.GetMqttReport:output_type -> twlogeye.MqttReportEnt
+	21, // 65: twlogeye.TWLogEyeService.GetLastMqttReport:output_type -> twlogeye.MqttReportEnt
+	23, // 66: twlogeye.TWLogEyeService.GetAnomalyReport:output_type -> twlogeye.AnomalyReportEnt
+	25, // 67: twlogeye.TWLogEyeService.GetLastAnomalyReport:output_type -> twlogeye.LastAnomalyReportEnt
+	26, // 68: twlogeye.TWLogEyeService.GetMonitorReport:output_type -> twlogeye.MonitorReportEnt
+	26, // 69: twlogeye.TWLogEyeService.GetLastMonitorReport:output_type -> twlogeye.MonitorReportEnt
+	30, // 70: twlogeye.TWLogEyeService.GetOTelMetricList:output_type -> twlogeye.OTelMetricListEnt
+	29, // 71: twlogeye.TWLogEyeService.GetOTelMetric:output_type -> twlogeye.OTelMetricEnt
+	33, // 72: twlogeye.TWLogEyeService.GetOTelTraceList:output_type -> twlogeye.OTelTraceListEnt
+	32, // 73: twlogeye.TWLogEyeService.GetOTelTrace:output_type -> twlogeye.OTelTraceEnt
+	48, // [48:74] is the sub-list for method output_type
+	22, // [22:48] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_twlogeye_proto_init() }
@@ -3321,7 +3331,7 @@ func file_twlogeye_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_twlogeye_proto_rawDesc), len(file_twlogeye_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   35,
+			NumMessages:   34,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -25,6 +25,9 @@ func (m dashboardModel) renderNetflowCount() string {
 		ips := []float64{}
 		macs := []float64{}
 		fumbles := []float64{}
+		hosts := []float64{}
+		locs := []float64{}
+		country := []float64{}
 		prots := []float64{}
 		flows := []float64{}
 		for _, e := range m.netflowReport {
@@ -35,6 +38,9 @@ func (m dashboardModel) renderNetflowCount() string {
 			flows = append(flows, float64(e.Flows))
 			ips = append(ips, float64(e.Ips))
 			macs = append(macs, float64(e.Macs))
+			hosts = append(hosts, float64(e.Hosts))
+			locs = append(locs, float64(e.Locs))
+			country = append(country, float64(e.Country))
 		}
 		leftTitle := "Netflow Count " + time.Unix(0, m.netflowReport[len(m.netflowReport)-1].Time).Format("2006-01-02 15:04")
 		rightTitle := "Cur/Avg/Max"
@@ -51,6 +57,9 @@ func (m dashboardModel) renderNetflowCount() string {
 		row = append(row, formatNetflowCountLine("MAC", macs, width, lipgloss.NewStyle().Foreground(ColorGray)))
 		row = append(row, formatNetflowCountLine("Flow", flows, width, lipgloss.NewStyle().Foreground(ColorWhite)))
 		row = append(row, formatNetflowCountLine("Prot", prots, width, lipgloss.NewStyle().Foreground(ColorWhite)))
+		row = append(row, formatNetflowCountLine("Host", hosts, width, lipgloss.NewStyle().Foreground(ColorWhite)))
+		row = append(row, formatNetflowCountLine("Loc", locs, width, lipgloss.NewStyle().Foreground(ColorWhite)))
+		row = append(row, formatNetflowCountLine("Country", country, width, lipgloss.NewStyle().Foreground(ColorWhite)))
 	} else {
 		row = append(row, titleStyle.Render("Netflow Count"))
 		row = append(row, "No netflow report")
@@ -224,7 +233,7 @@ func (m dashboardModel) renderNetflowFumble() string {
 		for _, e := range last.TopFumbleSrcList {
 			patterns = append(patterns, &netflowTopListEnt{
 				Count: int64(e.Count),
-				Key:   e.Ip,
+				Key:   e.Key,
 			})
 		}
 		row = append(row, m.renderNetflowTopListContent(width, patterns, false))
@@ -251,13 +260,94 @@ func (m dashboardModel) renderNetflowProt() string {
 		for _, e := range last.TopProtocolList {
 			patterns = append(patterns, &netflowTopListEnt{
 				Count: int64(e.Count),
-				Key:   e.Protocol,
+				Key:   e.Key,
 			})
 		}
 		row = append(row, m.renderNetflowTopListContent(width, patterns, false))
 	} else {
 		row = append(row, titleStyle.Render("Netflow protocols"))
-		row = append(row, "No netflow report")
+		row = append(row, "No netflow protocol report")
+	}
+	return style.Render(lipgloss.JoinVertical(lipgloss.Left, row...))
+}
+
+func (m dashboardModel) renderNetflowHost() string {
+	height := 6
+	width := (m.width / 2) - 2
+	if m.width < 80 {
+		width = m.width - 2
+	}
+	style := sectionStyle.Width(width).Height(height)
+	row := []string{}
+	if len(m.netflowReport) > 0 {
+		last := m.netflowReport[len(m.netflowReport)-1]
+		row = append(row, titleStyle.Render(fmt.Sprintf("Netflow %d hosts from %d packets",
+			last.Hosts, last.Packets)))
+		patterns := []*netflowTopListEnt{}
+		for _, e := range last.TopHostList {
+			patterns = append(patterns, &netflowTopListEnt{
+				Count: int64(e.Count),
+				Key:   e.Key,
+			})
+		}
+		row = append(row, m.renderNetflowTopListContent(width, patterns, false))
+	} else {
+		row = append(row, titleStyle.Render("Netflow Hosts"))
+		row = append(row, "No netflow host report")
+	}
+	return style.Render(lipgloss.JoinVertical(lipgloss.Left, row...))
+}
+
+func (m dashboardModel) renderNetflowLoc() string {
+	height := 6
+	width := (m.width / 2) - 2
+	if m.width < 80 {
+		width = m.width - 2
+	}
+	style := sectionStyle.Width(width).Height(height)
+	row := []string{}
+	if len(m.netflowReport) > 0 {
+		last := m.netflowReport[len(m.netflowReport)-1]
+		row = append(row, titleStyle.Render(fmt.Sprintf("Netflow %d location from %d packets",
+			last.Locs, last.Packets)))
+		patterns := []*netflowTopListEnt{}
+		for _, e := range last.TopLocList {
+			patterns = append(patterns, &netflowTopListEnt{
+				Count: int64(e.Count),
+				Key:   e.Key,
+			})
+		}
+		row = append(row, m.renderNetflowTopListContent(width, patterns, false))
+	} else {
+		row = append(row, titleStyle.Render("Netflow Location"))
+		row = append(row, "No netflow location report")
+	}
+	return style.Render(lipgloss.JoinVertical(lipgloss.Left, row...))
+}
+
+func (m dashboardModel) renderNetflowCountry() string {
+	height := 6
+	width := (m.width / 2) - 2
+	if m.width < 80 {
+		width = m.width - 2
+	}
+	style := sectionStyle.Width(width).Height(height)
+	row := []string{}
+	if len(m.netflowReport) > 0 {
+		last := m.netflowReport[len(m.netflowReport)-1]
+		row = append(row, titleStyle.Render(fmt.Sprintf("Netflow %d country from %d packets",
+			last.Country, last.Packets)))
+		patterns := []*netflowTopListEnt{}
+		for _, e := range last.TopCountryList {
+			patterns = append(patterns, &netflowTopListEnt{
+				Count: int64(e.Count),
+				Key:   e.Key,
+			})
+		}
+		row = append(row, m.renderNetflowTopListContent(width, patterns, false))
+	} else {
+		row = append(row, titleStyle.Render("Netflow Country"))
+		row = append(row, "No netflow country report")
 	}
 	return style.Render(lipgloss.JoinVertical(lipgloss.Left, row...))
 }

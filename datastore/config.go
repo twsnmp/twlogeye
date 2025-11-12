@@ -65,6 +65,12 @@ type ConfigEnt struct {
 	NamedCaptures string `yaml:"namedCaptures"`
 	// Key/Vaue parse
 	KeyValParse bool `yaml:"keyValParse"`
+
+	// Resolve Host Name
+	ResolveHostName bool `yaml:"resolveHostName"`
+	// GeoIP DB
+	GeoIPDB string `yaml:"geoIPDB"`
+
 	// Sigma
 	SigmaRules     string `yaml:"sigmaRules"`
 	SigmaConfigs   string `yaml:"sigmaConfigs"`

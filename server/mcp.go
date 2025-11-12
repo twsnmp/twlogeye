@@ -686,8 +686,8 @@ type mcpNetflowReportEnt struct {
 	TopIPBytesList     []datastore.NetflowBytesSummaryEnt
 	TopFlowPacketsList []datastore.NetflowPacketsSummaryEnt
 	TopFlowBytesList   []datastore.NetflowBytesSummaryEnt
-	TopProtocolList    []datastore.NetflowProtocolCountEnt
-	TopFumbleSrcList   []datastore.NetflowIPCountEnt
+	TopProtocolList    []datastore.NetflowKeyCountEnt
+	TopFumbleSrcList   []datastore.NetflowKeyCountEnt
 }
 
 func getNetflowReport(st, et int64) string {

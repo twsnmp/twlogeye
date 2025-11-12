@@ -29,6 +29,9 @@ var netflowIPMap map[string]*netflowSummaryEnt
 var netflowFlowMap map[string]*netflowSummaryEnt
 var netflowProtocolMap map[string]int
 var netflowFumbleSrcMap map[string]int
+var netflowHostMap map[string]int
+var netflowCountryMap map[string]int
+var netflowLocMap map[string]int
 
 func startNetflow(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -44,6 +47,9 @@ func startNetflow(ctx context.Context, wg *sync.WaitGroup) {
 	netflowFlowMap = make(map[string]*netflowSummaryEnt)
 	netflowProtocolMap = make(map[string]int)
 	netflowFumbleSrcMap = make(map[string]int)
+	netflowHostMap = make(map[string]int)
+	netflowCountryMap = make(map[string]int)
+	netflowLocMap = make(map[string]int)
 	for {
 		select {
 		case <-ctx.Done():
@@ -221,12 +227,30 @@ func processNetflowReport(l *datastore.NetflowLogEnt) {
 		netflowFlowMap[flow] = &netflowSummaryEnt{}
 	}
 	netflowFlowMap[flow].Count++
-	netflowFlowMap[flow].Bytes = int64(bytes)
-	netflowFlowMap[flow].Packets = int(packets)
+	netflowFlowMap[flow].Bytes += int64(bytes)
+	netflowFlowMap[flow].Packets += int(packets)
 	protocol = getProtocolName(protocol, int(sp), int(dp))
 	netflowProtocolMap[protocol]++
 	if src := isFumble(srcIP, dstIP, pi, sp, int(packets)); src != "" {
 		netflowFumbleSrcMap[src]++
+	}
+	if host, ok := l.Log["srcHost"].(string); ok {
+		netflowHostMap[host]++
+	}
+	if host, ok := l.Log["dstHost"].(string); ok {
+		netflowHostMap[host]++
+	}
+	if loc, ok := l.Log["srcLoc"].(string); ok {
+		netflowLocMap[loc]++
+	}
+	if loc, ok := l.Log["dstLoc"].(string); ok {
+		netflowLocMap[loc]++
+	}
+	if c, ok := l.Log["srcCountry"].(string); ok {
+		netflowCountryMap[c]++
+	}
+	if c, ok := l.Log["dstCountry"].(string); ok {
+		netflowCountryMap[c]++
 	}
 }
 
@@ -338,9 +362,9 @@ func saveNetflowReport() {
 	netflowReport.TopFlowBytesList = topFlowBytesList
 	netflowReport.Flows = len(netflowFlowMap)
 
-	topProtocolList := []datastore.NetflowProtocolCountEnt{}
+	topProtocolList := []datastore.NetflowKeyCountEnt{}
 	for k, v := range netflowProtocolMap {
-		topProtocolList = append(topProtocolList, datastore.NetflowProtocolCountEnt{Protocol: k, Count: v})
+		topProtocolList = append(topProtocolList, datastore.NetflowKeyCountEnt{Key: k, Count: v})
 	}
 	sort.Slice(topProtocolList, func(i, j int) bool {
 		return topProtocolList[i].Count > topProtocolList[j].Count
@@ -351,9 +375,9 @@ func saveNetflowReport() {
 	netflowReport.TopProtocolList = topProtocolList
 	netflowReport.Protocols = len(netflowProtocolMap)
 
-	topFumbleSrcList := []datastore.NetflowIPCountEnt{}
+	topFumbleSrcList := []datastore.NetflowKeyCountEnt{}
 	for k, v := range netflowFumbleSrcMap {
-		topFumbleSrcList = append(topFumbleSrcList, datastore.NetflowIPCountEnt{IP: k, Count: v})
+		topFumbleSrcList = append(topFumbleSrcList, datastore.NetflowKeyCountEnt{Key: k, Count: v})
 	}
 	sort.Slice(topFumbleSrcList, func(i, j int) bool {
 		return topFumbleSrcList[i].Count > topFumbleSrcList[j].Count
@@ -363,7 +387,47 @@ func saveNetflowReport() {
 	}
 	netflowReport.TopFumbleSrcList = topFumbleSrcList
 	netflowReport.Fumbles = len(netflowFumbleSrcMap)
-	// Save trap Report
+
+	topHostList := []datastore.NetflowKeyCountEnt{}
+	for k, v := range netflowHostMap {
+		topHostList = append(topHostList, datastore.NetflowKeyCountEnt{Key: k, Count: v})
+	}
+	sort.Slice(topFumbleSrcList, func(i, j int) bool {
+		return topFumbleSrcList[i].Count > topFumbleSrcList[j].Count
+	})
+	if len(topHostList) > datastore.Config.ReportTopN {
+		topHostList = topHostList[:datastore.Config.ReportTopN]
+	}
+	netflowReport.TopHostList = topHostList
+	netflowReport.Hosts = len(netflowHostMap)
+
+	topLocList := []datastore.NetflowKeyCountEnt{}
+	for k, v := range netflowLocMap {
+		topLocList = append(topLocList, datastore.NetflowKeyCountEnt{Key: k, Count: v})
+	}
+	sort.Slice(topLocList, func(i, j int) bool {
+		return topLocList[i].Count > topLocList[j].Count
+	})
+	if len(topLocList) > datastore.Config.ReportTopN {
+		topLocList = topLocList[:datastore.Config.ReportTopN]
+	}
+	netflowReport.TopLocList = topLocList
+	netflowReport.Locs = len(netflowLocMap)
+
+	topCountryList := []datastore.NetflowKeyCountEnt{}
+	for k, v := range netflowCountryMap {
+		topCountryList = append(topCountryList, datastore.NetflowKeyCountEnt{Key: k, Count: v})
+	}
+	sort.Slice(topCountryList, func(i, j int) bool {
+		return topCountryList[i].Count > topCountryList[j].Count
+	})
+	if len(topCountryList) > datastore.Config.ReportTopN {
+		topCountryList = topCountryList[:datastore.Config.ReportTopN]
+	}
+	netflowReport.TopCountryList = topCountryList
+	netflowReport.Country = len(netflowCountryMap)
+
+	// Save Netflow Report
 	datastore.SaveNetflowReport(netflowReport)
 	anomalyCh <- &anomalyChannelData{
 		Time:   netflowReport.Time,
@@ -375,6 +439,9 @@ func saveNetflowReport() {
 	netflowIPMap = make(map[string]*netflowSummaryEnt)
 	netflowProtocolMap = make(map[string]int)
 	netflowFumbleSrcMap = make(map[string]int)
+	netflowHostMap = make(map[string]int)
+	netflowCountryMap = make(map[string]int)
+	netflowLocMap = make(map[string]int)
 	netflowFlowMap = make(map[string]*netflowSummaryEnt)
 	netflowReport = &datastore.NetflowReportEnt{}
 }
