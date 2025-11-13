@@ -56,11 +56,8 @@ func saveMonitorReport() {
 	}
 	dbPath := datastore.Config.DBPath
 	if dbPath == "" {
-		dbPath = datastore.Config.LogPath
-		if dbPath == "" {
-			if wd, err := os.Getwd(); err == nil {
-				dbPath = wd
-			}
+		if wd, err := os.Getwd(); err == nil {
+			dbPath = wd
 		}
 	}
 	d, err := disk.Usage(dbPath)

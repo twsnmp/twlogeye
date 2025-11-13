@@ -82,6 +82,8 @@ Supported logs are
 - SNMP trap
 - NetFlow/IPFIX
 - Windows event log
+- OptenTelemetry
+- MQTT
 You can find sigma rule here.
 https://github.com/SigmaHQ/sigma
 
@@ -98,6 +100,7 @@ Available Commands:
   help        Help about any command
   log         Search log
   notify      Search notify
+  otel        Get OpenTelemetry info
   reload      Reload rules
   report      Get report
   sigma       Check sigma rules (list|stat|logsrc|field|check|test)
@@ -127,7 +130,6 @@ Use "twlogeye [command] --help" for more information about a command.
 
 ```terminal
 $twlogeye help start
-
 Start twlogeye
 
 Usage:
@@ -139,6 +141,7 @@ Flags:
       --anomayUseTime                  Include weekends and hours in the vector data for anomaly detection
   -d, --dbPath string                  DB Path default: memory
       --debug                          debug mode
+      --geoIPDB string                 Geo IP Database Path
       --grokDef string                 GROK define file
       --grokPat string                 GROK patterns
   -h, --help                           help for start
@@ -149,12 +152,26 @@ Flags:
       --mcpFrom string                 MCP server from ip address list
       --mcpToekn string                MCP server token
       --mibPath string                 SNMP Ext MIB Path
+      --mqttCert string                MQTT server certficate
+      --mqttFrom string                MQTT clinet IPs
+      --mqttKey string                 MQTT server private key
+      --mqttTCPPort int                MQTT TCP Port
+      --mqttUsers string               MQTT user and password
+      --mqttWSPort int                 MQTT Websock Port
       --namedCaptures string           Named capture defs path
       --netflowPort int                netflow port 0=disable
       --notifyRetention int            notify retention(days) (default 7)
+      --otelCA string                  OpenTelemetry CA certficate
+      --otelCert string                OpenTelemetry server certficate
+      --otelFrom string                OpenTelemetry clinet IPs
+      --otelHTTPPort int               OpenTelemetry HTTP Port
+      --otelKey string                 OpenTelemetry server private key
+      --otelRetention int              log retention(hours) (default 48)
+      --otelgRPCPort int               OpenTelemetry gRPC Port
       --reportInterval int             report interval (minute) (default 5)
       --reportRetention int            report retention(days) (default 7)
       --reportTopN int                 report top n (default 10)
+      --resolveHostName                Resolve Host Name
       --sigmaConfigs string            SIGMA config path
       --sigmaRules string              SIGMA rule path
       --sigmaSkipError                 Skip sigma rule error
@@ -309,12 +326,15 @@ Global Flags:
 $twlogeye help dashboard
 Display twlogeye dashboard.
 <panel type> is
-        monitor | anomaly
+  monitor | anomaly
   syslog.count | syslog.pattern | syslog.error
   trap.count | trap.type
-        netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte
-        netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
-        winevent.count | winevent.pattern | winevent.error
+  netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte
+  netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
+  netflow.host | netflow.loc | netflow.country
+  winevent.count | winevent.pattern | winevent.error
+  otel.count | otel.pattern | otel.error | otel.metric.<id>
+  mqtt.count | mqtt.type
 
 Usage:
   twlogeye dashboard <panel type>... [flags]
@@ -322,6 +342,32 @@ Usage:
 Flags:
   -h, --help          help for dashboard
       --history int   Keep report history (default 100)
+      --topn int      Number of top n lines. (default 5)
+
+Global Flags:
+  -p, --apiPort int         API Server port (default 8081)
+      --apiServer string    server IP or host name (default "localhost")
+      --caCert string       API CA cert
+      --clientCert string   API client cert
+      --clientKey string    API client private key
+      --config string       config file (default is ./twlogeye.yaml)
+      --serverCert string   API server cert
+      --serverKey string    API server private key```
+```
+
+#### otel コマンド
+
+This is a command to obtain OpenTelemetry metrics and traces.
+
+```
+$twlogeye help otel
+Get OpenTelemetry info via api
+
+Usage:
+  twlogeye otel <metric|trace> <list|id> [flags]
+
+Flags:
+  -h, --help   help for otel
 
 Global Flags:
   -p, --apiPort int         API Server port (default 8081)
@@ -488,7 +534,7 @@ TwLogEyeからログを検索します。
 - **パラメータ:**
   - `start` (string): 検索を開始する日時 (例: `2025/08/30 11:00:00`)。指定しない場合は `1970/01/01 00:00:00` になります。
   - `end` (string): 検索を終了する日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
-  - `type` (string): ログの種別 (`syslog`, `trap`, `netflow`, `winevent` のいずれか)。
+  - `type` (string): ログの種別 (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt` のいずれか)。
   - `filter` (string): ログをフィルタリングするための正規表現。
 
 ### `search_notify`
@@ -507,7 +553,7 @@ TwLogEyeからレポートを取得します。
 - **パラメータ:**
   - `start` (string): レポートの開始日時 (例: `2025/08/30 11:00:00`)。指定しない場合は `1970/01/01 00:00:00` になります。
   - `end` (string): レポートの終了日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
-  - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
+  - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`, `anomaly`, `monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
 
 ### `get_anomaly_report`
 
@@ -516,7 +562,14 @@ TwLogEyeから異常検知のレポートを取得します。
 - **パラメータ:**
   - `start` (string): レポートの開始日時 (例: `2025/08/30 11:00:00`)。指定しない場合は `1970/01/01 00:00:00` になります。
   - `end` (string): レポートの終了日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
-  - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
+  - `type` (string): 異常検知レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
+
+### `get_last_report`
+
+TwLogEyeから最新のレポートを取得します。
+
+- **パラメータ:**
+  - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `anomaly`, `monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
 
 ### `get_sigma_evaluator_list`
 
@@ -524,7 +577,7 @@ TwLogEyeからSigmaルール評価器のリストを取得します。
 
 - **パラメータ:** なし
 
-## `get_sigma_rule_id_list`
+### `get_sigma_rule_id_list`
 
 TwLogEyeからSigmaルールのIDリストを取得します。
 
@@ -560,80 +613,118 @@ TwLogEyeにロードされているSigmaルールを再読み込みします。
 
 ## 設定ファイル
 
---config パラメータで指定するか、カレントディレクトリの ./twlogeye.yamlを設定ファイルとして使用します。YAML形式です。
+--config パラメータで指定するか、カレントディレクトリの `./twlogeye.yaml` を設定ファイルとして使用します。YAML形式です。
 
+### コア設定
 
-`ConfigEnt`構造体の設定ファイルについて、日本語で各項目を説明します。
+* **`dbPath`**: データベースファイルのパスを指定します。
 
 ---
 
-## 設定ファイル項目一覧
+### 受信データポート
 
-### データベースとログのパス
-* **`dbPath`**: データベースファイルのパスを指定します。
-* **`logPath`**: ログファイルのパスを指定します。
+* **`syslogUDPPort`**: SyslogメッセージをUDPで受信するポート。
+* **`syslogTCPPort`**: SyslogメッセージをTCPで受信するポート。
+* **`netflowPort`**: NetFlowデータを受信するポート。
+* **`snmpTrapPort`**: SNMPトラップメッセージを受信するポート。
+* **`otelHTTPPort`**: OpenTelemetryメッセージをHTTP/JSONで受信するポート。
+* **`otelgRPCPort`**: OpenTelemetryメッセージをgRPCで受信するポート。
+* **`mqttTCPPort`**: MQTTブローカーのTCPポート。
+* **`mqttWSPort`**: MQTTブローカーのWebSocketポート。
 
-### 受信ポート設定
-* **`syslogUDPPort`**: Syslog (UDP) の受信ポート番号。
-* **`syslogTCPPort`**: Syslog (TCP) の受信ポート番号。
-* **`netFlowPort`**: NetFlow の受信ポート番号。
-* **`snmpTrapPort`**: SNMPトラップ の受信ポート番号。
+---
 
-### Windowsイベントログ設定
-* **`winEventLogChannel`**: 監視するWindowsイベントログのチャンネル名（例: "System"、"Security"）。
+### OpenTelemetry設定
+
+* **`otelRetention`**: OpenTelemetryのログ保持期間を時間単位で指定します。
+* **`otelFrom`**: OpenTelemetryの許可されたクライアントIPアドレスのリスト。
+* **`otelCert`**: OpenTelemetryサーバーの証明書パス。
+* **`otelKey`**: OpenTelemetryサーバーの秘密鍵パス。
+* **`otelCA`**: OpenTelemetryのCA証明書パス。
+
+---
+
+### MQTTサーバー設定
+
+* **`mqttUsers`**: MQTTクライアントの `ユーザー名:パスワード` のカンマ区切りリスト。
+* **`mqttFrom`**: MQTTの許可されたクライアントIPアドレスのリスト。
+* **`mqttCert`**: MQTTサーバーの証明書パス。
+* **`mqttKey`**: MQTTサーバーの秘密鍵パス。
+
+---
+
+### Windowsイベントログ収集
+
+* **`winEventLogChannel`**: 監視するWindowsイベントログのチャンネル名（例: "System", "Security"）。
 * **`winEventLogCheckInterval`**: イベントログのチェック間隔を秒単位で指定します。
-* **`winEventLogCheckStart`**: イベントログの監視を開始する位置を秒単位で指定します。
-* **`winRemote`**: Windowsログを取得するリモートホスト名またはIPアドレス。
-* **`winUser`**: リモートホストに接続するためのユーザー名。
-* **`winPassword`**: リモートホストに接続するためのパスワード。
-* **`winAuth`**: 認証方式を指定します。
-* **`winLogSJIS`**: WindowsログがShift_JIS形式の場合に`true`を設定します。
+* **`winEventLogCheckStart`**: イベントログの監視を開始する起点（過去からの時間）を時間単位で指定します。
+* **`winRemote`**: リモートWindowsマシンのホスト名またはIPアドレス。
+* **`winUser`**: リモートマシン認証用のユーザー名。
+* **`winPassword`**: 認証用のパスワード。
+* **`winAuth`**: 使用する認証方法。
+* **`winLogSJIS`**: WindowsログがShift JISエンコーディングである場合に `true` を設定するブール値フラグ。
+
+---
 
 ### 転送先設定
-* **`syslogDst`**: Syslogの転送先ホストのリスト。
+
+* **`syslogDst`**: Syslogメッセージの転送先ホストのリスト。
 * **`trapDst`**: SNMPトラップの転送先ホストのリスト。
 * **`webhookDst`**: Webhookの転送先URLのリスト。
-* **`trapCommunity`**: SNMPトラップで使用するコミュニティ名。
+* **`mqttDst`**: MQTTメッセージの転送先MQTTブローカーのリスト。
+* **`trapCommunity`**: トラップに使用されるSNMPコミュニティ文字列。
 
-### データ保持期間設定
+---
+
+### データ保持期間
+
 * **`logRetention`**: ログの保持期間を時間単位で指定します。
 * **`notifyRetention`**: 通知データの保持期間を日単位で指定します。
-* **`reportRetention`**: レポートの保持期間を日単位で指定します。
+* **`reportRetention`**: レポートデータの保持期間を日単位で指定します。
+
+---
 
 ### レポート設定
-* **`reportInterval`**: レポートを生成する間隔を`日,時間,分`の形式で指定します。
-* **`reportTopN`**: レポートで表示する上位N件の数を指定します。
 
-### 異常検知レポート設定
-* **`anomalyReportThreshold`**: 異常検知の閾値を浮動小数点数で指定します。
-* **`anomalyUseTimeData`**: 異常検知に曜日や時間帯のデータを使用するかどうかを`true`または`false`で指定します。
+* **`reportInterval`**: レポート生成の間隔を分単位で指定します。
+* **`reportTopN`**: レポートに含める上位N件の数。
+
+---
+
+### 異常検知
+
+* **`anomalyReportThreshold`**: 異常検知の閾値を表す浮動小数点値。
+* **`anomalyUseTimeData`**: 異常検知分析に時間と曜日のデータを含めるかどうかのブール値フラグ。
 * **`anomalyNotifyDelay`**: 異常検知時に通知を送信するまでの猶予期間を時間単位で指定します。
 
-### ログ解析 (GROK)
-* **`grokPat`**: GROKパターンを定義するファイルのパスのリスト。
-* **`grokDef`**: GROK定義ファイル（例: `grok-patterns`）のパス。
+---
 
-### ログ解析 (Named capture)
-* **`namedCaptures`**: ログから特定の情報を抽出するための名前付きキャプチャ設定。
+### ログ解析
 
-### ログ解析 (Key/Value)
-* **`keyValParse`**: ログをKey/Value形式で解析するかどうかを`true`または`false`で指定します。
+* **`grokPat`**: Grokパターンを含むファイルのパスのリスト。
+* **`grokDef`**: Grok定義ファイル（例: `grok-patterns`）のパス。
+* **`namedCaptures`**: ログから特定の情報を抽出するための名前付きキャプチャグループの設定。
+* **`keyValParse`**: キー/値ログ解析を有効または無効にするブール値フラグ。
 
-### Sigmaルール設定
+---
+
+### Sigmaルール
+
 * **`sigmaRules`**: Sigmaルールファイルのパス。
 * **`sigmaConfigs`**: Sigma設定ファイルのパス。
-* **`sigmaSkipError`**: Sigmaルールの処理中にエラーが発生した場合に、そのルールをスキップするかどうかを`true`または`false`で指定します。
+* **`sigmaSkipError`**: 処理中にエラーが発生した場合にルールをスキップするかどうかのブール値フラグ。
 
-### SNMP MIB設定
+---
+
+### その他の設定
+
+* **`resolveHostName`**: IPアドレスからホスト名を解決するかどうかのブール値フラグ。
+* **`geoIPDB`**: GeoIPデータベースファイルのパス。
 * **`mibPath`**: SNMP MIBファイルのパス。
-
-### MCP (Microsoft Cloud) 設定
-* **`mcpEndpoint`**: MCPのエンドポイントURL。
-* **`mcpFrom`**: MCPからの送信元アドレス。
-* **`mcpToken`**: MCPに接続するためのトークン。
-
-### デバッグ
-* **`debug`**: デバッグモードを有効にするかどうかを`true`または`false`で指定します。
+* **`mcpEndpoint`**: Microsoft Cloud Platform (MCP) のエンドポイントURL。
+* **`mcpFrom`**: MCPに送信されるメッセージの"From"アドレス。
+* **`mcpToken`**: MCPの認証トークン。
+* **`debug`**: デバッグモードを有効または無効にするブール値フラグ。
 
 
 

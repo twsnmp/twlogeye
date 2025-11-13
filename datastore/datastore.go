@@ -11,9 +11,6 @@ var db *badger.DB
 // OpenDB : open log database
 func OpenDB() {
 	dbPath := Config.DBPath
-	if dbPath == "" {
-		dbPath = Config.LogPath
-	}
 	opt := badger.DefaultOptions(dbPath)
 	if dbPath == "" {
 		opt = opt.WithInMemory(true)

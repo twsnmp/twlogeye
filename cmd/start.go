@@ -62,7 +62,6 @@ var startCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(startCmd)
-	startCmd.Flags().StringVarP(&datastore.Config.LogPath, "logPath", "l", "", "Log DB Path default: memory old option")
 	startCmd.Flags().StringVarP(&datastore.Config.DBPath, "dbPath", "d", "", "DB Path default: memory")
 	startCmd.Flags().IntVar(&datastore.Config.SyslogUDPPort, "syslogUDPPort", 0, "syslog UDP port 0=disable")
 	startCmd.Flags().IntVar(&datastore.Config.SyslogUDPPort, "syslogTCPPort", 0, "syslog TCP port 0=disable")

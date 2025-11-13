@@ -84,6 +84,8 @@ Supported logs are
 - SNMP trap
 - NetFlow/IPFIX
 - Windows event log
+- OptenTelemetry
+- MQTT
 You can find sigma rule here.
 https://github.com/SigmaHQ/sigma
 
@@ -100,6 +102,7 @@ Available Commands:
   help        Help about any command
   log         Search log
   notify      Search notify
+  otel        Get OpenTelemetry info
   reload      Reload rules
   report      Get report
   sigma       Check sigma rules (list|stat|logsrc|field|check|test)
@@ -127,7 +130,6 @@ Use "twlogeye [command] --help" for more information about a command.
 
 ```terminal
 $twlogeye help start
-
 Start twlogeye
 
 Usage:
@@ -139,6 +141,7 @@ Flags:
       --anomayUseTime                  Include weekends and hours in the vector data for anomaly detection
   -d, --dbPath string                  DB Path default: memory
       --debug                          debug mode
+      --geoIPDB string                 Geo IP Database Path
       --grokDef string                 GROK define file
       --grokPat string                 GROK patterns
   -h, --help                           help for start
@@ -149,12 +152,26 @@ Flags:
       --mcpFrom string                 MCP server from ip address list
       --mcpToekn string                MCP server token
       --mibPath string                 SNMP Ext MIB Path
+      --mqttCert string                MQTT server certficate
+      --mqttFrom string                MQTT clinet IPs
+      --mqttKey string                 MQTT server private key
+      --mqttTCPPort int                MQTT TCP Port
+      --mqttUsers string               MQTT user and password
+      --mqttWSPort int                 MQTT Websock Port
       --namedCaptures string           Named capture defs path
       --netflowPort int                netflow port 0=disable
       --notifyRetention int            notify retention(days) (default 7)
+      --otelCA string                  OpenTelemetry CA certficate
+      --otelCert string                OpenTelemetry server certficate
+      --otelFrom string                OpenTelemetry clinet IPs
+      --otelHTTPPort int               OpenTelemetry HTTP Port
+      --otelKey string                 OpenTelemetry server private key
+      --otelRetention int              log retention(hours) (default 48)
+      --otelgRPCPort int               OpenTelemetry gRPC Port
       --reportInterval int             report interval (minute) (default 5)
       --reportRetention int            report retention(days) (default 7)
       --reportTopN int                 report top n (default 10)
+      --resolveHostName                Resolve Host Name
       --sigmaConfigs string            SIGMA config path
       --sigmaRules string              SIGMA rule path
       --sigmaSkipError                 Skip sigma rule error
@@ -300,12 +317,15 @@ Display dashboard.
 $twlogeye help dashboard
 Display twlogeye dashboard.
 <panel type> is
-        monitor | anomaly
+  monitor | anomaly
   syslog.count | syslog.pattern | syslog.error
   trap.count | trap.type
-        netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte
-        netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
-        winevent.count | winevent.pattern | winevent.error
+  netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte
+  netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
+  netflow.host | netflow.loc | netflow.country
+  winevent.count | winevent.pattern | winevent.error
+  otel.count | otel.pattern | otel.error | otel.metric.<id>
+  mqtt.count | mqtt.type
 
 Usage:
   twlogeye dashboard <panel type>... [flags]
@@ -313,6 +333,32 @@ Usage:
 Flags:
   -h, --help          help for dashboard
       --history int   Keep report history (default 100)
+      --topn int      Number of top n lines. (default 5)
+
+Global Flags:
+  -p, --apiPort int         API Server port (default 8081)
+      --apiServer string    server IP or host name (default "localhost")
+      --caCert string       API CA cert
+      --clientCert string   API client cert
+      --clientKey string    API client private key
+      --config string       config file (default is ./twlogeye.yaml)
+      --serverCert string   API server cert
+      --serverKey string    API server private key
+```
+
+#### otel Command
+
+OpenTelemetryのメトリック、トレースを取得するコマンドです。
+
+```
+$twlogeye help otel
+Get OpenTelemetry info via api
+
+Usage:
+  twlogeye otel <metric|trace> <list|id> [flags]
+
+Flags:
+  -h, --help   help for otel
 
 Global Flags:
   -p, --apiPort int         API Server port (default 8081)
@@ -469,7 +515,7 @@ Searches for logs from TwLogEye.
 - **Parameters:**
   - `start` (string): The date and time to start the search (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to `1970/01/01 00:00:00`.
   - `end` (string): The date and time to end the search (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to the current time.
-  - `type` (string): The type of log (one of `syslog`, `trap`, `netflow`, `winevent`).
+  - `type` (string): The type of log (one of `syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`).
   - `filter` (string): A regular expression to filter logs.
 
 ### `search_notify`
@@ -488,7 +534,23 @@ Retrieves a report from TwLogEye.
 - **Parameters:**
   - `start` (string): The start date and time for the report (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to `1970/01/01 00:00:00`.
   - `end` (string): The end date and time for the report (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to the current time.
-  - `type` (string): The type of report (one of `syslog`, `trap`, `netflow`, `winevent`, `anomaly`,`monitor`). `winevent` refers to Windows Event Logs.
+  - `type` (string): The type of report (one of `syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`, `anomaly`, `monitor`). `winevent` refers to Windows Event Logs.
+
+### `get_anomaly_report`
+
+Get anomaly report from TwLogEye database.
+
+- **Parameters:**
+  - `start` (string): Start date and time to get report. Empty is 1970/1/1. Example: 2025/10/26 11:00:00
+  - `end` (string): End date and time to get report. Empty is now. Example: 2025/10/26 11:00:00
+  - `type` (string): type of anomaly report. type can be `syslog`,`trap`,`netflow`,`winevent`,`otel`,`monitor`.
+
+### `get_last_report`
+
+Get last report from TwLogEye database.
+
+- **Parameters:**
+  - `type` (string): type of report. type can be `syslog`,`trap`,`netflow`,`winevent`,`otel`,`anomaly`,`monitor`.
 
 ### `get_sigma_evaluator_list`
 
@@ -549,6 +611,29 @@ YAML format.It corresponds to the following keys.
 * **`syslogTCPPort`**: The port for receiving Syslog messages over TCP.
 * **`netflowPort`**: The port for receiving NetFlow data.
 * **`snmpTrapPort`**: The port for receiving SNMP trap messages.
+* **`otelHTTPPort`**: The port for receiving OpenTelemetry messages over HTTP/JSON.
+* **`otelgRPCPort`**: The port for receiving OpenTelemetry messages over gRPC.
+* **`mqttTCPPort`**: The port for the MQTT broker over TCP.
+* **`mqttWSPort`**: The port for the MQTT broker over WebSocket.
+
+---
+
+### OpenTelemetry Settings
+
+* **`otelRetention`**: The log retention period in hours for OpenTelemetry.
+* **`otelFrom`**: A list of allowed client IP addresses for OpenTelemetry.
+* **`otelCert`**: The path to the server certificate for OpenTelemetry.
+* **`otelKey`**: The path to the server private key for OpenTelemetry.
+* **`otelCA`**: The path to the CA certificate for OpenTelemetry.
+
+---
+
+### MQTT Server Settings
+
+* **`mqttUsers`**: A comma-separated list of `user:password` for MQTT clients.
+* **`mqttFrom`**: A list of allowed client IP addresses for MQTT.
+* **`mqttCert`**: The path to the server certificate for MQTT.
+* **`mqttKey`**: The path to the server private key for MQTT.
 
 ---
 
@@ -556,7 +641,7 @@ YAML format.It corresponds to the following keys.
 
 * **`winEventLogChannel`**: The name of the Windows Event Log channel to monitor (e.g., "System", "Security").
 * **`winEventLogCheckInterval`**: The interval in seconds to check for new event logs.
-* **`winEventLogCheckStart`**: The starting point in seconds from which to begin monitoring event logs.
+* **`winEventLogCheckStart`**: The starting point in hours from which to begin monitoring event logs.
 * **`winRemote`**: The hostname or IP address of the remote Windows machine.
 * **`winUser`**: The username for authenticating with the remote machine.
 * **`winPassword`**: The password for authentication.
@@ -570,6 +655,7 @@ YAML format.It corresponds to the following keys.
 * **`syslogDst`**: A list of destination hosts to forward Syslog messages to.
 * **`trapDst`**: A list of destination hosts for forwarding SNMP traps.
 * **`webhookDst`**: A list of webhook URLs to send data to.
+* **`mqttDst`**: A list of destination MQTT brokers to forward messages to.
 * **`trapCommunity`**: The SNMP community string used for traps.
 
 ---
@@ -584,7 +670,7 @@ YAML format.It corresponds to the following keys.
 
 ### Reporting Settings
 
-* **`reportInterval`**: The interval for generating reports, specified as `day,hour,minute`.
+* **`reportInterval`**: The interval in minutes for generating reports.
 * **`reportTopN`**: The number of top entries to include in reports.
 
 ---
@@ -593,7 +679,7 @@ YAML format.It corresponds to the following keys.
 
 * **`anomalyReportThreshold`**: A floating-point value representing the threshold for anomaly detection.
 * **`anomalyUseTimeData`**: A boolean flag to include time and day of the week data in anomaly detection analysis.
-* **`anomalyNotifyDelay`**: The grace period in seconds before sending a notification for a detected anomaly.
+* **`anomalyNotifyDelay`**: The grace period in hours before sending a notification for a detected anomaly.
 
 ---
 
@@ -616,6 +702,8 @@ YAML format.It corresponds to the following keys.
 
 ### Other Settings
 
+* **`resolveHostName`**: A boolean flag to enable or disable resolving host names from IP addresses.
+* **`geoIPDB`**: The path to the GeoIP database file.
 * **`mibPath`**: The path to the SNMP MIB files.
 * **`mcpEndpoint`**: The endpoint URL for Microsoft Cloud Platform (MCP).
 * **`mcpFrom`**: The "from" address for messages sent to MCP.

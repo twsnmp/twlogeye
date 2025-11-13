@@ -2,7 +2,6 @@ package datastore
 
 type ConfigEnt struct {
 	DBPath        string `yaml:"dbPath"`
-	LogPath       string `yaml:"logPath"`
 	SyslogUDPPort int    `yaml:"syslogUDPPort"`
 	SyslogTCPPort int    `yaml:"syslogTCPPort"`
 	NetFlowPort   int    `yaml:"netflowPort"`
@@ -14,16 +13,16 @@ type ConfigEnt struct {
 	OTelRetention int    `yaml:"otelRetention"`
 	OTelFrom      string `yaml:"otelFrom"`
 	OTelCert      string `yaml:"otelCert"`
-	OTelKey       string `yaml:"otelgKey"`
+	OTelKey       string `yaml:"otelKey"`
 	OTelCA        string `yaml:"otelCA"`
 
 	// MQTT Server
 	MqttTCPPort int    `yaml:"mqttTCPPort"`
-	MqttWSPort  int    `yaml:"mqttWDPort"`
+	MqttWSPort  int    `yaml:"mqttWSPort"`
 	MqttUsers   string `yaml:"mqttUsers"`
 	MqttFrom    string `yaml:"mqttFrom"`
 	MqttCert    string `yaml:"mqttCert"`
-	MqttKey     string `yaml:"mqttgKey"`
+	MqttKey     string `yaml:"mqttKey"`
 
 	// Windows log
 	WinEventLogChannel       string `yaml:"winEventLogChannel"`
@@ -33,7 +32,7 @@ type ConfigEnt struct {
 	WinUser                  string `yaml:"winUser"`
 	WinPassword              string `yaml:"winPassword"`
 	WinAuth                  string `yaml:"winAuth"`
-	WinLogSJIS               bool   `yaml:"winSJIS"`
+	WinLogSJIS               bool   `yaml:"winLogSJIS"`
 
 	// Notify Dst
 	SyslogDst     []string `yaml:"syslogDst"`
@@ -59,7 +58,7 @@ type ConfigEnt struct {
 	// Grace period for sending notifications when detecting anomalies
 	AnomalyNotifyDelay int `yaml:"anomalyNotifyDelay"`
 	// GROK
-	GrokPat []string `yaml:"grockPat"`
+	GrokPat []string `yaml:"grokPat"`
 	GrokDef string   `yaml:"grokDef"`
 	// Named capture
 	NamedCaptures string `yaml:"namedCaptures"`
