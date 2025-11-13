@@ -57,6 +57,27 @@ Install in.
 >scoop install twlogeye
 ```
 
+## Docker
+
+How to start the Docker version
+
+```
+$mkdir ./twlogeye
+$vi  ./twlogeye/config.yaml #Edit Config
+$docker run --rm -v ./twlogeye:/datastore \
+-p 2055:2055/udp -p 514:514/udp -p 162:162/udp -p 1883:1883 \
+-e TZ=Asia/Tokyo twsnmp/twlogeye
+```
+Please create config.yaml.
+
+The dashboard display is
+```
+$docker exec -it <container ID> /twlogeye dashboard \
+monitor anomaly netflow.count mqtt.count
+```
+
+![Dashboard](https://assets.st-note.com/img/1762982295-vQB5Ki9Pq3TRGw7oWSfsc0Ly.png?width=1200)
+
 ## Basic usage
 
 - Create log and sigma rule directory.

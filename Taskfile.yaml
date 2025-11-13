@@ -52,9 +52,9 @@ tasks:
       - docker build -t twsnmp/twlogeye  --build-arg VERSION={{.VERSION}} --build-arg COMMIT={{.COMMIT}} .
   docker_push:
     cmds:
-      - docker buildx build --platform linux/amd64 --build-arg VERSION={{.VERSION}} --build-arg COMMIT={{.COMMIT}} -t twsnmp/twlogeye:amd64_{{.VERSION}}  .
-      - docker tag twsnmp/twlogeye:amd64_{{.VERSION}}  twsnmp/twlogeye:latest
+      - docker buildx build --platform linux/amd64 --build-arg VERSION={{.VERSION}} --build-arg COMMIT={{.COMMIT}} -t twsnmp/twlogeye:v{{.VERSION}} --push  .
+      - docker tag twsnmp/twlogeye:v{{.VERSION}}  twsnmp/twlogeye:latest
       - docker push twsnmp/twlogeye:latest
-      - docker buildx build --platform linux/arm64/v8 --build-arg VERSION={{.VERSION}} --build-arg COMMIT={{.COMMIT}} -t twsnmp/twlogeye:arm64_{{.VERSION}} --push .
-      - docker buildx build --platform linux/arm/v7  --build-arg VERSION={{.VERSION}} --build-arg COMMIT={{.COMMIT}} -t twsnmp/twlogeye:arm7_{{.VERSION}} --push .
+      - docker buildx build --platform linux/arm64/v8 --build-arg VERSION={{.VERSION}} --build-arg COMMIT={{.COMMIT}} -t twsnmp/twlogeye:arm64_v{{.VERSION}} --push .
+      - docker buildx build --platform linux/arm/v7  --build-arg VERSION={{.VERSION}} --build-arg COMMIT={{.COMMIT}} -t twsnmp/twlogeye:arm7_v{{.VERSION}} --push .
    

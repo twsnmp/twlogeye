@@ -55,6 +55,31 @@ Winddowsは、リリースのzipファイルをダウンロードするかscoop�
 >scoop install twlogeye
 ```
 
+## Docker
+
+Docker版の起動方法は
+
+```
+$mkdir ./twlogeye
+$vi ./twlogeye/config.yaml
+$docker run --rm -v ./twlogeye:/datastore \
+-p 2055:2055/udp -p 514:514/udp -p 162:162/udp -p 1883:1883 \
+-e TZ=Asia/Tokyo twsnmp/twlogeye
+```
+
+config.yamlを編集してください。
+
+ダッシュボードの表示は
+
+```
+$docker exec -it <コンテナID> /twlogeye dashboard \
+monitor anomaly netflow.count mqtt.count
+```
+
+![Dashboard](https://assets.st-note.com/img/1762982295-vQB5Ki9Pq3TRGw7oWSfsc0Ly.png?width=1200)
+
+
+
 ## 基本的な使い方
 
 - ログを保存するディレクトリとSgimaルールを保存するディレクトリを作成

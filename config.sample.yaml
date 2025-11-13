@@ -1,4 +1,4 @@
-dbPath: "/datastore/logs"
+#dbPath: ""
 #syslogUDPPort: 514
 #syslogTCPPort: 6514
 #netflowPort: 2055
@@ -23,7 +23,7 @@ winRemote: ""
 winUser: ""
 winPassword: ""
 winAuth: ""
-#winSJIS: false
+#winLogSJIS: false
 #syslogDst: []
 #trapDst: []
 #webhookDst: []
