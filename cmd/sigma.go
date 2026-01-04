@@ -33,7 +33,7 @@ var sigmaCmd = &cobra.Command{
 	Long: `Check sigma rules (list|stat|logsrc|field|check|test)
 	list: list rules
 	stat: stat rules
-	logsrc: list log srourcese
+	logsrc: list log sources
 	field: list fields
 	check: check rule
 	test: test rule args

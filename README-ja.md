@@ -47,7 +47,7 @@ Linux版のパッケージもリリースに用意してあります。
 https://github.com/twsnmp/twlogeye/releases
 
 
-Winddowsは、リリースのzipファイルをダウンロードするかscoopでインストールできます。
+Windowsは、リリースのzipファイルをダウンロードするかscoopでインストールできます。
 
 
 ```terminal
@@ -79,10 +79,9 @@ monitor anomaly netflow.count mqtt.count
 ![Dashboard](https://assets.st-note.com/img/1762982295-vQB5Ki9Pq3TRGw7oWSfsc0Ly.png?width=1200)
 
 
-
 ## 基本的な使い方
 
-- ログを保存するディレクトリとSgimaルールを保存するディレクトリを作成
+- ログを保存するディレクトリとSigmaルールを保存するディレクトリを作成
 - 設定ファイルを作成
 - Sigmaルールをコピーまたは、作成
 - サーバーを開始
@@ -107,7 +106,7 @@ Supported logs are
 - SNMP trap
 - NetFlow/IPFIX
 - Windows event log
-- OptenTelemetry
+- OpenTelemetry
 - MQTT
 You can find sigma rule here.
 https://github.com/SigmaHQ/sigma
@@ -163,7 +162,7 @@ Usage:
 Flags:
       --anomalyNotifyDelay int         Grace period for sending notifications when detecting anomalies (default 24)
       --anomalyReportThreshold float   anomaly report threshold
-      --anomayUseTime                  Include weekends and hours in the vector data for anomaly detection
+      --anomalyUseTime                 Include weekends and hours in the vector data for anomaly detection
   -d, --dbPath string                  DB Path default: memory
       --debug                          debug mode
       --geoIPDB string                 Geo IP Database Path
@@ -175,10 +174,10 @@ Flags:
       --logRetention int               log retention(hours) (default 48)
       --mcpEndpoint string             MCP server endpoint
       --mcpFrom string                 MCP server from ip address list
-      --mcpToekn string                MCP server token
+      --mcpToken string                MCP server token
       --mibPath string                 SNMP Ext MIB Path
-      --mqttCert string                MQTT server certficate
-      --mqttFrom string                MQTT clinet IPs
+      --mqttCert string                MQTT server certificate
+      --mqttFrom string                MQTT client IPs
       --mqttKey string                 MQTT server private key
       --mqttTCPPort int                MQTT TCP Port
       --mqttUsers string               MQTT user and password
@@ -186,9 +185,9 @@ Flags:
       --namedCaptures string           Named capture defs path
       --netflowPort int                netflow port 0=disable
       --notifyRetention int            notify retention(days) (default 7)
-      --otelCA string                  OpenTelemetry CA certficate
-      --otelCert string                OpenTelemetry server certficate
-      --otelFrom string                OpenTelemetry clinet IPs
+      --otelCA string                  OpenTelemetry CA certificate
+      --otelCert string                OpenTelemetry server certificate
+      --otelFrom string                OpenTelemetry client IPs
       --otelHTTPPort int               OpenTelemetry HTTP Port
       --otelKey string                 OpenTelemetry server private key
       --otelRetention int              log retention(hours) (default 48)
@@ -200,18 +199,18 @@ Flags:
       --sigmaConfigs string            SIGMA config path
       --sigmaRules string              SIGMA rule path
       --sigmaSkipError                 Skip sigma rule error
-      --sjis                           Windows eventlog SHIT-JIS mode
+      --sjis                           Windows eventlog SHIFT-JIS mode
       --syslogDst string               syslog dst
       --syslogTCPPort int              syslog TCP port 0=disable
       --syslogUDPPort int              syslog UDP port 0=disable
       --trapCommunity string           SNMP TRAP Community
       --trapDst string                 SNMP TRAP dst
-      --trapPort int                   SNMP TRAP recive port 0=disable
+      --trapPort int                   SNMP TRAP receive port 0=disable
       --webhookDst string              Webhook dst URL
       --winAuth string                 Windows eventlog auth
       --winEventLogChannel string      Windows eventlog channel
-  -i, --winEventLogCheckInterval int   Windows evnetlog check interval
-  -s, --winEventLogCheckStart int      Windows evnetlog check start time (hours)
+  -i, --winEventLogCheckInterval int   Windows eventlog check interval
+  -s, --winEventLogCheckStart int      Windows eventlog check start time (hours)
       --winPassword string             Windows eventlog password
       --winUser string                 Windows eventlog user
 
@@ -264,7 +263,7 @@ Global Flags:
 
 ```terminal
 $twlogeye help notify
-Serach notify via api
+Search notify via api
 
 Usage:
   twlogeye notify [flags]
@@ -354,7 +353,7 @@ Display twlogeye dashboard.
   monitor | anomaly
   syslog.count | syslog.pattern | syslog.error
   trap.count | trap.type
-  netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte
+  netflow.count | netflow.ip.packet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte
   netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
   netflow.host | netflow.loc | netflow.country
   winevent.count | winevent.pattern | winevent.error
@@ -377,12 +376,12 @@ Global Flags:
       --clientKey string    API client private key
       --config string       config file (default is ./twlogeye.yaml)
       --serverCert string   API server cert
-      --serverKey string    API server private key```
+      --serverKey string    API server private key
 ```
 
 #### otel コマンド
 
-This is a command to obtain OpenTelemetry metrics and traces.
+OpenTelemetryのメトリック、トレースを取得するコマンドです。
 
 ```
 $twlogeye help otel
@@ -525,7 +524,7 @@ sigmaルールを確認するためのコマンドです。
 Check sigma rules (list|stat|logsrc|field|check|test)
 	list: list rules
 	stat: stat rules
-	logsrc: list log srourcese
+	logsrc: list log sources
 	field: list fields
 	check: check rule
 	test: test rule args
@@ -612,21 +611,21 @@ TwLogEyeからSigmaルールのIDリストを取得します。
 
 TwLogEyeから指定したIDのSigmaルールを取得します。
 
-- **パラメータ:**
+- **パラメータ:** 
   - `id` (string): 取得するSigmaルールのID。
 
 ### `add_sigma_rule`
 
 TwLogEyeに新しいSigmaルールを追加します。
 
-- **パラメータ:**
+- **パラメータ:** 
   - `rule` (string): YAML形式のSigmaルール文字列。
 
 ### `delete_sigma_rule`
 
-TwLogEyeから指定したIDのSigmaルールを削除します。
+指定したIDのSigmaルールをTwLogEyeから削除します。
 
-- **パラメータ:**
+- **パラメータ:** 
   - `id` (string): 削除するSigmaルールのID。
 
 ### `reload_sigma_rule`
@@ -687,7 +686,7 @@ TwLogEyeにロードされているSigmaルールを再読み込みします。
 * **`winUser`**: リモートマシン認証用のユーザー名。
 * **`winPassword`**: 認証用のパスワード。
 * **`winAuth`**: 使用する認証方法。
-* **`winLogSJIS`**: WindowsログがShift JISエンコーディングである場合に `true` を設定するブール値フラグ。
+* **`winLogSJIS`**: WindowsログがSHIFT-JISエンコーディングである場合に `true` を設定するブール値フラグ。
 
 ---
 
@@ -755,16 +754,16 @@ TwLogEyeにロードされているSigmaルールを再読み込みします。
 
 ## 環境変数
 
-The following environment variables are available.
+以下の環境変数が利用可能です。
 
-| Key | Descr |
-| --- | ---- |
-| TWLOGEYE_APIPORT | API ポート番号 |
+| Key | Descr | 
+| --- | ---- | 
+| TWLOGEYE_APIPORT | API ポート番号 | 
 | TWLOGEYE_APISERVER | API サーバーアドレス|
-| TWLOGEYE_SERVERCERT | サーバー証明書のパス |
-| TWLOGEYE_SERVERKEY | サーバーの秘密鍵のパス |
-| TWLOGEYE_CLIENTCERT | クライアント証明書のパス |
-| TWLOGEYE_CLIENTKEY | クライアントの秘密鍵のパス |
+| TWLOGEYE_SERVERCERT | サーバー証明書のパス | 
+| TWLOGEYE_SERVERKEY | サーバーの秘密鍵のパス | 
+| TWLOGEYE_CLIENTCERT | クライアント証明書のパス | 
+| TWLOGEYE_CLIENTKEY | クライアントの秘密鍵のパス | 
 | TWLOGEYE_CACERT | CA証明書のパス|
 
 ## ビルド方法

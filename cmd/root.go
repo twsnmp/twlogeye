@@ -42,7 +42,7 @@ Supported logs are
 - SNMP trap
 - NetFlow/IPFIX
 - Windows event log
-- OptenTelemetry
+- OpenTelemetry
 - MQTT
 You can find sigma rule here.
 https://github.com/SigmaHQ/sigma
@@ -90,7 +90,7 @@ func initConfig() {
 	viper.BindEnv("servercert")
 	viper.BindEnv("serverkey")
 	viper.BindEnv("clientcert")
-	viper.BindEnv("clinetkey")
+	viper.BindEnv("clientkey")
 	viper.BindEnv("cacert")
 	viper.BindEnv("mcpToken")
 

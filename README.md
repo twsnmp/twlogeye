@@ -32,13 +32,13 @@ We use Badger, a high-speed Key/Value Store built in Go, for storing logs and re
 
 ## Install
 
-It is recommended to install the Linux/Mac OS with a shell script.
+It is recommended to install on Linux/Mac OS with a shell script.
 
 ```terminal
 $curl -sS https://lhx98.linkclub.jp/twise.co.jp/download/install_twlogeye.sh | sh
 ```
 
-Linux/Mac OS can be installed on Homebrew.
+Linux/Mac OS can be installed via Homebrew.
 
 ```terminal
 $brew install twsnmp/tap/twlogeye
@@ -49,8 +49,7 @@ Linux packages are also available for release.
 https://github.com/twsnmp/twlogeye/releases
 
 
-Winddows downloads zip files from the release or scoop
-Install in.
+Windows downloads are available as zip files from the releases or can be installed via scoop.
 
 ```terminal
 >scoop bucket add twsnmp https://github.com/twsnmp/scoop-bucket
@@ -105,7 +104,7 @@ Supported logs are
 - SNMP trap
 - NetFlow/IPFIX
 - Windows event log
-- OptenTelemetry
+- OpenTelemetry
 - MQTT
 You can find sigma rule here.
 https://github.com/SigmaHQ/sigma
@@ -159,7 +158,7 @@ Usage:
 Flags:
       --anomalyNotifyDelay int         Grace period for sending notifications when detecting anomalies (default 24)
       --anomalyReportThreshold float   anomaly report threshold
-      --anomayUseTime                  Include weekends and hours in the vector data for anomaly detection
+      --anomalyUseTime                 Include weekends and hours in the vector data for anomaly detection
   -d, --dbPath string                  DB Path default: memory
       --debug                          debug mode
       --geoIPDB string                 Geo IP Database Path
@@ -171,10 +170,10 @@ Flags:
       --logRetention int               log retention(hours) (default 48)
       --mcpEndpoint string             MCP server endpoint
       --mcpFrom string                 MCP server from ip address list
-      --mcpToekn string                MCP server token
+      --mcpToken string                MCP server token
       --mibPath string                 SNMP Ext MIB Path
-      --mqttCert string                MQTT server certficate
-      --mqttFrom string                MQTT clinet IPs
+      --mqttCert string                MQTT server certificate
+      --mqttFrom string                MQTT client IPs
       --mqttKey string                 MQTT server private key
       --mqttTCPPort int                MQTT TCP Port
       --mqttUsers string               MQTT user and password
@@ -182,10 +181,9 @@ Flags:
       --namedCaptures string           Named capture defs path
       --netflowPort int                netflow port 0=disable
       --notifyRetention int            notify retention(days) (default 7)
-      --otelCA string                  OpenTelemetry CA certficate
-      --otelCert string                OpenTelemetry server certficate
-      --otelFrom string                OpenTelemetry clinet IPs
-      --otelHTTPPort int               OpenTelemetry HTTP Port
+      --otelCA string                  OpenTelemetry CA certificate
+      --otelCert string                OpenTelemetry server certificate
+      --otelFrom string                OpenTelemetry client IPs
       --otelKey string                 OpenTelemetry server private key
       --otelRetention int              log retention(hours) (default 48)
       --otelgRPCPort int               OpenTelemetry gRPC Port
@@ -196,18 +194,18 @@ Flags:
       --sigmaConfigs string            SIGMA config path
       --sigmaRules string              SIGMA rule path
       --sigmaSkipError                 Skip sigma rule error
-      --sjis                           Windows eventlog SHIT-JIS mode
+      --sjis                           Windows eventlog SHIFT-JIS mode
       --syslogDst string               syslog dst
       --syslogTCPPort int              syslog TCP port 0=disable
       --syslogUDPPort int              syslog UDP port 0=disable
       --trapCommunity string           SNMP TRAP Community
       --trapDst string                 SNMP TRAP dst
-      --trapPort int                   SNMP TRAP recive port 0=disable
+      --trapPort int                   SNMP TRAP receive port 0=disable
       --webhookDst string              Webhook dst URL
       --winAuth string                 Windows eventlog auth
       --winEventLogChannel string      Windows eventlog channel
-  -i, --winEventLogCheckInterval int   Windows evnetlog check interval
-  -s, --winEventLogCheckStart int      Windows evnetlog check start time (hours)
+  -i, --winEventLogCheckInterval int   Windows eventlog check interval
+  -s, --winEventLogCheckStart int      Windows eventlog check start time (hours)
       --winPassword string             Windows eventlog password
       --winUser string                 Windows eventlog user
 
@@ -255,7 +253,7 @@ Global Flags:
 #### notify command
 ```terminal
 $twlogeye help notify
-Serach notify via api
+Search notify via api
 
 Usage:
   twlogeye notify [flags]
@@ -341,7 +339,7 @@ Display twlogeye dashboard.
   monitor | anomaly
   syslog.count | syslog.pattern | syslog.error
   trap.count | trap.type
-  netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte
+  netflow.count | netflow.ip.packet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte
   netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot
   netflow.host | netflow.loc | netflow.country
   winevent.count | winevent.pattern | winevent.error
@@ -491,7 +489,7 @@ Generate client cert and key.
 ```terminal
 $twlogeye gencert --clientCert c.crt --clientKey k.key
 ```
-Generate sercer cert and key.
+Generate server cert and key.
 ```terminal
 $twlogeye gencert --serverCert s.crt --serverKey s.key
 ```
@@ -500,9 +498,9 @@ $twlogeye gencert --serverCert s.crt --serverKey s.key
 
 ```terminal
 Check sigma rules (list|stat|logsrc|field|check|test)
-	list: list rules
+	directory: list rules
 	stat: stat rules
-	logsrc: list log srourcese
+	logsrc: list log sources
 	field: list fields
 	check: check rule
 	test: test rule args
@@ -613,11 +611,10 @@ Reloads the Sigma rules loaded in TwLogEye.
 - **Parameters:** None
 
 
-
-## Setting file
+## Configuration file
 
 Use the file specified in --config or the current directory ./twlogeye.yaml as the configuration file.
-YAML format.It corresponds to the following keys.
+YAML format. It corresponds to the following keys.
 
 
 ### Core Configuration
@@ -667,7 +664,7 @@ YAML format.It corresponds to the following keys.
 * **`winUser`**: The username for authenticating with the remote machine.
 * **`winPassword`**: The password for authentication.
 * **`winAuth`**: The authentication method to use.
-* **`winLogSJIS`**: A boolean flag (`true` or `false`) to indicate if Windows logs are in Shift JIS encoding.
+* **`winLogSJIS`**: A boolean flag (`true` or `false`) to indicate if Windows logs are in SHIFT-JIS encoding.
 
 ---
 
@@ -757,7 +754,7 @@ $task
 
 ## Copyright
 
-see [LICENSE](./LICENSE)
+see [LICENSE](./LICENSE) 
 
 ```
 Copyright 2025 Masayuki Yamai

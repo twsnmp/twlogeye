@@ -367,7 +367,7 @@ type WindowsEventEnt struct {
 type WindowsEventSummary struct {
 	Computer string
 	Provider string
-	EeventID string
+	EventID  string
 	Count    int
 }
 
@@ -720,7 +720,7 @@ type MqttLogEnt struct {
 }
 
 type MqttSummaryEnt struct {
-	ClinetID string
+	ClientID string
 	Topic    string
 	Count    int
 }

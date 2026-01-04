@@ -72,7 +72,7 @@ func saveWindowsEventReport() {
 	for k, v := range wineventTypeMap {
 		a := strings.SplitN(k, "\t", 3)
 		if len(a) >= 3 {
-			topList = append(topList, datastore.WindowsEventSummary{Computer: a[0], Provider: a[1], EeventID: a[2], Count: v})
+			topList = append(topList, datastore.WindowsEventSummary{Computer: a[0], Provider: a[1], EventID: a[2], Count: v})
 		}
 	}
 	sort.Slice(topList, func(i, j int) bool {
@@ -88,7 +88,7 @@ func saveWindowsEventReport() {
 	for k, v := range wineventTypeErrorMap {
 		a := strings.SplitN(k, "\t", 3)
 		if len(a) >= 3 {
-			topErrorList = append(topErrorList, datastore.WindowsEventSummary{Computer: a[0], Provider: a[1], EeventID: a[2], Count: v})
+			topErrorList = append(topErrorList, datastore.WindowsEventSummary{Computer: a[0], Provider: a[1], EventID: a[2], Count: v})
 		}
 	}
 	sort.Slice(topErrorList, func(i, j int) bool {

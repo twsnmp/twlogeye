@@ -502,7 +502,7 @@ func (s *apiServer) GetWindowsEventReport(req *api.ReportRequest, stream api.TWL
 			r.TopList = append(r.TopList, &api.WindowsEventSummary{
 				Computer: t.Computer,
 				Provider: t.Provider,
-				EventId:  t.EeventID,
+				EventId:  t.EventID,
 				Count:    int32(t.Count),
 			})
 		}
@@ -510,7 +510,7 @@ func (s *apiServer) GetWindowsEventReport(req *api.ReportRequest, stream api.TWL
 			r.TopErrorList = append(r.TopErrorList, &api.WindowsEventSummary{
 				Computer: t.Computer,
 				Provider: t.Provider,
-				EventId:  t.EeventID,
+				EventId:  t.EventID,
 				Count:    int32(t.Count),
 			})
 		}
@@ -542,7 +542,7 @@ func (s *apiServer) GetLastWindowsEventReport(ctx context.Context, req *api.Empt
 		r.TopList = append(r.TopList, &api.WindowsEventSummary{
 			Computer: t.Computer,
 			Provider: t.Provider,
-			EventId:  t.EeventID,
+			EventId:  t.EventID,
 			Count:    int32(t.Count),
 		})
 	}
@@ -550,7 +550,7 @@ func (s *apiServer) GetLastWindowsEventReport(ctx context.Context, req *api.Empt
 		r.TopErrorList = append(r.TopErrorList, &api.WindowsEventSummary{
 			Computer: t.Computer,
 			Provider: t.Provider,
-			EventId:  t.EeventID,
+			EventId:  t.EventID,
 			Count:    int32(t.Count),
 		})
 	}
@@ -650,7 +650,7 @@ func (s *apiServer) GetMqttReport(req *api.ReportRequest, stream api.TWLogEyeSer
 		}
 		for _, t := range l.TopList {
 			r.TopList = append(r.TopList, &api.MqttSummaryEnt{
-				ClientId: t.ClinetID,
+				ClientId: t.ClientID,
 				Topic:    t.Topic,
 				Count:    int32(t.Count),
 			})
@@ -677,7 +677,7 @@ func (s *apiServer) GetLastMqttReport(ctx context.Context, req *api.Empty) (*api
 	}
 	for _, t := range l.TopList {
 		r.TopList = append(r.TopList, &api.MqttSummaryEnt{
-			ClientId: t.ClinetID,
+			ClientId: t.ClientID,
 			Topic:    t.Topic,
 			Count:    int32(t.Count),
 		})

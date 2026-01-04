@@ -44,7 +44,7 @@ var dashboardCmd = &cobra.Command{
   monitor | anomaly
   syslog.count | syslog.pattern | syslog.error
   trap.count | trap.type 
-  netflow.count | netflow.ip.packtet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte 
+  netflow.count | netflow.ip.packet | netflow.ip.byte | netflow.mac.packet | netflow.mac.byte 
   netflow.flow.packet | netflow.flow.byte | netflow.fumble | netflow.prot 
   netflow.host | netflow.loc | netflow.country 
   winevent.count | winevent.pattern | winevent.error
@@ -257,7 +257,7 @@ func loadOldReport() {
 func checkDashboardReport() {
 	conn, err := getClientConn()
 	if err != nil {
-		log.Fatalf("getClinetConn err=%v", err)
+		log.Fatalf("getClientConn err=%v", err)
 	}
 	defer conn.Close()
 	client := api.NewTWLogEyeServiceClient(conn)

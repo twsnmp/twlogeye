@@ -248,7 +248,7 @@ func getNetflowReport(st, et int64) {
 				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
 			}
 			fmt.Println("Top protocol list")
-			fmt.Println("No.\tProcottol\tCount")
+			fmt.Println("No.\tProtocol\tCount")
 			for i, t := range r.GetTopProtocolList() {
 				fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetCount())
 			}
@@ -303,7 +303,7 @@ func getLastNetflowReport() {
 			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetBytes())
 		}
 		fmt.Println("Top protocol list")
-		fmt.Println("No.\tProcottol\tCount")
+		fmt.Println("No.\tProtocol\tCount")
 		for i, t := range r.GetTopProtocolList() {
 			fmt.Printf("%d\t%s\t%d\n", i+1, t.GetKey(), t.GetCount())
 		}
@@ -392,12 +392,12 @@ func getOTelReport(st, et int64) {
 			r.GetTypes(), r.GetErrorTypes(), r.GetHosts(), r.GetMericsCount(), r.GetTraceCount(), r.GetTraceIds())
 		if len(r.GetTopList()) > 0 && !noList {
 			fmt.Println("Top otel log list")
-			fmt.Println("No.\tHost\tService\tScopre\tSeverity\tCount")
+			fmt.Println("No.\tHost\tService\tScope\tSeverity\tCount")
 			for i, t := range r.GetTopList() {
 				fmt.Printf("%d\t%s\t%s\t%s\t%s\t%d\n", i+1, t.GetHost(), t.GetService(), t.GetScope(), t.GetSeverity(), t.GetCount())
 			}
 			fmt.Println("Top error otel log list")
-			fmt.Println("No.\tHost\tService\tScopre\tSeverity\tCount")
+			fmt.Println("No.\tHost\tService\tScope\tSeverity\tCount")
 			for i, t := range r.GetTopErrorList() {
 				fmt.Printf("%d\t%s\t%s\t%s\t%s\t%d\n", i+1, t.GetHost(), t.GetService(), t.GetScope(), t.GetSeverity(), t.GetCount())
 			}
@@ -417,12 +417,12 @@ func getLastOTelReport() {
 		r.GetTypes(), r.GetErrorTypes(), r.GetHosts(), r.GetMericsCount(), r.GetTraceCount(), r.GetTraceIds())
 	if len(r.GetTopList()) > 0 && !noList {
 		fmt.Println("Top otel log list")
-		fmt.Println("No.\tHost\tService\tScopre\tSeverity\tCount")
+		fmt.Println("No.\tHost\tService\tScope\tSeverity\tCount")
 		for i, t := range r.GetTopList() {
 			fmt.Printf("%d\t%s\t%s\t%s\t%s\t%d\n", i+1, t.GetHost(), t.GetService(), t.GetScope(), t.GetSeverity(), t.GetCount())
 		}
 		fmt.Println("Top error otel log list")
-		fmt.Println("No.\tHost\tService\tScopre\tSeverity\tCount")
+		fmt.Println("No.\tHost\tService\tScope\tSeverity\tCount")
 		for i, t := range r.GetTopErrorList() {
 			fmt.Printf("%d\t%s\t%s\t%s\t%s\t%d\n", i+1, t.GetHost(), t.GetService(), t.GetScope(), t.GetSeverity(), t.GetCount())
 		}
@@ -448,7 +448,7 @@ func getMqttReport(st, et int64) {
 		list := r.GetTopList()
 		if len(list) > 0 && !noList {
 			fmt.Println("Top MQTT publish info type list")
-			fmt.Println("No.\tClinet ID\tTopic\tCount")
+			fmt.Println("No.\tClient ID\tTopic\tCount")
 			for i, t := range list {
 				fmt.Printf("%d\t%s\t%s\t%d\n", i+1, t.GetClientId(), t.GetTopic(), t.GetCount())
 			}
@@ -467,7 +467,7 @@ func getLastMqttReport() {
 	list := r.GetTopList()
 	if len(list) > 0 && !noList {
 		fmt.Println("Top MQTT client topic list")
-		fmt.Println("No.\tClinet ID\tTopic\tCount")
+		fmt.Println("No.\tClient ID\tTopic\tCount")
 		for i, t := range list {
 			fmt.Printf("%d\t%s\t%s\t%d\n", i+1, t.GetClientId(), t.GetTopic(), t.GetCount())
 		}
@@ -487,7 +487,7 @@ func getAnomalyReport(t string, st, et int64) {
 			break
 		}
 		if err != nil {
-			log.Fatalf("get anomary report err=%v", err)
+			log.Fatalf("get anomaly report err=%v", err)
 		}
 		fmt.Printf("%s anomaly type=%s score=%.2f\n",
 			getReportTimeStr(r.GetTime()), t, r.GetScore())

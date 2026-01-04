@@ -62,7 +62,7 @@ func saveMqttReport() {
 	for k, v := range mqttTypeMap {
 		a := strings.SplitN(k, "\t", 2)
 		if len(a) == 2 {
-			topList = append(topList, datastore.MqttSummaryEnt{ClinetID: a[0], Topic: a[1], Count: v})
+			topList = append(topList, datastore.MqttSummaryEnt{ClientID: a[0], Topic: a[1], Count: v})
 		}
 	}
 	sort.Slice(topList, func(i, j int) bool {
