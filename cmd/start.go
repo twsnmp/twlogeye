@@ -25,6 +25,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
 	"github.com/twsnmp/twlogeye/logger"
@@ -113,6 +114,54 @@ func init() {
 	startCmd.Flags().StringVar(&datastore.Config.MqttKey, "mqttKey", "", "MQTT server private key")
 	startCmd.Flags().StringVar(&datastore.Config.GeoIPDB, "geoIPDB", "", "Geo IP Database Path")
 	startCmd.Flags().BoolVar(&datastore.Config.ResolveHostName, "resolveHostName", false, "Resolve Host Name")
+
+	viper.BindPFlag("dbPath", startCmd.Flags().Lookup("dbPath"))
+	viper.BindPFlag("syslogUDPPort", startCmd.Flags().Lookup("syslogUDPPort"))
+	viper.BindPFlag("syslogTCPPort", startCmd.Flags().Lookup("syslogTCPPort"))
+	viper.BindPFlag("netflowPort", startCmd.Flags().Lookup("netflowPort"))
+	viper.BindPFlag("snmpTrapPort", startCmd.Flags().Lookup("trapPort"))
+	viper.BindPFlag("mibPath", startCmd.Flags().Lookup("mibPath"))
+	viper.BindPFlag("logRetention", startCmd.Flags().Lookup("logRetention"))
+	viper.BindPFlag("notifyRetention", startCmd.Flags().Lookup("notifyRetention"))
+	viper.BindPFlag("reportRetention", startCmd.Flags().Lookup("reportRetention"))
+	viper.BindPFlag("reportTopN", startCmd.Flags().Lookup("reportTopN"))
+	viper.BindPFlag("anomalyNotifyDelay", startCmd.Flags().Lookup("anomalyNotifyDelay"))
+	viper.BindPFlag("anomalyReportThreshold", startCmd.Flags().Lookup("anomalyReportThreshold"))
+	viper.BindPFlag("reportInterval", startCmd.Flags().Lookup("reportInterval"))
+	viper.BindPFlag("mcpEndpoint", startCmd.Flags().Lookup("mcpEndpoint"))
+	viper.BindPFlag("mcpFrom", startCmd.Flags().Lookup("mcpFrom"))
+	viper.BindPFlag("mcpToken", startCmd.Flags().Lookup("mcpToken"))
+	viper.BindPFlag("trapCommunity", startCmd.Flags().Lookup("trapCommunity"))
+	viper.BindPFlag("sigmaRules", startCmd.Flags().Lookup("sigmaRules"))
+	viper.BindPFlag("sigmaConfigs", startCmd.Flags().Lookup("sigmaConfigs"))
+	viper.BindPFlag("namedCaptures", startCmd.Flags().Lookup("namedCaptures"))
+	viper.BindPFlag("grokDef", startCmd.Flags().Lookup("grokDef"))
+	viper.BindPFlag("winEventLogChannel", startCmd.Flags().Lookup("winEventLogChannel"))
+	viper.BindPFlag("winEventLogCheckInterval", startCmd.Flags().Lookup("winEventLogCheckInterval"))
+	viper.BindPFlag("winEventLogCheckStart", startCmd.Flags().Lookup("winEventLogCheckStart"))
+	viper.BindPFlag("winUser", startCmd.Flags().Lookup("winUser"))
+	viper.BindPFlag("winPassword", startCmd.Flags().Lookup("winPassword"))
+	viper.BindPFlag("winAuth", startCmd.Flags().Lookup("winAuth"))
+	viper.BindPFlag("keyValParse", startCmd.Flags().Lookup("keyValParse"))
+	viper.BindPFlag("sigmaSkipError", startCmd.Flags().Lookup("sigmaSkipError"))
+	viper.BindPFlag("debug", startCmd.Flags().Lookup("debug"))
+	viper.BindPFlag("winLogSJIS", startCmd.Flags().Lookup("sjis"))
+	viper.BindPFlag("anomalyUseTimeData", startCmd.Flags().Lookup("anomalyUseTime"))
+	viper.BindPFlag("otelHTTPPort", startCmd.Flags().Lookup("otelHTTPPort"))
+	viper.BindPFlag("otelgRPCPort", startCmd.Flags().Lookup("otelgRPCPort"))
+	viper.BindPFlag("otelFrom", startCmd.Flags().Lookup("otelFrom"))
+	viper.BindPFlag("otelCert", startCmd.Flags().Lookup("otelCert"))
+	viper.BindPFlag("otelKey", startCmd.Flags().Lookup("otelKey"))
+	viper.BindPFlag("otelCA", startCmd.Flags().Lookup("otelCA"))
+	viper.BindPFlag("otelRetention", startCmd.Flags().Lookup("otelRetention"))
+	viper.BindPFlag("mqttTCPPort", startCmd.Flags().Lookup("mqttTCPPort"))
+	viper.BindPFlag("mqttWSPort", startCmd.Flags().Lookup("mqttWSPort"))
+	viper.BindPFlag("mqttFrom", startCmd.Flags().Lookup("mqttFrom"))
+	viper.BindPFlag("mqttUsers", startCmd.Flags().Lookup("mqttUsers"))
+	viper.BindPFlag("mqttCert", startCmd.Flags().Lookup("mqttCert"))
+	viper.BindPFlag("mqttKey", startCmd.Flags().Lookup("mqttKey"))
+	viper.BindPFlag("geoIPDB", startCmd.Flags().Lookup("geoIPDB"))
+	viper.BindPFlag("resolveHostName", startCmd.Flags().Lookup("resolveHostName"))
 }
 
 func start() {

@@ -70,6 +70,13 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&apiClientKey, "clientKey", "", "API client private key")
 	rootCmd.PersistentFlags().StringVar(&apiCACert, "caCert", "", "API CA cert")
 
+	viper.BindPFlag("apiport", rootCmd.PersistentFlags().Lookup("apiPort"))
+	viper.BindPFlag("apiserver", rootCmd.PersistentFlags().Lookup("apiServer"))
+	viper.BindPFlag("servercert", rootCmd.PersistentFlags().Lookup("serverCert"))
+	viper.BindPFlag("clientcert", rootCmd.PersistentFlags().Lookup("clientCert"))
+	viper.BindPFlag("serverkey", rootCmd.PersistentFlags().Lookup("serverKey"))
+	viper.BindPFlag("clientkey", rootCmd.PersistentFlags().Lookup("clientKey"))
+	viper.BindPFlag("cacert", rootCmd.PersistentFlags().Lookup("caCert"))
 }
 
 // initConfig reads in config file and ENV variables if set.
