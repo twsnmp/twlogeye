@@ -45,7 +45,7 @@ func init() {
 	rootCmd.AddCommand(notifyCmd)
 	notifyCmd.Flags().StringVar(&level, "level", "", "notify level")
 	notifyCmd.Flags().StringVar(&startTime, "start", "", "start date and time")
-	notifyCmd.Flags().StringVar(&endTime, "end", "", "notify level")
+	notifyCmd.Flags().StringVar(&endTime, "end", "", "end date and time")
 }
 
 func searchNotify() {

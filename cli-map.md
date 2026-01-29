@@ -1,0 +1,159 @@
+# twlogeye CLI Command Map
+
+# twlogeye
+## Global Flags
+- --config
+- --apiPort (-p)
+- --apiServer
+- --serverCert
+- --clientCert
+- --serverKey
+- --clientKey
+- --caCert
+## clear <type> <subtype>
+- logs
+- notify
+- report
+## dashboard <panel type>...
+- monitor
+- anomaly
+- syslog
+  - count
+  - pattern
+  - error
+- trap
+  - count
+  - type
+- netflow
+  - count
+  - ip.packet
+  - ip.byte
+  - mac.packet
+  - mac.byte
+  - flow.packet
+  - flow.byte
+  - fumble
+  - prot
+  - host
+  - loc
+  - country
+- winevent
+  - count
+  - pattern
+  - error
+- otel
+  - count
+  - pattern
+  - error
+  - metric.<id>
+- mqtt
+  - count
+  - type
+- Flags
+  - --history
+  - --topn
+## gencert
+- Flags
+  - --cn
+## log
+- Flags
+  - --logtype
+  - --start
+  - --end
+  - --search
+## notify
+- Flags
+  - --level
+  - --start
+  - --end
+## otel <metric|trace> <list|id>
+## reload
+## report <report type> [<anomaly type>]
+- syslog
+- trap
+- netflow
+- winevent
+- otel
+- mqtt
+- anomaly <type>
+- monitor
+- last <type>
+  - syslog
+  - trap
+  - netflow
+  - winevent
+  - otel
+  - mqtt
+  - monitor
+  - anomaly
+- Flags
+  - --start
+  - --end
+  - --noList
+## sigma
+- list (default)
+- stat
+- logsrc
+- field
+- check
+- test
+- Flags
+  - --sigmaRules
+## start
+- Flags
+  - --dbPath (-d)
+  - --syslogUDPPort
+  - --syslogTCPPort
+  - --netflowPort
+  - --trapPort
+  - --mibPath
+  - --logRetention
+  - --notifyRetention
+  - --reportRetention
+  - --reportTopN
+  - --anomalyNotifyDelay
+  - --anomalyReportThreshold
+  - --reportInterval
+  - --syslogDst
+  - --trapDst
+  - --webhookDst
+  - --mcpEndpoint
+  - --mcpFrom
+  - --mcpToken
+  - --trapCommunity
+  - --sigmaRules
+  - --sigmaConfigs
+  - --namedCaptures
+  - --grokDef
+  - --grokPat
+  - --winEventLogChannel
+  - --winEventLogCheckInterval (-i)
+  - --winEventLogCheckStart (-s)
+  - --winUser
+  - --winPassword
+  - --winAuth
+  - --keyValParse
+  - --sigmaSkipError
+  - --debug
+  - --sjis
+  - --anomalyUseTime
+  - --otelHTTPPort
+  - --otelgRPCPort
+  - --otelFrom
+  - --otelCert
+  - --otelKey
+  - --otelCA
+  - --otelRetention
+  - --mqttTCPPort
+  - --mqttWSPort
+  - --mqttFrom
+  - --mqttUsers
+  - --mqttCert
+  - --mqttKey
+  - --geoIPDB
+  - --resolveHostName
+## stop
+## version
+- Flags
+  - --color
+## watch

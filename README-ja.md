@@ -96,6 +96,11 @@ monitor anomaly netflow.count mqtt.count
 
 ## コマンドの説明
 
+[コマンド体系](cli-map.md)
+
+[コマンド体系の図解](cli-map-v.html)
+
+
 helpコマンドで確認できます。
 
 ```terminal
@@ -170,7 +175,6 @@ Flags:
       --grokPat string                 GROK patterns
   -h, --help                           help for start
       --keyValParse                    Splunk Key value parse
-  -l, --logPath string                 Log DB Path default: memory old option
       --logRetention int               log retention(hours) (default 48)
       --mcpEndpoint string             MCP server endpoint
       --mcpFrom string                 MCP server from ip address list

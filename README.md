@@ -94,6 +94,11 @@ monitor anomaly netflow.count mqtt.count
 
 ## Command explanation
 
+[Command system](cli-map.md)
+
+[Illustration of command system](cli-map-v.html)
+
+
 You can check the commands that support the Help command.
 
 ```terminal
@@ -166,7 +171,6 @@ Flags:
       --grokPat string                 GROK patterns
   -h, --help                           help for start
       --keyValParse                    Splunk Key value parse
-  -l, --logPath string                 Log DB Path default: memory old option
       --logRetention int               log retention(hours) (default 48)
       --mcpEndpoint string             MCP server endpoint
       --mcpFrom string                 MCP server from ip address list
@@ -184,6 +188,7 @@ Flags:
       --otelCA string                  OpenTelemetry CA certificate
       --otelCert string                OpenTelemetry server certificate
       --otelFrom string                OpenTelemetry client IPs
+      --otelHTTPPort int               OpenTelemetry HTTP Port
       --otelKey string                 OpenTelemetry server private key
       --otelRetention int              log retention(hours) (default 48)
       --otelgRPCPort int               OpenTelemetry gRPC Port
@@ -741,6 +746,7 @@ The following environment variables are available.
 | TWLOGEYE_SERVERKEY | Server private key path |
 | TWLOGEYE_CLIENTCERT | Client cert file path |
 | TWLOGEYE_CLIENTKEY | Client private key path |
+| TWLOGEYE_CACERT | CA cert file path |
 
 ## Build
 
