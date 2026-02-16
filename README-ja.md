@@ -1,5 +1,7 @@
 # twlogeye
 
+![](images/dashboard.png)
+
 twlogeyeはAIネイティブなログサーバーです。
 
 SIGMAルール

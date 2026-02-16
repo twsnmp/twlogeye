@@ -2,7 +2,17 @@
 
 [日本語のREADME](README-ja.md)
 
-twlogeye is an AI-native log server.
+### AI-Powered Lightweight Log Server & Intelligent Monitoring
+
+![](images/dashboard.png)
+
+**TwLogEye** is a next-generation log server that goes beyond simple storage. It integrates AI to analyze, categorize, and detect anomalies in real-time, turning raw logs into actionable intelligence.
+
+🤖 AI-Driven Anomaly Detection: High-performance scoring for Syslog, Trap, and Netflow. 
+
+📊 Visual Log Clustering: Automatically group similar logs into patterns for faster troubleshooting. 
+
+🚀 Resource Efficient: Real-time monitoring with minimal CPU/Memory footprint. 
 
 SIGMA Rules
 
