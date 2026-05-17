@@ -143,6 +143,7 @@ Available Commands:
   sigma       Check sigma rules (list|stat|logsrc|field|check|test)
   start       Start twlogeye
   stop        Stop twlogeye
+  update      Update twlogeye to the latest or specified version
   version     Show twlogeye version
   watch       Watch notify
 
@@ -446,6 +447,32 @@ Global Flags:
       --caCert string       API CA cert
       --clientCert string   API client cert
 
+```
+
+#### update command
+
+```
+$twlogeye help update
+Update twlogeye to the latest or specified version from GitHub releases.
+
+Usage:
+  twlogeye update [flags]
+
+Flags:
+  -c, --check             Check for updates only
+  -h, --help              help for update
+      --version string    Update to specified version
+  -y, --yes               Update without confirmation
+
+Global Flags:
+  -p, --apiPort int         API Server port (default 8081)
+      --apiServer string    server IP or host name (default "localhost")
+      --caCert string       API CA cert
+      --clientCert string   API client cert
+      --clientKey string    API client private key
+      --config string       config file (default is ./twlogeye.yaml)
+      --serverCert string   API server cert
+      --serverKey string    API server private key
 ```
 
 #### clear command
