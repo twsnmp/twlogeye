@@ -71,20 +71,28 @@ type LogEnt struct {
 }
 
 // SaveLogs : save log to database
-func SaveLogs(t string, logs []*LogEnt) {
+func SaveLogs(t string, logs []*LogEnt) error {
 	txn := db.NewTransaction(true)
+	defer txn.Discard()
 	for i, l := range logs {
 		k := fmt.Sprintf("%s:%016x:%04x", t, l.Time, i)
 		e := badger.NewEntry([]byte(k), []byte(l.Src+"\t"+l.Log)).WithTTL(time.Hour * time.Duration(Config.LogRetention))
 		if err := txn.SetEntry(e); err != nil {
 			if err == badger.ErrTxnTooBig {
-				txn.Commit()
+				if err := txn.Commit(); err != nil {
+					return err
+				}
 				txn = db.NewTransaction(true)
-				txn.SetEntry(e)
+				defer txn.Discard()
+				if err := txn.SetEntry(e); err != nil {
+					return err
+				}
+			} else {
+				return err
 			}
 		}
 	}
-	txn.Commit()
+	return txn.Commit()
 }
 
 // ForEachLogs : for each logs

@@ -26,6 +26,7 @@ func OpenDB() {
 func CloseDB() {
 	if db != nil {
 		db.Close()
+		db = nil
 	}
 }
 
