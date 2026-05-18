@@ -45,7 +45,7 @@ We use Badger, a high-speed Key/Value Store built in Go, for storing logs and re
 It is recommended to install on Linux/Mac OS with a shell script.
 
 ```terminal
-$curl -sS https://lhx98.linkclub.jp/twise.co.jp/download/install_twlogeye.sh | sh
+$curl -sS https://raw.githubusercontent.com/twsnmp/twlogeye/main/install/install.sh | sh
 ```
 
 Linux/Mac OS can be installed via Homebrew.

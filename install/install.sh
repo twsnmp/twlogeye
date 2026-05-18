@@ -13,8 +13,8 @@ BLUE="$(tput setaf 4 2>/dev/null || printf '')"
 MAGENTA="$(tput setaf 5 2>/dev/null || printf '')"
 NO_COLOR="$(tput sgr0 2>/dev/null || printf '')"
 
-SUPPORTED_TARGETS="Linux_x86_64 Linux_arm64 \
-                  Darwin_x86_64 Darwin_arm64"
+SUPPORTED_TARGETS="linux_amd64 linux_arm64 \
+                  darwin_amd64 darwin_arm64"
 info() {
   printf '%s\n' "${BOLD}${GREY}>${NO_COLOR} $*"
 }
