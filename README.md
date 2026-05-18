@@ -6,6 +6,9 @@
 
 ![](images/dashboard.png)
 
+### Demo
+![](images/dashboard.gif)
+
 **TwLogEye** is a next-generation log server that goes beyond simple storage. It integrates AI to analyze, categorize, and detect anomalies in real-time, turning raw logs into actionable intelligence.
 
 🤖 AI-Driven Anomaly Detection: High-performance scoring for Syslog, Trap, and Netflow. 
@@ -88,6 +91,9 @@ monitor anomaly netflow.count mqtt.count
 ![Dashboard](https://assets.st-note.com/img/1762982295-vQB5Ki9Pq3TRGw7oWSfsc0Ly.png?width=1200)
 
 ## Basic usage
+
+### Demo
+![](images/basic.gif)
 
 - Create log and sigma rule directory.
 - Create config file.
@@ -240,6 +246,9 @@ Global Flags:
 ### Client
 #### log command
 
+### Demo
+![](images/report-log.gif)
+
 ```terminal
 $twlogeye help log
 
@@ -316,6 +325,9 @@ Global Flags:
 
 #### report command
 
+### Demo
+![](images/report-log.gif)
+
 get report
 
 ```
@@ -347,6 +359,9 @@ Global Flags:
 Display dashboard.
 
 ![](images/dashboard.png)
+
+### Demo
+![](images/dashboard.gif)
 
 ```terminal
 $twlogeye help dashboard
@@ -801,4 +816,4 @@ see [LICENSE](./LICENSE)
 
 ```
 Copyright 2025 Masayuki Yamai
-```
+````

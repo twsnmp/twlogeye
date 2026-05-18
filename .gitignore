@@ -26,5 +26,6 @@ go.work.sum
 
 dist/
 tmp/
+vhs_test.db/
 .DS_Store
 .gemini/

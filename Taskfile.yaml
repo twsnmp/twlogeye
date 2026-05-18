@@ -4,6 +4,10 @@ vars:
   VERSION: 0.4.3
   COMMIT:
     sh: git rev-parse --short HEAD
+  DB_PATH: ./vhs_test.db
+  SYSLOG_PORT: 8514
+  NETFLOW_PORT: 2055
+  TRAP_PORT: 8162
 
 tasks:
   default:
@@ -68,3 +72,19 @@ tasks:
     desc: Run unit tests with coverage
     cmds:
       - go test -cover ./...
+
+  start_server:
+    desc: Start twlogeye server for recording
+    cmds:
+      - go build -o dist/twlogeye .
+      - ./dist/twlogeye start --dbPath {{.DB_PATH}} --syslogUDPPort {{.SYSLOG_PORT}} --netflowPort {{.NETFLOW_PORT}} --trapPort {{.TRAP_PORT}} --sigmaRules embed:test/syslog
+ 
+
+  record:
+    desc: Record CLI demonstrations using VHS (Server must be started with 'task start_server')
+    cmds:
+      - go build -o dist/twlogeye .
+      - mkdir -p images
+      - PATH=$PATH:$(pwd)/dist vhs vhs/basic.tape
+      - PATH=$PATH:$(pwd)/dist vhs vhs/dashboard.tape
+      - PATH=$PATH:$(pwd)/dist vhs vhs/report-log.tape

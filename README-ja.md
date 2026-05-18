@@ -2,6 +2,9 @@
 
 ![](images/dashboard.png)
 
+### 操作イメージ
+![](images/dashboard.gif)
+
 twlogeyeはAIネイティブなログサーバーです。
 
 SIGMAルール
@@ -83,6 +86,9 @@ monitor anomaly netflow.count mqtt.count
 
 ## 基本的な使い方
 
+### 操作イメージ
+![](images/basic.gif)
+
 - ログを保存するディレクトリとSigmaルールを保存するディレクトリを作成
 - 設定ファイルを作成
 - Sigmaルールをコピーまたは、作成
@@ -160,6 +166,9 @@ Use "twlogeye [command] --help" for more information about a command.
 
 サーバーを起動するコマンドです。
 
+### 操作イメージ
+![](images/basic.gif)
+
 ```terminal
 $twlogeye help start
 Start twlogeye
@@ -235,6 +244,9 @@ Global Flags:
 
 ### クライアント
 #### log コマンド
+
+### 操作イメージ
+![](images/report-log.gif)
 
 サーバーに保存されたログを検索するためのコマンドです。
 
@@ -321,6 +333,9 @@ Global Flags:
 
 #### report コマンド
 
+### 操作イメージ
+![](images/report-log.gif)
+
 レポートを表示するコマンドです。
 
 ```
@@ -352,6 +367,9 @@ Global Flags:
 ダッシュボードを表示するコマンドです。
 
 ![](images/dashboard.png)
+
+### 操作イメージ
+![](images/dashboard.gif)
 
 ```terminal
 $twlogeye help dashboard
