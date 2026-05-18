@@ -26,6 +26,8 @@ builds:
       - amd64
       - arm64
     id: twlogeye
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
 
 archives:
   - formats: ["tar.gz"]

@@ -1,7 +1,8 @@
 version: '3'
 
 vars:
-  VERSION: 0.4.3
+  VERSION:
+    sh: git describe --tags --abbrev=0 | sed 's/^v//'
   COMMIT:
     sh: git rev-parse --short HEAD
   DB_PATH: ./vhs_test.db
