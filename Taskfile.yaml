@@ -60,3 +60,11 @@ tasks:
   cmd_map:
     cmds:
       - npx markmap-cli cli-map.md -o cli-map-v.html   
+  test:
+    desc: Run unit tests
+    cmds:
+      - go test -v ./...
+  cover:
+    desc: Run unit tests with coverage
+    cmds:
+      - go test -cover ./...
