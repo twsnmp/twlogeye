@@ -161,22 +161,14 @@ install() {
 detect_platform() {
   platform="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
-  case "${platform}" in
-    linux) platform="Linux" ;;
-    darwin) platform="Darwin" ;;
-  esac
-
   printf '%s' "${platform}"
 }
 
-# Currently supporting:
-#   - x86_64
-#   - arm64
 detect_arch() {
   arch="$(uname -m | tr '[:upper:]' '[:lower:]')"
 
   case "${arch}" in
-    amd64) arch="x86_64" ;;
+    x86_64) arch="amd64" ;;
     aarch64) arch="arm64" ;;
   esac
   printf '%s' "${arch}"
