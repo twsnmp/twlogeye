@@ -36,15 +36,18 @@ var updateCmd = &cobra.Command{
 	Short: "Update twlogeye to the latest or specified version",
 	Long:  `Update twlogeye to the latest or specified version from GitHub releases.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if updateCheck {
+		check, _ := cmd.Flags().GetBool("check")
+		version, _ := cmd.Flags().GetString("version")
+		yes, _ := cmd.Flags().GetBool("yes")
+		if check {
 			checkUpdate()
 			return
 		}
-		if updateVersion != "" {
-			updateToVersion(updateVersion)
+		if version != "" {
+			updateToVersion(version, yes)
 			return
 		}
-		updateToLatest()
+		updateToLatest(yes)
 	},
 }
 
@@ -82,7 +85,7 @@ func checkUpdate() {
 	}
 }
 
-func updateToLatest() {
+func updateToLatest(yes bool) {
 	v, err := semver.Parse(strings.TrimPrefix(Version, "v"))
 	if err != nil {
 		fmt.Printf("Invalid current version format: %v\n", err)
@@ -95,12 +98,17 @@ func updateToLatest() {
 		return
 	}
 
-	if !ok || latest.Version.LTE(v) {
+	if !ok {
+		fmt.Println("No release found on GitHub for your OS/Arch.")
+		return
+	}
+
+	if latest.Version.LTE(v) {
 		fmt.Printf("twlogeye is already up to date (v%s).\n", v)
 		return
 	}
 
-	if !updateYes {
+	if !yes {
 		fmt.Printf("New version v%s is available.\n", latest.Version)
 		fmt.Printf("Release notes:\n%s\n", latest.ReleaseNotes)
 		fmt.Printf("Do you want to update to v%s? [y/N]: ", latest.Version)
@@ -120,7 +128,7 @@ func updateToLatest() {
 	fmt.Printf("Successfully updated to v%s\n", latest.Version)
 }
 
-func updateToVersion(target string) {
+func updateToVersion(target string, yes bool) {
 	_, err := semver.Parse(strings.TrimPrefix(Version, "v"))
 	if err != nil {
 		fmt.Printf("Invalid current version format: %v\n", err)
@@ -143,7 +151,7 @@ func updateToVersion(target string) {
 		return
 	}
 
-	if !updateYes {
+	if !yes {
 		fmt.Printf("Do you want to update to v%s? [y/N]: ", targetV)
 		input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 		if strings.ToLower(strings.TrimSpace(input)) != "y" {
