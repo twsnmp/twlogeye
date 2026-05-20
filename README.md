@@ -71,19 +71,32 @@ Windows downloads are available as zip files from the releases or can be install
 
 ## Docker
 
-How to start the Docker version
+The container images built by GitHub Actions are published on GitHub Container Registry (GHCR).
 
-```
+### How to Start
+
+```terminal
 $mkdir ./twlogeye
-$vi  ./twlogeye/config.yaml #Edit Config
+$vi  ./twlogeye/config.yaml # Edit Config
 $docker run --rm -v ./twlogeye:/datastore \
 -p 2055:2055/udp -p 514:514/udp -p 162:162/udp -p 1883:1883 \
--e TZ=Asia/Tokyo twsnmp/twlogeye
+-e TZ=Asia/Tokyo \
+ghcr.io/twsnmp/twlogeye:latest
 ```
+
+To start with a specific version, specify the tag as follows:
+```terminal
+$docker run --rm -v ./twlogeye:/datastore \
+-p 2055:2055/udp -p 514:514/udp -p 162:162/udp -p 1883:1883 \
+-e TZ=Asia/Tokyo \
+ghcr.io/twsnmp/twlogeye:v0.5.0
+```
+
 Please create config.yaml.
 
-The dashboard display is
-```
+### Dashboard Display
+
+```terminal
 $docker exec -it <container ID> /twlogeye dashboard \
 monitor anomaly netflow.count mqtt.count
 ```
