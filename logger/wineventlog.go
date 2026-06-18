@@ -63,7 +63,7 @@ func getWindowsEventLogs() []*datastore.LogEnt {
 	}
 	out, err := exec.Command("wevtutil.exe", params...).Output()
 	if err != nil {
-		log.Printf("getWindowsEventLogs params=%+v err=%v", params, err)
+		log.Printf("getWindowsEventLogs err=%v", err)
 		return ret
 	}
 	log.Printf("wevtutil.exe out len=%d", len(out))
