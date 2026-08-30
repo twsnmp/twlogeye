@@ -63,7 +63,10 @@ var startCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(startCmd)
-	startCmd.Flags().StringVarP(&datastore.Config.DBPath, "dbPath", "d", "", "DB Path default: memory")
+	startCmd.Flags().StringVarP(&datastore.Config.DBPath, "dbPath", "d", "", "DB Path (.badger, .parquet) default: memory")
+	startCmd.Flags().StringVarP(&datastore.Config.LogPath, "logPath", "l", "", "Log DB Path (.badger, .parquet) default: dbPath")
+	startCmd.Flags().IntVar(&datastore.Config.ParquetBufferSize, "parquetBufferSize", 10000, "Parquet log buffer size")
+	startCmd.Flags().IntVar(&datastore.Config.ParquetBufferTime, "parquetBufferTime", 60, "Parquet log buffer flush interval (seconds)")
 	startCmd.Flags().IntVar(&datastore.Config.SyslogUDPPort, "syslogUDPPort", 0, "syslog UDP port 0=disable")
 	startCmd.Flags().IntVar(&datastore.Config.SyslogTCPPort, "syslogTCPPort", 0, "syslog TCP port 0=disable")
 	startCmd.Flags().IntVar(&datastore.Config.NetFlowPort, "netflowPort", 0, "netflow port 0=disable")
@@ -116,6 +119,9 @@ func init() {
 	startCmd.Flags().BoolVar(&datastore.Config.ResolveHostName, "resolveHostName", false, "Resolve Host Name")
 
 	viper.BindPFlag("dbPath", startCmd.Flags().Lookup("dbPath"))
+	viper.BindPFlag("logPath", startCmd.Flags().Lookup("logPath"))
+	viper.BindPFlag("parquetBufferSize", startCmd.Flags().Lookup("parquetBufferSize"))
+	viper.BindPFlag("parquetBufferTime", startCmd.Flags().Lookup("parquetBufferTime"))
 	viper.BindPFlag("syslogUDPPort", startCmd.Flags().Lookup("syslogUDPPort"))
 	viper.BindPFlag("syslogTCPPort", startCmd.Flags().Lookup("syslogTCPPort"))
 	viper.BindPFlag("netflowPort", startCmd.Flags().Lookup("netflowPort"))

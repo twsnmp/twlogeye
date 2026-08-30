@@ -1,4 +1,7 @@
 #dbPath: ""
+#logPath: "" # e.g. "parquet:///path/to/logs" or "./logs.parquet" or "./logs.badger"
+#parquetBufferSize: 10000
+#parquetBufferTime: 60 # seconds
 #syslogUDPPort: 514
 #syslogTCPPort: 6514
 #netflowPort: 2055

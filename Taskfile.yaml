@@ -79,6 +79,12 @@ tasks:
     cmds:
       - go build -o dist/twlogeye .
       - ./dist/twlogeye start --dbPath {{.DB_PATH}} --syslogUDPPort {{.SYSLOG_PORT}} --netflowPort {{.NETFLOW_PORT}} --trapPort {{.TRAP_PORT}} --sigmaRules embed:test/syslog
+
+  start_server_debug:
+    desc: Start twlogeye server for debugging
+    cmds:
+      - go build -o dist/twlogeye .
+      - ./dist/twlogeye start --dbPath twlogeye.pq --syslogUDPPort 514 --netflowPort 2055 --trapPort 162 --sigmaRules embed:test/syslog
  
 
   record:

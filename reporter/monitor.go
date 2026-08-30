@@ -87,6 +87,8 @@ func saveMonitorReport() {
 	}
 	// Save monitor Report
 	datastore.SaveMonitorReport(m)
+	_ = datastore.CleanupLog(datastore.Config.LogRetention)
+	_ = datastore.CompactLog("")
 	anomalyCh <- &anomalyChannelData{
 		Time:   m.Time,
 		Type:   "monitor",

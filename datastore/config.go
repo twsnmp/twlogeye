@@ -1,7 +1,10 @@
 package datastore
 
 type ConfigEnt struct {
-	DBPath        string `yaml:"dbPath"`
+	DBPath            string `yaml:"dbPath"`
+	LogPath           string `yaml:"logPath"`
+	ParquetBufferSize int    `yaml:"parquetBufferSize"`
+	ParquetBufferTime int    `yaml:"parquetBufferTime"`
 	SyslogUDPPort int    `yaml:"syslogUDPPort"`
 	SyslogTCPPort int    `yaml:"syslogTCPPort"`
 	NetFlowPort   int    `yaml:"netflowPort"`
