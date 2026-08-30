@@ -14,6 +14,8 @@ import (
 	"github.com/parquet-go/parquet-go"
 )
 
+const maxCompactedRecordsPerFile = 500000
+
 type ParquetLogRecord struct {
 	Time      int64  `parquet:"time,snappy"`
 	Timestamp int64  `parquet:"timestamp,timestamp(nanosecond),snappy"`
@@ -374,7 +376,7 @@ func (s *ParquetLogDataStore) Cleanup(retentionHours int) error {
 	return nil
 }
 
-// Compact merges multiple parquet files in past date directories into a single compacted file.
+// Compact merges multiple parquet files in past date directories into streaming compacted files.
 func (s *ParquetLogDataStore) Compact(currentDate string) error {
 	_ = s.Flush()
 
@@ -393,7 +395,7 @@ func (s *ParquetLogDataStore) Compact(currentDate string) error {
 				continue
 			}
 
-			if err := s.compactDateDir(dDir); err != nil {
+			if err := s.compactDateDir(dDir, maxCompactedRecordsPerFile); err != nil {
 				return err
 			}
 		}
@@ -401,23 +403,87 @@ func (s *ParquetLogDataStore) Compact(currentDate string) error {
 	return nil
 }
 
-func (s *ParquetLogDataStore) compactDateDir(dir string) error {
+func (s *ParquetLogDataStore) compactDateDir(dir string, maxRecords int) error {
 	files, err := filepath.Glob(filepath.Join(dir, "*.parquet"))
 	if err != nil || len(files) <= 1 {
-		// Nothing to merge if 0 or 1 file
 		return nil
 	}
 
-	// Read all records from existing files
-	var allRecords []ParquetLogRecord
 	validFiles := []string{}
-
 	for _, filePath := range files {
 		if strings.HasPrefix(filepath.Base(filePath), "compacting_") {
 			_ = os.Remove(filePath)
-			continue
+		} else {
+			validFiles = append(validFiles, filePath)
+		}
+	}
+
+	if len(validFiles) <= 1 {
+		return nil
+	}
+	sort.Strings(validFiles)
+
+	var createdTempFiles []string
+	var createdFinalFiles []string
+
+	var currentWriter *parquet.GenericWriter[ParquetLogRecord]
+	var currentFile *os.File
+	var currentCount int
+	seq := 0
+
+	closeCurrentWriter := func() error {
+		if currentWriter != nil {
+			if err := currentWriter.Close(); err != nil {
+				_ = currentFile.Close()
+				return err
+			}
+			if err := currentFile.Close(); err != nil {
+				return err
+			}
+			currentWriter = nil
+			currentFile = nil
+		}
+		return nil
+	}
+
+	openNewWriter := func() error {
+		if err := closeCurrentWriter(); err != nil {
+			return err
 		}
 
+		var randBytes [4]byte
+		_, _ = rand.Read(randBytes[:])
+		randVal := binary.BigEndian.Uint32(randBytes[:])
+		nowNano := time.Now().UnixNano()
+
+		tmpFileName := fmt.Sprintf("compacting_%016x_%04x_%08x.parquet", nowNano, seq, randVal)
+		finalFileName := fmt.Sprintf("compacted_%016x_%04x_%08x.parquet", nowNano, seq, randVal)
+		seq++
+
+		tmpFilePath := filepath.Join(dir, tmpFileName)
+		finalFilePath := filepath.Join(dir, finalFileName)
+
+		outFile, err := os.Create(tmpFilePath)
+		if err != nil {
+			return fmt.Errorf("create compacted parquet file: %w", err)
+		}
+		currentFile = outFile
+		currentWriter = parquet.NewGenericWriter[ParquetLogRecord](outFile)
+		currentCount = 0
+
+		createdTempFiles = append(createdTempFiles, tmpFilePath)
+		createdFinalFiles = append(createdFinalFiles, finalFilePath)
+		return nil
+	}
+
+	defer func() {
+		_ = closeCurrentWriter()
+	}()
+
+	buf := make([]ParquetLogRecord, 1024)
+	totalProcessed := 0
+
+	for _, filePath := range validFiles {
 		f, err := os.Open(filePath)
 		if err != nil {
 			continue
@@ -427,7 +493,6 @@ func (s *ParquetLogDataStore) compactDateDir(dir string) error {
 			_ = f.Close()
 			continue
 		}
-
 		pf, err := parquet.OpenFile(f, fi.Size())
 		if err != nil {
 			_ = f.Close()
@@ -435,11 +500,35 @@ func (s *ParquetLogDataStore) compactDateDir(dir string) error {
 		}
 
 		reader := parquet.NewGenericReader[ParquetLogRecord](pf)
-		buf := make([]ParquetLogRecord, 1024)
 		for {
 			n, err := reader.Read(buf)
 			if n > 0 {
-				allRecords = append(allRecords, buf[:n]...)
+				if currentWriter == nil {
+					if err := openNewWriter(); err != nil {
+						_ = reader.Close()
+						_ = f.Close()
+						cleanupTempFiles(createdTempFiles)
+						return err
+					}
+				}
+
+				if _, writeErr := currentWriter.Write(buf[:n]); writeErr != nil {
+					_ = reader.Close()
+					_ = f.Close()
+					cleanupTempFiles(createdTempFiles)
+					return fmt.Errorf("write streaming parquet records: %w", writeErr)
+				}
+				currentCount += n
+				totalProcessed += n
+
+				if maxRecords > 0 && currentCount >= maxRecords {
+					if err := openNewWriter(); err != nil {
+						_ = reader.Close()
+						_ = f.Close()
+						cleanupTempFiles(createdTempFiles)
+						return err
+					}
+				}
 			}
 			if err != nil {
 				break
@@ -447,52 +536,33 @@ func (s *ParquetLogDataStore) compactDateDir(dir string) error {
 		}
 		_ = reader.Close()
 		_ = f.Close()
-		validFiles = append(validFiles, filePath)
 	}
 
-	if len(validFiles) <= 1 || len(allRecords) == 0 {
+	if err := closeCurrentWriter(); err != nil {
+		cleanupTempFiles(createdTempFiles)
+		return err
+	}
+
+	if totalProcessed == 0 {
+		cleanupTempFiles(createdTempFiles)
 		return nil
 	}
 
-	// Sort records by Time
-	sort.Slice(allRecords, func(i, j int) bool {
-		return allRecords[i].Time < allRecords[j].Time
-	})
-
-	var randBytes [4]byte
-	_, _ = rand.Read(randBytes[:])
-	randVal := binary.BigEndian.Uint32(randBytes[:])
-
-	tmpFileName := fmt.Sprintf("compacting_%016x_%08x.parquet", time.Now().UnixNano(), randVal)
-	tmpFilePath := filepath.Join(dir, tmpFileName)
-
-	outFile, err := os.Create(tmpFilePath)
-	if err != nil {
-		return fmt.Errorf("create compacted parquet file: %w", err)
-	}
-
-	writer := parquet.NewGenericWriter[ParquetLogRecord](outFile)
-	if _, err := writer.Write(allRecords); err != nil {
-		_ = outFile.Close()
-		_ = os.Remove(tmpFilePath)
-		return fmt.Errorf("write compacted parquet records: %w", err)
-	}
-	if err := writer.Close(); err != nil {
-		_ = outFile.Close()
-		_ = os.Remove(tmpFilePath)
-		return fmt.Errorf("close compacted parquet writer: %w", err)
-	}
-	_ = outFile.Close()
-
-	// Remove old files
+	// Remove old source files
 	for _, oldFile := range validFiles {
 		_ = os.Remove(oldFile)
 	}
 
-	// Rename temporary file to final compacted file
-	finalFileName := fmt.Sprintf("compacted_%016x_%08x.parquet", time.Now().UnixNano(), randVal)
-	finalFilePath := filepath.Join(dir, finalFileName)
-	_ = os.Rename(tmpFilePath, finalFilePath)
+	// Rename temporary files to final compacted files
+	for i := range createdTempFiles {
+		_ = os.Rename(createdTempFiles[i], createdFinalFiles[i])
+	}
 
 	return nil
+}
+
+func cleanupTempFiles(files []string) {
+	for _, f := range files {
+		_ = os.Remove(f)
+	}
 }

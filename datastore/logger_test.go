@@ -419,3 +419,55 @@ func TestParquetCompaction(t *testing.T) {
 		t.Errorf("unexpected compacted log order: %+v", allRead)
 	}
 }
+
+func TestParquetCompactionSplit(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "twlogeye_compaction_split_test_*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	pStore := NewParquetLogDataStore()
+	if err := pStore.Open(tmpDir); err != nil {
+		t.Fatalf("Open failed: %v", err)
+	}
+	defer pStore.Close()
+
+	// Create 5 separate entries on a past date
+	yesterday := time.Now().Add(-24 * time.Hour)
+	yesterdayStr := yesterday.Format("2006-01-02")
+	baseTime := yesterday.UnixNano()
+
+	for i := 1; i <= 5; i++ {
+		entry := []*LogEnt{{Time: baseTime + int64(i*100), Type: Syslog, Src: "h", Log: "split log"}}
+		_ = pStore.SaveLogs("syslog", entry)
+		_ = pStore.Flush()
+	}
+
+	pastDateDir := filepath.Join(tmpDir, "type=syslog", "date="+yesterdayStr)
+	filesBefore, _ := filepath.Glob(filepath.Join(pastDateDir, "*.parquet"))
+	if len(filesBefore) != 5 {
+		t.Fatalf("expected 5 files before compaction, got %d", len(filesBefore))
+	}
+
+	// Compact with maxRecords = 2 (should split 5 records into 3 files: 2 + 2 + 1)
+	if err := pStore.compactDateDir(pastDateDir, 2); err != nil {
+		t.Fatalf("compactDateDir failed: %v", err)
+	}
+
+	filesAfter, _ := filepath.Glob(filepath.Join(pastDateDir, "*.parquet"))
+	if len(filesAfter) != 3 {
+		t.Fatalf("expected 3 split compacted files, got %d", len(filesAfter))
+	}
+
+	// Verify all 5 records are scanned
+	var allRead []*LogEnt
+	pStore.ForEachLog("syslog", 0, 0, func(l *LogEnt) bool {
+		allRead = append(allRead, l)
+		return true
+	})
+
+	if len(allRead) != 5 {
+		t.Fatalf("expected 5 total logs, got %d", len(allRead))
+	}
+}
