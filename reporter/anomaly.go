@@ -92,36 +92,69 @@ func loadReportData() {
 		syslogAnomaly.Vectors = append(syslogAnomaly.Vectors, syslogReportToVector(r))
 		return true
 	})
+	if len(syslogAnomaly.Times) >= 10 {
+		calcAnomalyScore("syslog", &syslogAnomaly)
+	}
+
 	trapAnomaly = anomalyCheckDataEnt{}
 	datastore.ForEachTrapReport(0, time.Now().UnixNano(), func(r *datastore.TrapReportEnt) bool {
 		trapAnomaly.Times = append(trapAnomaly.Times, r.Time)
 		trapAnomaly.Vectors = append(trapAnomaly.Vectors, trapReportToVector(r))
 		return true
 	})
+	if len(trapAnomaly.Times) >= 10 {
+		calcAnomalyScore("trap", &trapAnomaly)
+	}
+
 	netflowAnomaly = anomalyCheckDataEnt{}
 	datastore.ForEachNetflowReport(0, time.Now().UnixNano(), func(r *datastore.NetflowReportEnt) bool {
 		netflowAnomaly.Times = append(netflowAnomaly.Times, r.Time)
 		netflowAnomaly.Vectors = append(netflowAnomaly.Vectors, netflowReportToVector(r))
 		return true
 	})
+	if len(netflowAnomaly.Times) >= 10 {
+		calcAnomalyScore("netflow", &netflowAnomaly)
+	}
+
 	wineventAnomaly = anomalyCheckDataEnt{}
 	datastore.ForEachWindowsEventReport(0, time.Now().UnixNano(), func(r *datastore.WindowsEventReportEnt) bool {
 		wineventAnomaly.Times = append(wineventAnomaly.Times, r.Time)
 		wineventAnomaly.Vectors = append(wineventAnomaly.Vectors, wineventReportToVector(r))
 		return true
 	})
+	if len(wineventAnomaly.Times) >= 10 {
+		calcAnomalyScore("winevent", &wineventAnomaly)
+	}
+
 	otelAnomaly = anomalyCheckDataEnt{}
 	datastore.ForEachOTelReport(0, time.Now().UnixNano(), func(r *datastore.OTelReportEnt) bool {
 		otelAnomaly.Times = append(otelAnomaly.Times, r.Time)
 		otelAnomaly.Vectors = append(otelAnomaly.Vectors, otelReportToVector(r))
 		return true
 	})
+	if len(otelAnomaly.Times) >= 10 {
+		calcAnomalyScore("otel", &otelAnomaly)
+	}
+
+	mqttAnomaly = anomalyCheckDataEnt{}
+	datastore.ForEachMqttReport(0, time.Now().UnixNano(), func(r *datastore.MqttReportEnt) bool {
+		mqttAnomaly.Times = append(mqttAnomaly.Times, r.Time)
+		mqttAnomaly.Vectors = append(mqttAnomaly.Vectors, mqttReportToVector(r))
+		return true
+	})
+	if len(mqttAnomaly.Times) >= 10 {
+		calcAnomalyScore("mqtt", &mqttAnomaly)
+	}
+
 	monitorAnomaly = anomalyCheckDataEnt{}
 	datastore.ForEachMonitorReport(0, time.Now().UnixNano(), func(r *datastore.MonitorReportEnt) bool {
 		monitorAnomaly.Times = append(monitorAnomaly.Times, r.Time)
 		monitorAnomaly.Vectors = append(monitorAnomaly.Vectors, monitorReportToVector(r))
 		return true
 	})
+	if len(monitorAnomaly.Times) >= 10 {
+		calcAnomalyScore("monitor", &monitorAnomaly)
+	}
 }
 
 func syslogReportToVector(r *datastore.SyslogReportEnt) []float64 {

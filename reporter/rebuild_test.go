@@ -203,3 +203,74 @@ func TestRebuildReportsFromLogs(t *testing.T) {
 		t.Errorf("expected 1 netflow anomaly times after loadReportData, got %d", len(netflowAnomaly.Times))
 	}
 }
+
+func TestRebuildReportsAnomalyScore(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "twlogeye_rebuild_anomaly_test_*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	datastore.Config.DBPath = ""
+	datastore.Config.LogPath = filepath.Join(tmpDir, "logs.parquet")
+	datastore.Config.ReportInterval = 5
+	datastore.Config.ReportRetention = 7
+	datastore.Config.ReportTopN = 10
+	datastore.OpenDB()
+	defer datastore.CloseDB()
+
+	Init()
+
+	now := time.Now().UnixNano()
+	intervalNano := int64(5 * 60 * 1000 * 1000 * 1000)
+
+	// Create 15 intervals of syslog logs to satisfy >= 10 threshold for anomaly score calculation
+	var logs []*datastore.LogEnt
+	for i := 15; i >= 1; i-- {
+		slotTime := now - int64(i)*intervalNano
+		syslogData, _ := json.Marshal(map[string]any{
+			"hostname": "server1",
+			"severity": 3 + (i % 4),
+			"tag":      "test",
+			"content":  "test message",
+		})
+		logs = append(logs, &datastore.LogEnt{
+			Time: slotTime + 100,
+			Type: datastore.Syslog,
+			Src:  "server1",
+			Log:  string(syslogData),
+		})
+	}
+	if err := datastore.SaveLogs("syslog", logs); err != nil {
+		t.Fatalf("SaveLogs failed: %v", err)
+	}
+	_ = datastore.FlushLog()
+
+	// Clear in-memory Badger
+	datastore.ClearReport("all")
+
+	// Rebuild
+	RebuildReportsFromLogs(7)
+
+	// Load into Anomaly and trigger calculation
+	loadReportData()
+
+	// Verify that Anomaly report for syslog exists in datastore
+	var anomalyCount int
+	datastore.ForEachAnomalyReport("syslog", 0, now+intervalNano, func(r *datastore.AnomalyReportEnt) bool {
+		anomalyCount++
+		return true
+	})
+
+	if anomalyCount < 10 {
+		t.Errorf("expected at least 10 anomaly scores for syslog, got %d", anomalyCount)
+	}
+
+	lastAnomaly := datastore.GetLastAnomalyReport("syslog")
+	if lastAnomaly == nil {
+		t.Fatal("expected GetLastAnomalyReport('syslog') not to be nil")
+	}
+	if lastAnomaly.Score <= 0 {
+		t.Errorf("expected positive anomaly score, got %f", lastAnomaly.Score)
+	}
+}
