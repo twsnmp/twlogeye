@@ -24,6 +24,9 @@ func Init() {
 }
 
 func Start(ctx context.Context, wg *sync.WaitGroup) {
+	// Rebuild historical reports into in-memory Badger from datastore (Parquet/Badger)
+	RebuildReportsFromLogs(7)
+
 	wg.Add(1)
 	go startSyslog(ctx, wg)
 	wg.Add(1)
