@@ -154,3 +154,11 @@ func (s *BadgerLogDataStore) Compact(currentDate string) error {
 func (s *BadgerLogDataStore) Flush() error {
 	return nil
 }
+
+func (s *BadgerLogDataStore) Size() int64 {
+	if s.db == nil {
+		return 0
+	}
+	lsm, dbs := s.db.Size()
+	return lsm + dbs
+}

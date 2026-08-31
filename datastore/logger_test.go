@@ -471,3 +471,34 @@ func TestParquetCompactionSplit(t *testing.T) {
 		t.Fatalf("expected 5 total logs, got %d", len(allRead))
 	}
 }
+
+func TestParquetGetDBSize(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "twlogeye_size_test_*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	Config.DBPath = ""
+	Config.LogPath = filepath.Join(tmpDir, "logs.parquet")
+	Config.ParquetBufferSize = 1
+	OpenDB()
+	defer CloseDB()
+
+	// Initially empty
+	initSize := GetDBSize()
+
+	// Save a log entry
+	logs := []*LogEnt{
+		{Time: time.Now().UnixNano(), Type: Syslog, Src: "host1", Log: "test size message"},
+	}
+	if err := SaveLogs("syslog", logs); err != nil {
+		t.Fatalf("SaveLogs failed: %v", err)
+	}
+	_ = FlushLog()
+
+	sizeAfter := GetDBSize()
+	if sizeAfter <= initSize {
+		t.Errorf("expected DB size to increase after saving logs, got init=%d, after=%d", initSize, sizeAfter)
+	}
+}

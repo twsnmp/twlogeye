@@ -566,3 +566,17 @@ func cleanupTempFiles(files []string) {
 		_ = os.Remove(f)
 	}
 }
+
+func (s *ParquetLogDataStore) Size() int64 {
+	var totalSize int64
+	if s.dirPath == "" {
+		return 0
+	}
+	_ = filepath.Walk(s.dirPath, func(path string, info os.FileInfo, err error) error {
+		if err == nil && info != nil && !info.IsDir() {
+			totalSize += info.Size()
+		}
+		return nil
+	})
+	return totalSize
+}

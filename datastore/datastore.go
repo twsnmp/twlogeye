@@ -26,6 +26,7 @@ type LogDataStore interface {
 	Cleanup(retentionHours int) error
 	Compact(currentDate string) error
 	Flush() error
+	Size() int64
 }
 
 var (
@@ -128,11 +129,19 @@ func CloseDB() {
 }
 
 func GetDBSize() int64 {
-	if db == nil {
-		return 0
+	metaSize := int64(0)
+	if db != nil {
+		lsm, dbs := db.Size()
+		metaSize = lsm + dbs
 	}
-	lsm, dbs := db.Size()
-	return lsm + dbs
+	if logStore != nil {
+		if b, ok := logStore.(*BadgerLogDataStore); ok && !b.ownedDB {
+			// Shared db, already counted in metaSize
+			return metaSize
+		}
+		return metaSize + logStore.Size()
+	}
+	return metaSize
 }
 
 func GetLogStore() LogDataStore {
