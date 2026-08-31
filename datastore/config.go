@@ -60,6 +60,8 @@ type ConfigEnt struct {
 	AnomalyUseTimeData bool `yaml:"anomalyUseTimeData"`
 	// Grace period for sending notifications when detecting anomalies
 	AnomalyNotifyDelay int `yaml:"anomalyNotifyDelay"`
+	// Anomaly detection algorithm (iforest, autoencoder, lstm, lof, knn, mahalanobis, zscore)
+	AnomalyAlgo string `yaml:"anomalyAlgo"`
 	// GROK
 	GrokPat []string `yaml:"grokPat"`
 	GrokDef string   `yaml:"grokDef"`

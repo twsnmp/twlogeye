@@ -188,6 +188,7 @@ Usage:
   twlogeye start [flags]
 
 Flags:
+      --anomalyAlgo string             Anomaly detection algorithm (iforest|autoencoder|lstm|lof|knn|mahalanobis|zscore) (default "iforest")
       --anomalyNotifyDelay int         Grace period for sending notifications when detecting anomalies (default 24)
       --anomalyReportThreshold float   anomaly report threshold
       --anomalyUseTime                 Include weekends and hours in the vector data for anomaly detection
@@ -784,6 +785,7 @@ TwLogEyeにロードされているSigmaルールを再読み込みします。
 * **`anomalyReportThreshold`**: 異常検知の閾値を表す浮動小数点値。
 * **`anomalyUseTimeData`**: 異常検知分析に時間と曜日のデータを含めるかどうかのブール値フラグ。
 * **`anomalyNotifyDelay`**: 異常検知時に通知を送信するまでの猶予期間を時間単位で指定します。
+* **`anomalyAlgo`**: 異常検知アルゴリズム (`iforest`, `autoencoder`, `lstm`, `lof`, `knn`, `mahalanobis`, `zscore`) を指定します（デフォルト: `iforest`）。
 
 ---
 

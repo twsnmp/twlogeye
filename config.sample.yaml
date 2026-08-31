@@ -40,6 +40,7 @@ reportTopN: 10
 anomalyReportThreshold: 0.01
 anomalyUseTimeData: true
 anomalyNotifyDelay: 30
+anomalyAlgo: iforest # iforest | autoencoder | lstm | lof | knn | mahalanobis | zscore
 grockPat: []
 grokDef: ""
 namedCaptures: ""

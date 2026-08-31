@@ -8,11 +8,9 @@ import (
 	"time"
 
 	"github.com/montanaflynn/stats"
-
-	iforest "github.com/codegaudi/go-iforest"
-
 	"github.com/twsnmp/twlogeye/auditor"
 	"github.com/twsnmp/twlogeye/datastore"
+	"github.com/twsnmp/twlogeye/pkg/anomaly"
 )
 
 type anomalyChannelData struct {
@@ -203,18 +201,18 @@ func calcAnomalyScore(t string, a *anomalyCheckDataEnt) {
 		return
 	}
 	vectors := getVectors(a)
-	subSamplingSize := 256
-	if len(vectors) < subSamplingSize {
-		subSamplingSize = len(vectors)
-	}
-	i, err := iforest.NewIForest(vectors, 1000, subSamplingSize)
+	detector, err := anomaly.NewDetector(datastore.Config.AnomalyAlgo)
 	if err != nil {
-		log.Printf("calcAnomalyScore err=%v", err)
+		log.Printf("calcAnomalyScore new detector err=%v, fallback to iforest", err)
+		detector = anomaly.NewIForestDetector()
+	}
+	if err := detector.Fit(vectors); err != nil {
+		log.Printf("calcAnomalyScore fit err=%v", err)
 		return
 	}
 	r := make([]float64, len(vectors))
 	for j, v := range vectors {
-		r[j] = i.CalculateAnomalyScore(v)
+		r[j] = detector.Score(v)
 	}
 	max, err := stats.Max(r)
 	if err != nil {

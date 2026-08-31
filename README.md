@@ -191,6 +191,7 @@ Usage:
   twlogeye start [flags]
 
 Flags:
+      --anomalyAlgo string             Anomaly detection algorithm (iforest|autoencoder|lstm|lof|knn|mahalanobis|zscore) (default "iforest")
       --anomalyNotifyDelay int         Grace period for sending notifications when detecting anomalies (default 24)
       --anomalyReportThreshold float   anomaly report threshold
       --anomalyUseTime                 Include weekends and hours in the vector data for anomaly detection
@@ -768,6 +769,7 @@ YAML format. It corresponds to the following keys.
 * **`anomalyReportThreshold`**: A floating-point value representing the threshold for anomaly detection.
 * **`anomalyUseTimeData`**: A boolean flag to include time and day of the week data in anomaly detection analysis.
 * **`anomalyNotifyDelay`**: The grace period in hours before sending a notification for a detected anomaly.
+* **`anomalyAlgo`**: The anomaly detection algorithm to use (`iforest`, `autoencoder`, `lstm`, `lof`, `knn`, `mahalanobis`, `zscore`, default: `iforest`).
 
 ---
 
