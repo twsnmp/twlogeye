@@ -203,6 +203,8 @@ func TestParquetCleanup(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	Config.LogRetentionDays = 0
+
 	pStore := NewParquetLogDataStore()
 	if err := pStore.Open(tmpDir); err != nil {
 		t.Fatalf("Open failed: %v", err)
@@ -210,7 +212,7 @@ func TestParquetCleanup(t *testing.T) {
 	defer pStore.Close()
 
 	// Old date (3 days ago)
-	oldTime := time.Now().Add(-72 * time.Hour).UnixNano()
+	oldTime := time.Now().AddDate(0, 0, -3).UnixNano()
 	oldLogs := []*LogEnt{
 		{Time: oldTime, Type: Syslog, Src: "oldHost", Log: "old log"},
 	}
@@ -227,12 +229,12 @@ func TestParquetCleanup(t *testing.T) {
 		t.Fatalf("SaveLogs new failed: %v", err)
 	}
 
-	// Run cleanup with retention of 48 hours
+	// Run cleanup with retention of 48 hours (2 days)
 	if err := pStore.Cleanup(48); err != nil {
 		t.Fatalf("Cleanup failed: %v", err)
 	}
 
-	// Old logs should be gone, new logs should remain
+	// Old logs (3 days ago) should be gone, new logs should remain
 	var remaining []*LogEnt
 	pStore.ForEachLog("syslog", 0, 0, func(l *LogEnt) bool {
 		remaining = append(remaining, l)
@@ -241,6 +243,70 @@ func TestParquetCleanup(t *testing.T) {
 
 	if len(remaining) != 1 || remaining[0].Log != "new log" {
 		t.Fatalf("expected 1 remaining log ('new log'), got %d (%v)", len(remaining), remaining)
+	}
+
+	// Test minimum 1 day guarantee: retentionHours < 24 should still keep yesterday's log
+	yesterdayTime := time.Now().AddDate(0, 0, -1).UnixNano()
+	yLogs := []*LogEnt{
+		{Time: yesterdayTime, Type: Syslog, Src: "yHost", Log: "yesterday log"},
+	}
+	if err := pStore.SaveLogs("syslog", yLogs); err != nil {
+		t.Fatalf("SaveLogs yesterday failed: %v", err)
+	}
+
+	// Cleanup with 1 hour retention (should keep at least 1 day)
+	if err := pStore.Cleanup(1); err != nil {
+		t.Fatalf("Cleanup 1h failed: %v", err)
+	}
+
+	var after1h []*LogEnt
+	pStore.ForEachLog("syslog", 0, 0, func(l *LogEnt) bool {
+		after1h = append(after1h, l)
+		return true
+	})
+	if len(after1h) != 2 {
+		t.Fatalf("expected 2 logs kept with minimum 1 day retention, got %d", len(after1h))
+	}
+}
+
+func TestParquetCleanupDays(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "twlogeye_cleanup_days_test_*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	pStore := NewParquetLogDataStore()
+	if err := pStore.Open(tmpDir); err != nil {
+		t.Fatalf("Open failed: %v", err)
+	}
+	defer pStore.Close()
+
+	// 5 days ago, 2 days ago, today
+	t5 := time.Now().AddDate(0, 0, -5).UnixNano()
+	t2 := time.Now().AddDate(0, 0, -2).UnixNano()
+	t0 := time.Now().UnixNano()
+
+	_ = pStore.SaveLogs("syslog", []*LogEnt{{Time: t5, Type: Syslog, Src: "h5", Log: "log5"}})
+	_ = pStore.SaveLogs("syslog", []*LogEnt{{Time: t2, Type: Syslog, Src: "h2", Log: "log2"}})
+	_ = pStore.SaveLogs("syslog", []*LogEnt{{Time: t0, Type: Syslog, Src: "h0", Log: "log0"}})
+	_ = pStore.Flush()
+
+	// Set LogRetentionDays = 3 and retentionHours = 24 (1 day). LogRetentionDays (3) is larger and should be used.
+	Config.LogRetentionDays = 3
+	if err := pStore.Cleanup(24); err != nil {
+		t.Fatalf("Cleanup failed: %v", err)
+	}
+
+	var remaining []*LogEnt
+	pStore.ForEachLog("syslog", 0, 0, func(l *LogEnt) bool {
+		remaining = append(remaining, l)
+		return true
+	})
+
+	// log5 (5 days ago) deleted, log2 (2 days ago) and log0 kept
+	if len(remaining) != 2 {
+		t.Fatalf("expected 2 logs remaining after 3-day cleanup, got %d", len(remaining))
 	}
 }
 

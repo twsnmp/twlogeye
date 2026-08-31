@@ -31,8 +31,8 @@ winAuth: ""
 #trapDst: []
 #webhookDst: []
 #mqttDst: []
-trapCommunity: "public"
 logRetention: 720
+#logRetentionDays: 30 # Log retention period in days (larger of logRetention and logRetentionDays is used for Parquet)
 notifyRetention: 30
 reportRetention: 30
 reportInterval: 60

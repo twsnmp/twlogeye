@@ -344,14 +344,22 @@ func (s *ParquetLogDataStore) ClearLog(t string) {
 }
 
 func (s *ParquetLogDataStore) Cleanup(retentionHours int) error {
-	if retentionHours <= 0 {
-		return nil
-	}
 	_ = s.Flush()
 
-	cutoffTime := time.Now().Add(-time.Hour * time.Duration(retentionHours))
+	hoursAsDays := 0
+	if retentionHours > 0 {
+		hoursAsDays = (retentionHours + 23) / 24
+	}
+	days := hoursAsDays
+	if Config.LogRetentionDays > days {
+		days = Config.LogRetentionDays
+	}
+	if days < 1 {
+		days = 1
+	}
+
+	cutoffTime := time.Now().AddDate(0, 0, -days)
 	cutoffDateStr := cutoffTime.Format("2006-01-02")
-	cutoffNano := cutoffTime.UnixNano()
 
 	typeDirs, _ := filepath.Glob(filepath.Join(s.dirPath, "type=*"))
 	for _, tDir := range typeDirs {
@@ -361,15 +369,6 @@ func (s *ParquetLogDataStore) Cleanup(retentionHours int) error {
 			dStr := strings.TrimPrefix(base, "date=")
 			if dStr < cutoffDateStr {
 				_ = os.RemoveAll(dDir)
-			} else if dStr == cutoffDateStr {
-				files, _ := filepath.Glob(filepath.Join(dDir, "*.parquet"))
-				for _, f := range files {
-					if fi, err := os.Stat(f); err == nil {
-						if fi.ModTime().UnixNano() < cutoffNano {
-							_ = os.Remove(f)
-						}
-					}
-				}
 			}
 		}
 	}

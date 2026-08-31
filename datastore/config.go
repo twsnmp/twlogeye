@@ -46,6 +46,8 @@ type ConfigEnt struct {
 
 	// Log retention period (hours)
 	LogRetention int `yaml:"logRetention"`
+	// Log retention period (days)
+	LogRetentionDays int `yaml:"logRetentionDays"`
 	// Notify retention period (days)
 	NotifyRetention int `yaml:"notifyRetention"`
 	// Report retention period (days)
