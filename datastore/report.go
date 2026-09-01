@@ -96,6 +96,9 @@ func SaveSyslogReport(r *SyslogReportEnt) {
 }
 
 func GetLastSyslogReport() *SyslogReportEnt {
+	if db == nil {
+		return nil
+	}
 	var r *SyslogReportEnt
 	prefix := []byte("report:syslog:")
 	db.View(func(txn *badger.Txn) error {
@@ -122,6 +125,9 @@ func GetLastSyslogReport() *SyslogReportEnt {
 }
 
 func ForEachSyslogReport(st, et int64, callBack func(r *SyslogReportEnt) bool) {
+	if db == nil {
+		return
+	}
 	if et == 0 {
 		et = time.Now().UnixNano()
 	}
@@ -186,6 +192,9 @@ func SaveTrapReport(r *TrapReportEnt) {
 }
 
 func GetLastTrapReport() *TrapReportEnt {
+	if db == nil {
+		return nil
+	}
 	var r *TrapReportEnt
 	prefix := []byte("report:trap:")
 	db.View(func(txn *badger.Txn) error {
@@ -212,6 +221,9 @@ func GetLastTrapReport() *TrapReportEnt {
 }
 
 func ForEachTrapReport(st, et int64, callBack func(r *TrapReportEnt) bool) {
+	if db == nil {
+		return
+	}
 	if et == 0 {
 		et = time.Now().UnixNano()
 	}
@@ -288,6 +300,9 @@ type NetflowReportEnt struct {
 }
 
 func SaveNetflowReport(r *NetflowReportEnt) {
+	if db == nil {
+		return
+	}
 	db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("report:netflow:%016x", r.Time)
 		if v, err := json.Marshal(r); err == nil {
@@ -303,6 +318,9 @@ func SaveNetflowReport(r *NetflowReportEnt) {
 }
 
 func GetLastNetflowReport() *NetflowReportEnt {
+	if db == nil {
+		return nil
+	}
 	var r *NetflowReportEnt
 	prefix := []byte("report:netflow:")
 	db.View(func(txn *badger.Txn) error {
@@ -329,6 +347,9 @@ func GetLastNetflowReport() *NetflowReportEnt {
 }
 
 func ForEachNetflowReport(st, et int64, callBack func(r *NetflowReportEnt) bool) {
+	if db == nil {
+		return
+	}
 	if et == 0 {
 		et = time.Now().UnixNano()
 	}
@@ -383,6 +404,9 @@ type WindowsEventReportEnt struct {
 }
 
 func SaveWindowsEventReport(r *WindowsEventReportEnt) {
+	if db == nil {
+		return
+	}
 	db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("report:winevent:%016x", r.Time)
 		if v, err := json.Marshal(r); err == nil {
@@ -398,6 +422,9 @@ func SaveWindowsEventReport(r *WindowsEventReportEnt) {
 }
 
 func GetLastWindowsEventReport() *WindowsEventReportEnt {
+	if db == nil {
+		return nil
+	}
 	var r *WindowsEventReportEnt
 	prefix := []byte("report:winevent:")
 	db.View(func(txn *badger.Txn) error {
@@ -424,6 +451,9 @@ func GetLastWindowsEventReport() *WindowsEventReportEnt {
 }
 
 func ForEachWindowsEventReport(st, et int64, callBack func(r *WindowsEventReportEnt) bool) {
+	if db == nil {
+		return
+	}
 	if et == 0 {
 		et = time.Now().UnixNano()
 	}
@@ -460,6 +490,9 @@ type AnomalyReportEnt struct {
 }
 
 func SaveAnomalyReport(t string, list []*AnomalyReportEnt) {
+	if db == nil {
+		return
+	}
 	db.DropPrefix([]byte("report:anomaly:" + t + ":"))
 	db.Update(func(txn *badger.Txn) error {
 		for _, r := range list {
@@ -478,6 +511,9 @@ func SaveAnomalyReport(t string, list []*AnomalyReportEnt) {
 }
 
 func GetLastAnomalyReport(t string) *AnomalyReportEnt {
+	if db == nil {
+		return nil
+	}
 	var r *AnomalyReportEnt
 	prefix := []byte("report:anomaly:" + t)
 	db.View(func(txn *badger.Txn) error {
@@ -504,6 +540,9 @@ func GetLastAnomalyReport(t string) *AnomalyReportEnt {
 }
 
 func ForEachAnomalyReport(t string, st, et int64, callBack func(r *AnomalyReportEnt) bool) {
+	if db == nil {
+		return
+	}
 	if et == 0 {
 		et = time.Now().UnixNano()
 	}
@@ -547,6 +586,9 @@ type MonitorReportEnt struct {
 }
 
 func SaveMonitorReport(r *MonitorReportEnt) {
+	if db == nil {
+		return
+	}
 	db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("report:monitor:%016x", r.Time)
 		if v, err := json.Marshal(r); err == nil {
@@ -562,6 +604,9 @@ func SaveMonitorReport(r *MonitorReportEnt) {
 }
 
 func GetLastMonitorReport() *MonitorReportEnt {
+	if db == nil {
+		return nil
+	}
 	var r *MonitorReportEnt
 	prefix := []byte("report:monitor:")
 	db.View(func(txn *badger.Txn) error {
@@ -588,6 +633,9 @@ func GetLastMonitorReport() *MonitorReportEnt {
 }
 
 func ForEachMonitorReport(st, et int64, callBack func(r *MonitorReportEnt) bool) {
+	if db == nil {
+		return
+	}
 	if et == 0 {
 		et = time.Now().UnixNano()
 	}
@@ -642,6 +690,9 @@ type OTelReportEnt struct {
 }
 
 func SaveOTelReport(r *OTelReportEnt) {
+	if db == nil {
+		return
+	}
 	db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("report:otel:%016x", r.Time)
 		if v, err := json.Marshal(r); err == nil {
@@ -657,6 +708,9 @@ func SaveOTelReport(r *OTelReportEnt) {
 }
 
 func GetLastOTelReport() *OTelReportEnt {
+	if db == nil {
+		return nil
+	}
 	var r *OTelReportEnt
 	prefix := []byte("report:otel:")
 	db.View(func(txn *badger.Txn) error {
@@ -683,6 +737,9 @@ func GetLastOTelReport() *OTelReportEnt {
 }
 
 func ForEachOTelReport(st, et int64, callBack func(r *OTelReportEnt) bool) {
+	if db == nil {
+		return
+	}
 	if et == 0 {
 		et = time.Now().UnixNano()
 	}
@@ -733,6 +790,9 @@ type MqttReportEnt struct {
 }
 
 func SaveMqttReport(r *MqttReportEnt) {
+	if db == nil {
+		return
+	}
 	db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("report:mqtt:%016x", r.Time)
 		if v, err := json.Marshal(r); err == nil {
@@ -748,6 +808,9 @@ func SaveMqttReport(r *MqttReportEnt) {
 }
 
 func GetLastMqttReport() *MqttReportEnt {
+	if db == nil {
+		return nil
+	}
 	var r *MqttReportEnt
 	prefix := []byte("report:mqtt:")
 	db.View(func(txn *badger.Txn) error {
@@ -774,6 +837,9 @@ func GetLastMqttReport() *MqttReportEnt {
 }
 
 func ForEachMqttReport(st, et int64, callBack func(r *MqttReportEnt) bool) {
+	if db == nil {
+		return
+	}
 	if et == 0 {
 		et = time.Now().UnixNano()
 	}

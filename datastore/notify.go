@@ -11,6 +11,9 @@ import (
 )
 
 func ClearNotify() {
+	if db == nil {
+		return
+	}
 	db.DropPrefix([]byte("notify:"))
 }
 
@@ -28,6 +31,9 @@ type NotifyEnt struct {
 }
 
 func SaveNotify(n *NotifyEnt) {
+	if db == nil {
+		return
+	}
 	db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("notify:%016x:%s", n.Time, n.ID)
 		if v, err := json.Marshal(n); err == nil {
@@ -43,6 +49,9 @@ func SaveNotify(n *NotifyEnt) {
 }
 
 func ForEachNotify(st, et int64, callBack func(n *NotifyEnt) bool) {
+	if db == nil {
+		return
+	}
 	if et == 0 {
 		et = time.Now().UnixNano()
 	}

@@ -200,7 +200,7 @@ var regJSON = regexp.MustCompile(`^\s*{.+}\s*$`)
 var regSplunk = regexp.MustCompile(`\s*([a-zA-Z_]+[a-zA-Z0-9_]+)=([^ ,;]+)`)
 var namedCaptureRegList = []*regexp.Regexp{}
 
-func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
+func ParseLogData(l *datastore.LogEnt) map[string]interface{} {
 	var data map[string]interface{}
 	if err := json.Unmarshal([]byte(l.Log), &data); err != nil {
 		return nil
@@ -260,6 +260,29 @@ func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 			}
 		}
 	}
+	return data
+}
+
+func MatchSigmaRuleWithEvaluator(ev *evaluator.RuleEvaluator, l *datastore.LogEnt) bool {
+	data := ParseLogData(l)
+	if data == nil {
+		return false
+	}
+	r, err := ev.Matches(context.Background(), data)
+	if err != nil {
+		if datastore.Config.Debug {
+			log.Printf("sigma matches rule id=%s err=%+v", ev.Rule.ID, err)
+		}
+		return false
+	}
+	return r.Match
+}
+
+func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
+	data := ParseLogData(l)
+	if data == nil {
+		return nil
+	}
 	for _, ev := range evaluators {
 		r, err := ev.Matches(context.Background(), data)
 		if err != nil {
@@ -273,6 +296,21 @@ func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 		}
 	}
 	return nil
+}
+
+func CreateRuleEvaluator(c string) (*evaluator.RuleEvaluator, error) {
+	rule, err := sigma.ParseRule([]byte(c))
+	if err != nil && strings.Contains(err.Error(), "'*'") {
+		rule, err = autoFixSigmaRule([]byte(c), rule)
+	}
+	if err != nil {
+		return nil, err
+	}
+	config := getSigmaConfig(&rule)
+	if config != nil {
+		return evaluator.ForRule(rule, evaluator.WithConfig(*config), evaluator.CaseSensitive), nil
+	}
+	return evaluator.ForRule(rule, evaluator.CaseSensitive), nil
 }
 
 func GetSigmaRuleEvaluators() []*evaluator.RuleEvaluator {
@@ -440,4 +478,50 @@ func convertNumberToAlpha(input string) string {
 		}
 	}
 	return builder.String()
+}
+
+func GetRuleIDs() []string {
+	ids := []string{}
+	for _, e := range evaluators {
+		if e != nil && e.Rule.ID != "" {
+			ids = append(ids, e.Rule.ID)
+		}
+	}
+	return ids
+}
+
+func GetRule(id string) string {
+	// 1. First check DB
+	if r, err := datastore.GetSigmaRuleFromDB(id); err == nil && r != "" {
+		return r
+	}
+	// 2. Check loaded raw rules from ForEachSigmaRules
+	var found string
+	datastore.ForEachSigmaRules(func(c []byte, path string) {
+		if found != "" {
+			return
+		}
+		rule, err := sigma.ParseRule(c)
+		if err == nil {
+			ruleID := rule.ID
+			if ruleID == "" {
+				ruleID = path
+			}
+			if ruleID == id {
+				found = string(c)
+			}
+		}
+	})
+	if found != "" {
+		return found
+	}
+	// 3. Fallback: Search from loaded evaluators and Marshal to YAML
+	for _, e := range evaluators {
+		if e != nil && (e.Rule.ID == id || e.Rule.Title == id) {
+			if y, err := yaml.Marshal(e.Rule); err == nil {
+				return string(y)
+			}
+		}
+	}
+	return ""
 }

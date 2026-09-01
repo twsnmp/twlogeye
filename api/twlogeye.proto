@@ -57,6 +57,27 @@ service TWLogEyeService {
 	rpc GetOTelTraceList (Empty) returns (stream OTelTraceListEnt); 
   // Get OpenTelemetry Trace
   rpc GetOTelTrace (IDRequest) returns (OTelTraceEnt);
+  // Get Sigma Rule List
+  rpc GetSigmaRuleList (Empty) returns (SigmaRuleListResponse);
+  // Get Sigma Rule
+  rpc GetSigmaRule (IDRequest) returns (SigmaRuleResponse);
+  // Add Sigma Rule
+  rpc AddSigmaRule (SigmaRuleRequest) returns (ControlResponse);
+  // Delete Sigma Rule
+  rpc DeleteSigmaRule (IDRequest) returns (ControlResponse);
+}
+
+message SigmaRuleListResponse {
+  repeated string rule_ids = 1;
+}
+
+message SigmaRuleRequest {
+  string id = 1;
+  string rule = 2;
+}
+
+message SigmaRuleResponse {
+  string rule = 1;
 }
 
 message NofifyRequest {

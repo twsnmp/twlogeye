@@ -612,12 +612,36 @@ Global Flags:
       --serverKey string    API server private key
 ```
 
+## MCP (Model Context Protocol) サーバー
+
+TwLogEyeはMCPサーバー機能を備えており、Claude DesktopやCursor、AIエージェントなどのLLMクライアントと連携してログ分析やインシデント調査を行うことができます。
+
+### 接続方法
+
+#### 1. stdioモード (Claude Desktop / Cursor等でのローカル連携)
+`twlogeye mcp` コマンドで標準入出力 (stdio) 経由のMCPサーバーを起動できます。
+
+Claude Desktopの設定例 (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "twlogeye": {
+      "command": "twlogeye",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+#### 2. HTTPモード (リモート / Web連携)
+設定ファイルで `mcpEndpoint` (例: `0.0.0.0:8080`) を指定すると、`/mcp` エンドポイントでHTTP (SSE/Streamable HTTP) 経由の待ち受けを行います。
+`mcpToken` が設定されている場合は、`Authorization: Bearer <トークン>` による認証が必要です。
+
+---
+
 ## MCPサーバー ツールの仕様
 
-`mcp.go`で定義されているMCPサーバーのツールとそのパラメータについて説明します。
-
 ### `search_log`
-
 TwLogEyeからログを検索します。
 
 - **パラメータ:**
@@ -625,18 +649,49 @@ TwLogEyeからログを検索します。
   - `end` (string): 検索を終了する日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
   - `type` (string): ログの種別 (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt` のいずれか)。
   - `filter` (string): ログをフィルタリングするための正規表現。
+  - `limit` (int): 取得する最大件数（デフォルト: 100、最大: 1000）。
 
 ### `search_notify`
-
 TwLogEyeから通知を検索します。
 
 - **パラメータ:**
   - `start` (string): 検索を開始する日時 (例: `2025/08/30 11:00:00`)。指定しない場合は `1970/01/01 00:00:00` になります。
   - `end` (string): 検索を終了する日時 (例: `2025/08/30 11:00:00`)。指定しない場合は現在時刻になります。
   - `level` (string): 通知レベルをフィルタリングするための正規表現 (例: `high|critical`)。指定しない場合はフィルタリングされません。レベル名には `info`, `low`, `medium`, `high`, `critical` などがあります。
+  - `limit` (int): 取得する最大件数（デフォルト: 100、最大: 1000）。
+
+### `investigate_ip`
+指定したIPアドレスに関するGeoIP情報、DNS逆引きホスト名、および関連するログ・通知を集約調査します。
+
+- **パラメータ:**
+  - `ip` (string): 調査対象のIPアドレス。
+  - `start` (string): 調査対象の開始日時。指定しない場合は24時間前になります。
+  - `end` (string): 調査対象の終了日時。指定しない場合は現在時刻になります。
+  - `limit` (int): 取得する関連ログの最大件数（デフォルト: 20、最大: 100）。
+
+### `test_sigma_rule`
+作成したSigmaルールYAMLを過去ログに対してシミュレーション評価（バックテスト）し、マッチ件数とマッチしたログのサンプルを取得します。
+
+- **パラメータ:**
+  - `rule` (string): YAML形式のSigmaルール文字列。
+  - `type` (string): テスト対象のログ種別 (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`。デフォルト: `syslog`)。
+  - `start` (string): テスト対象の開始日時。指定しない場合は24時間前になります。
+  - `end` (string): テスト対象の終了日時。指定しない場合は現在時刻になります。
+  - `limit` (int): 取得するマッチログサンプルの最大件数（デフォルト: 5、最大: 50）。
+
+### `get_otel_trace`
+指定したTrace IDのOpenTelemetryトレース詳細（スパンツリー）を取得します。
+
+- **パラメータ:**
+  - `id` (string): 取得するOpenTelemetryのTrace ID。
+
+### `get_otel_metric`
+指定したMetric ID/KeyのOpenTelemetryメトリクス詳細を取得します。
+
+- **パラメータ:**
+  - `id` (string): 取得するOpenTelemetryのMetric ID。
 
 ### `get_report`
-
 TwLogEyeからレポートを取得します。
 
 - **パラメータ:**
@@ -645,7 +700,6 @@ TwLogEyeからレポートを取得します。
   - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`, `anomaly`, `monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
 
 ### `get_anomaly_report`
-
 TwLogEyeから異常検知のレポートを取得します。
 
 - **パラメータ:**
@@ -654,50 +708,62 @@ TwLogEyeから異常検知のレポートを取得します。
   - `type` (string): 異常検知レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
 
 ### `get_last_report`
-
 TwLogEyeから最新のレポートを取得します。
 
 - **パラメータ:**
   - `type` (string): レポートの種別 (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `anomaly`, `monitor` のいずれか)。`winevent` は Windowsイベントログを指します。
 
 ### `get_sigma_evaluator_list`
-
 TwLogEyeからSigmaルール評価器のリストを取得します。
 
 - **パラメータ:** なし
 
 ### `get_sigma_rule_id_list`
-
 TwLogEyeからSigmaルールのIDリストを取得します。
 
 - **パラメータ:** なし
 
 ### `get_sigma_rule`
-
 TwLogEyeから指定したIDのSigmaルールを取得します。
 
 - **パラメータ:** 
   - `id` (string): 取得するSigmaルールのID。
 
 ### `add_sigma_rule`
-
 TwLogEyeに新しいSigmaルールを追加します。
 
 - **パラメータ:** 
   - `rule` (string): YAML形式のSigmaルール文字列。
 
 ### `delete_sigma_rule`
-
 指定したIDのSigmaルールをTwLogEyeから削除します。
 
 - **パラメータ:** 
   - `id` (string): 削除するSigmaルールのID。
 
 ### `reload_sigma_rule`
-
 TwLogEyeにロードされているSigmaルールを再読み込みします。
 
 - **パラメータ:** なし
+
+---
+
+## MCP Resources (リソース)
+
+MCPクライアントから以下のURIでリソースを直接参照できます：
+
+* `twlogeye://status`: システム状態・リソース情報
+* `twlogeye://sigma/rules`: 有効なSigmaルールIDリスト
+* `twlogeye://reports/{type}/latest`: 各種最新レポート (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`, `monitor`, `anomaly`)
+
+---
+
+## MCP Prompts (プロンプト)
+
+* `investigate_incident`: インシデント対象（IP、ホスト名、通知ID）をもとに深層調査を行うプロンプト
+* `daily_security_briefing`: 過去24時間のセキュリティ状況を集約する日次ブリーフィングプロンプト
+* `test_and_add_sigma_rule`: Sigmaルールのバックテストから登録・反映を行うプロンプト
+* `search_log`, `search_notify`, `get_report`, `get_last_report`, `get_anomaly_report`: 各種検索・レポート取得プロンプト
 
 
 ## 設定ファイル

@@ -48,34 +48,46 @@ func ForEachSigmaConfig(callBack func(c string, d []byte)) {
 
 // ForEachSigmaRules : call back with sigma rule data
 func ForEachSigmaRules(callBack func(c []byte, path string)) {
-	if Config.SigmaRules == "" {
-		log.Println("no sigma rule path")
-		return
+	rulePath := Config.SigmaRules
+	if rulePath == "" {
+		rulePath = "embed:"
 	}
-	if strings.HasPrefix(Config.SigmaRules, "embed:") {
-		p := path.Join("sigma", "rules", Config.SigmaRules[6:])
-		l, err := sigmaFS.ReadDir(p)
-		if err != nil {
-			log.Fatalf("invalid rule path=%s err=%v", p, err)
+	if strings.HasPrefix(rulePath, "embed:") {
+		sub := ""
+		if len(rulePath) > 6 {
+			sub = rulePath[6:]
 		}
-		for _, f := range l {
-			if f.IsDir() {
-				continue
-			}
-			pf := path.Join(p, f.Name())
-			c, err := sigmaFS.ReadFile(pf)
+		p := "sigma/rules"
+		if sub != "" {
+			p = path.Join("sigma", "rules", sub)
+		}
+		fs.WalkDir(sigmaFS, p, func(filePath string, info fs.DirEntry, err error) error {
 			if err != nil {
-				log.Fatalf("invalid rule=path %s err=%v", p, err)
+				return err
 			}
-			callBack(c, p)
+			if info.IsDir() {
+				return nil
+			}
+			ext := strings.ToLower(filepath.Ext(filePath))
+			if ext != ".yaml" && ext != ".yml" {
+				return nil
+			}
+			c, err := sigmaFS.ReadFile(filePath)
+			if err != nil {
+				log.Printf("invalid rule path %s err=%v", filePath, err)
+				return nil
+			}
+			callBack(c, filePath)
+			return nil
+		})
+	} else {
+		for _, path := range getRulePath(rulePath) {
+			c, err := os.ReadFile(path)
+			if err != nil {
+				log.Fatalf("invalid rule %s %s", path, err)
+			}
+			callBack(c, path)
 		}
-	}
-	for _, path := range getRulePath(Config.SigmaRules) {
-		c, err := os.ReadFile(path)
-		if err != nil {
-			log.Fatalf("invalid rule %s %s", path, err)
-		}
-		callBack(c, path)
 	}
 	ForEachSigmaRuleOnDB(callBack)
 }
@@ -104,6 +116,9 @@ func getRulePath(root string) []string {
 }
 
 func AddSigmaRuleToDB(id, rule string) error {
+	if db == nil {
+		return fmt.Errorf("db not open")
+	}
 	return db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("sigma:rule:%s", id)
 		e := badger.NewEntry([]byte(k), []byte(rule))
@@ -112,6 +127,9 @@ func AddSigmaRuleToDB(id, rule string) error {
 }
 
 func GetSigmaRuleFromDB(id string) (string, error) {
+	if db == nil {
+		return "", fmt.Errorf("db not open")
+	}
 	r := ""
 	err := db.View(func(txn *badger.Txn) error {
 		if item, err := txn.Get([]byte("sigma:rule:" + id)); err == nil {
@@ -128,6 +146,9 @@ func GetSigmaRuleFromDB(id string) (string, error) {
 }
 
 func DeleteSigmaRuleFromDB(id string) error {
+	if db == nil {
+		return fmt.Errorf("db not open")
+	}
 	return db.Update(func(txn *badger.Txn) error {
 		k := fmt.Sprintf("sigma:rule:%s", id)
 		return txn.Delete([]byte(k))
@@ -135,6 +156,9 @@ func DeleteSigmaRuleFromDB(id string) error {
 }
 
 func ForEachSigmaRuleOnDB(callBack func(c []byte, id string)) {
+	if db == nil {
+		return
+	}
 	db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()

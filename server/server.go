@@ -118,6 +118,50 @@ func (s *apiServer) Reload(ctx context.Context, req *api.Empty) (*api.ControlRes
 	}, nil
 }
 
+func (s *apiServer) GetSigmaRuleList(ctx context.Context, req *api.Empty) (*api.SigmaRuleListResponse, error) {
+	return &api.SigmaRuleListResponse{
+		RuleIds: auditor.GetRuleIDs(),
+	}, nil
+}
+
+func (s *apiServer) GetSigmaRule(ctx context.Context, req *api.IDRequest) (*api.SigmaRuleResponse, error) {
+	r := auditor.GetRule(req.GetId())
+	if r == "" {
+		return nil, fmt.Errorf("sigma rule %s not found", req.GetId())
+	}
+	return &api.SigmaRuleResponse{
+		Rule: r,
+	}, nil
+}
+
+func (s *apiServer) AddSigmaRule(ctx context.Context, req *api.SigmaRuleRequest) (*api.ControlResponse, error) {
+	err := datastore.AddSigmaRuleToDB(req.GetId(), req.GetRule())
+	if err != nil {
+		return &api.ControlResponse{
+			Ok:      false,
+			Message: err.Error(),
+		}, err
+	}
+	return &api.ControlResponse{
+		Ok:      true,
+		Message: "add sigma rule id=" + req.GetId(),
+	}, nil
+}
+
+func (s *apiServer) DeleteSigmaRule(ctx context.Context, req *api.IDRequest) (*api.ControlResponse, error) {
+	err := datastore.DeleteSigmaRuleFromDB(req.GetId())
+	if err != nil {
+		return &api.ControlResponse{
+			Ok:      false,
+			Message: err.Error(),
+		}, err
+	}
+	return &api.ControlResponse{
+		Ok:      true,
+		Message: "delete sigma rule id=" + req.GetId(),
+	}, nil
+}
+
 func (s *apiServer) ClearDB(ctx context.Context, req *api.ClearRequest) (*api.ControlResponse, error) {
 	st := time.Now()
 	t := req.GetType()

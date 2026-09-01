@@ -594,12 +594,36 @@ Global Flags:
       --serverKey string    API server private key
 ```
 
+## MCP (Model Context Protocol) Server
+
+TwLogEye includes an integrated Model Context Protocol (MCP) server that empowers LLM clients (such as Claude Desktop, Cursor, or AI SOC agents) to analyze logs, investigate incidents, and manage Sigma rules.
+
+### Connection Modes
+
+#### 1. stdio Mode (Local integration with Claude Desktop / Cursor)
+Run `twlogeye mcp` to start the MCP server over standard input/output (stdio).
+
+Example Claude Desktop configuration (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "twlogeye": {
+      "command": "twlogeye",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+#### 2. HTTP Mode (Remote / Web integration)
+Configure `mcpEndpoint` (e.g., `0.0.0.0:8080`) in the configuration file to expose the `/mcp` endpoint using HTTP (SSE/Streamable HTTP).
+If `mcpToken` is set, requests must provide `Authorization: Bearer <token>`.
+
+---
+
 ## MCP Server Tool Specifications
 
-This document describes the tools and their parameters for the MCP server defined in `mcp.go`.
-
 ### `search_log`
-
 Searches for logs from TwLogEye.
 
 - **Parameters:**
@@ -607,18 +631,49 @@ Searches for logs from TwLogEye.
   - `end` (string): The date and time to end the search (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to the current time.
   - `type` (string): The type of log (one of `syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`).
   - `filter` (string): A regular expression to filter logs.
+  - `limit` (int): Maximum number of logs to return (default: 100, max: 1000).
 
 ### `search_notify`
-
 Searches for notifications from TwLogEye.
 
 - **Parameters:**
   - `start` (string): The date and time to start the search (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to `1970/01/01 00:00:00`.
   - `end` (string): The date and time to end the search (e.g., `2025/08/30 11:00:00`). If not specified, it defaults to the current time.
   - `level` (string): A regular expression to filter notification levels (e.g., `high|critical`). If not specified, no filtering is applied. Level names include `info`, `low`, `medium`, `high`, `critical`, etc.
+  - `limit` (int): Maximum number of notifications to return (default: 100, max: 1000).
+
+### `investigate_ip`
+Aggregates GeoIP location, DNS PTR hostname, and correlated logs/alerts for a given IP address.
+
+- **Parameters:**
+  - `ip` (string): Target IP address to investigate.
+  - `start` (string): Start date and time. Defaults to 24 hours ago.
+  - `end` (string): End date and time. Defaults to now.
+  - `limit` (int): Maximum number of correlated logs to return (default: 20, max: 100).
+
+### `test_sigma_rule`
+Simulates and backtests a YAML Sigma rule against historical logs to verify detection matches and false positive rates.
+
+- **Parameters:**
+  - `rule` (string): YAML-formatted Sigma rule string.
+  - `type` (string): Log type to evaluate against (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`. Default: `syslog`).
+  - `start` (string): Start date and time. Defaults to 24 hours ago.
+  - `end` (string): End date and time. Defaults to now.
+  - `limit` (int): Maximum number of matched log samples to return (default: 5, max: 50).
+
+### `get_otel_trace`
+Retrieves OpenTelemetry trace details (span tree) by trace ID.
+
+- **Parameters:**
+  - `id` (string): OpenTelemetry trace ID.
+
+### `get_otel_metric`
+Retrieves OpenTelemetry metric details by metric key/ID.
+
+- **Parameters:**
+  - `id` (string): OpenTelemetry metric key/ID.
 
 ### `get_report`
-
 Retrieves a report from TwLogEye.
 
 - **Parameters:**
@@ -627,7 +682,6 @@ Retrieves a report from TwLogEye.
   - `type` (string): The type of report (one of `syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`, `anomaly`, `monitor`). `winevent` refers to Windows Event Logs.
 
 ### `get_anomaly_report`
-
 Get anomaly report from TwLogEye database.
 
 - **Parameters:**
@@ -636,51 +690,62 @@ Get anomaly report from TwLogEye database.
   - `type` (string): type of anomaly report. type can be `syslog`,`trap`,`netflow`,`winevent`,`otel`,`monitor`.
 
 ### `get_last_report`
-
 Get last report from TwLogEye database.
 
 - **Parameters:**
   - `type` (string): type of report. type can be `syslog`,`trap`,`netflow`,`winevent`,`otel`,`anomaly`,`monitor`.
 
 ### `get_sigma_evaluator_list`
-
 Retrieves a list of Sigma rule evaluators from TwLogEye.
 
 - **Parameters:** None
 
 ### `get_sigma_rule_id_list`
-
 Retrieves a list of Sigma rule IDs from TwLogEye.
 
 - **Parameters:** None
 
 ### `get_sigma_rule`
-
 Retrieves a Sigma rule with the specified ID from TwLogEye.
 
 - **Parameters:**
   - `id` (string): The ID of the Sigma rule to retrieve.
 
 ### `add_sigma_rule`
-
 Adds a new Sigma rule to TwLogEye.
 
 - **Parameters:**
   - `rule` (string): The Sigma rule string in YAML format.
 
 ### `delete_sigma_rule`
-
 Deletes a Sigma rule with the specified ID from TwLogEye.
 
 - **Parameters:**
   - `id` (string): The ID of the Sigma rule to delete.
 
 ### `reload_sigma_rule`
-
 Reloads the Sigma rules loaded in TwLogEye.
 
 - **Parameters:** None
 
+---
+
+## MCP Resources
+
+Clients can read resources directly using the `twlogeye://` URI scheme:
+
+* `twlogeye://status`: System performance metrics and storage status
+* `twlogeye://sigma/rules`: List of active Sigma rule IDs
+* `twlogeye://reports/{type}/latest`: Latest report for specified category (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`, `monitor`, `anomaly`)
+
+---
+
+## MCP Prompts
+
+* `investigate_incident`: Deep-dive investigation prompt for target IP, hostname, or alert ID
+* `daily_security_briefing`: Comprehensive 24-hour security summary prompt
+* `test_and_add_sigma_rule`: Sigma rule development and backtesting workflow prompt
+* `search_log`, `search_notify`, `get_report`, `get_last_report`, `get_anomaly_report`: Query and report generation prompts
 
 ## Configuration file
 
