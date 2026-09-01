@@ -56,13 +56,14 @@
 - Flags
   - --cn
 ## log
-- Flags
+- Flags:
   - --logtype
   - --start
   - --end
   - --search
+## mcp
 ## notify
-- Flags
+- Flags:
   - --level
   - --start
   - --end
@@ -86,7 +87,7 @@
   - mqtt
   - monitor
   - anomaly
-- Flags
+- Flags:
   - --start
   - --end
   - --noList
@@ -97,22 +98,27 @@
 - field
 - check
 - test
-- Flags
+- Flags:
   - --sigmaRules
 ## start
-- Flags
+- Flags:
   - --dbPath (-d)
+  - --logPath (-l)
+  - --parquetBufferSize
+  - --parquetBufferTime
   - --syslogUDPPort
   - --syslogTCPPort
   - --netflowPort
   - --trapPort
   - --mibPath
   - --logRetention
+  - --logRetentionDays
   - --notifyRetention
   - --reportRetention
   - --reportTopN
   - --anomalyNotifyDelay
   - --anomalyReportThreshold
+  - --anomalyAlgo
   - --reportInterval
   - --syslogDst
   - --trapDst
@@ -154,6 +160,6 @@
   - --resolveHostName
 ## stop
 ## version
-- Flags
+- Flags:
   - --color
 ## watch

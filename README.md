@@ -40,7 +40,7 @@ The system configuration is
 
 
 
-We use Badger, a high-speed Key/Value Store built in Go, for storing logs and reports. This enables us to store tens of thousands of logs per second, amounting to several terabytes.
+We support both Badger (a high-speed Key/Value Store built in Go) and Parquet (columnar storage format for big data analytics) for storing logs and reports. This enables us to efficiently store tens of thousands of logs per second and manage multiple terabytes of data.
 
 
 ## Install
@@ -89,7 +89,7 @@ To start with a specific version, specify the tag as follows:
 $docker run --rm -v ./twlogeye:/datastore \
 -p 2055:2055/udp -p 514:514/udp -p 162:162/udp -p 1883:1883 \
 -e TZ=Asia/Tokyo \
-ghcr.io/twsnmp/twlogeye:v0.5.0
+ghcr.io/twsnmp/twlogeye:v0.6.0
 ```
 
 Please create config.yaml.
@@ -155,6 +155,7 @@ Available Commands:
   gencert     Generate TLS private key and cert
   help        Help about any command
   log         Search log
+  mcp         Run MCP server via stdio
   notify      Search notify
   otel        Get OpenTelemetry info
   reload      Reload rules
@@ -195,14 +196,16 @@ Flags:
       --anomalyNotifyDelay int         Grace period for sending notifications when detecting anomalies (default 24)
       --anomalyReportThreshold float   anomaly report threshold
       --anomalyUseTime                 Include weekends and hours in the vector data for anomaly detection
-  -d, --dbPath string                  DB Path default: memory
+  -d, --dbPath string                  DB Path (.badger, .parquet) default: memory
       --debug                          debug mode
       --geoIPDB string                 Geo IP Database Path
       --grokDef string                 GROK define file
       --grokPat string                 GROK patterns
   -h, --help                           help for start
       --keyValParse                    Splunk Key value parse
+  -l, --logPath string                 Log DB Path (.badger, .parquet) default: dbPath
       --logRetention int               log retention(hours) (default 48)
+      --logRetentionDays int           log retention(days)
       --mcpEndpoint string             MCP server endpoint
       --mcpFrom string                 MCP server from ip address list
       --mcpToken string                MCP server token
@@ -223,6 +226,8 @@ Flags:
       --otelKey string                 OpenTelemetry server private key
       --otelRetention int              log retention(hours) (default 48)
       --otelgRPCPort int               OpenTelemetry gRPC Port
+      --parquetBufferSize int          Parquet log buffer size (default 10000)
+      --parquetBufferTime int          Parquet log buffer flush interval (seconds) (default 60)
       --reportInterval int             report interval (minute) (default 5)
       --reportRetention int            report retention(days) (default 7)
       --reportTopN int                 report top n (default 10)
@@ -755,7 +760,10 @@ YAML format. It corresponds to the following keys.
 
 ### Core Configuration
 
-* **`dbPath`**: Specifies the path to the database file.
+* **`dbPath`**: Specifies the path to the database file (e.g., `./twlogeye.badger`, `memory`).
+* **`logPath`**: Specifies the path to the dedicated log database. Supports Parquet format (e.g. `parquet:///path/to/logs`, `./logs.parquet`) or Badger format (e.g. `./logs.badger`). Defaults to `dbPath` if omitted.
+* **`parquetBufferSize`**: In-memory buffer size for Parquet logs (count, default: 10000).
+* **`parquetBufferTime`**: Flush interval for Parquet log buffer (seconds, default: 60).
 
 ---
 
@@ -817,6 +825,7 @@ YAML format. It corresponds to the following keys.
 ### Data Retention Periods
 
 * **`logRetention`**: The log retention period in hours.
+* **`logRetentionDays`**: The log retention period in days (for Parquet storage, the larger of `logRetention` and `logRetentionDays` is used).
 * **`notifyRetention`**: The notification data retention period in days.
 * **`reportRetention`**: The report data retention period in days.
 
@@ -860,7 +869,7 @@ YAML format. It corresponds to the following keys.
 * **`resolveHostName`**: A boolean flag to enable or disable resolving host names from IP addresses.
 * **`geoIPDB`**: The path to the GeoIP database file.
 * **`mibPath`**: The path to the SNMP MIB files.
-* **`mcpEndpoint`**: The endpoint URL for Microsoft Cloud Platform (MCP).
+* **`mcpEndpoint`**: The endpoint URL for Model Context Protocol (MCP).
 * **`mcpFrom`**: The "from" address for messages sent to MCP.
 * **`mcpToken`**: The authentication token for MCP.
 * **`debug`**: A boolean flag to enable or disable debug mode.

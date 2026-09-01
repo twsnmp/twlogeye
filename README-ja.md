@@ -31,8 +31,9 @@ WebhookによりAI対応の自動化ツールに通知することができま�
 
 です。
 
-ログやレポートの保存にGo言語製の高速Key/Value Store Badgerを
-を使用しているため毎秒数万件のログを数TB単位で保存できます。
+ログやレポートの保存にGo言語製の高速Key/Value Store Badgerおよび
+ビッグデータ向け列指向フォーマットParquetに対応しているため、
+毎秒数万件のログを数TB単位で効率的に保存・集計できます。
 
 ## Install
 
@@ -80,7 +81,7 @@ ghcr.io/twsnmp/twlogeye:latest
 $docker run --rm -v ./twlogeye:/datastore \
 -p 2055:2055/udp -p 514:514/udp -p 162:162/udp -p 1883:1883 \
 -e TZ=Asia/Tokyo \
-ghcr.io/twsnmp/twlogeye:v0.5.0
+ghcr.io/twsnmp/twlogeye:v0.6.0
 ```
 
 config.yamlを編集してください。
@@ -147,6 +148,7 @@ Available Commands:
   gencert     Generate TLS private key and cert
   help        Help about any command
   log         Search log
+  mcp         Run MCP server via stdio
   notify      Search notify
   otel        Get OpenTelemetry info
   reload      Reload rules
@@ -192,14 +194,16 @@ Flags:
       --anomalyNotifyDelay int         Grace period for sending notifications when detecting anomalies (default 24)
       --anomalyReportThreshold float   anomaly report threshold
       --anomalyUseTime                 Include weekends and hours in the vector data for anomaly detection
-  -d, --dbPath string                  DB Path default: memory
+  -d, --dbPath string                  DB Path (.badger, .parquet) default: memory
       --debug                          debug mode
       --geoIPDB string                 Geo IP Database Path
       --grokDef string                 GROK define file
       --grokPat string                 GROK patterns
   -h, --help                           help for start
       --keyValParse                    Splunk Key value parse
+  -l, --logPath string                 Log DB Path (.badger, .parquet) default: dbPath
       --logRetention int               log retention(hours) (default 48)
+      --logRetentionDays int           log retention(days)
       --mcpEndpoint string             MCP server endpoint
       --mcpFrom string                 MCP server from ip address list
       --mcpToken string                MCP server token
@@ -220,6 +224,8 @@ Flags:
       --otelKey string                 OpenTelemetry server private key
       --otelRetention int              log retention(hours) (default 48)
       --otelgRPCPort int               OpenTelemetry gRPC Port
+      --parquetBufferSize int          Parquet log buffer size (default 10000)
+      --parquetBufferTime int          Parquet log buffer flush interval (seconds) (default 60)
       --reportInterval int             report interval (minute) (default 5)
       --reportRetention int            report retention(days) (default 7)
       --reportTopN int                 report top n (default 10)
@@ -772,7 +778,10 @@ MCPクライアントから以下のURIでリソースを直接参照できま�
 
 ### コア設定
 
-* **`dbPath`**: データベースファイルのパスを指定します。
+* **`dbPath`**: データベースファイルのパスを指定します（例: `./twlogeye.badger`, `memory`）。
+* **`logPath`**: ログ専用のデータベースパスを指定します。Parquet形式（例: `parquet:///path/to/logs`, `./logs.parquet`）またはBadger形式（例: `./logs.badger`）が指定可能です。省略時は `dbPath` と同一になります。
+* **`parquetBufferSize`**: Parquetログ保存時のメモリ内バッファサイズ（件数、デフォルト: 10000）。
+* **`parquetBufferTime`**: Parquetログバッファのフラッシュ間隔（秒、デフォルト: 60）。
 
 ---
 
@@ -834,6 +843,7 @@ MCPクライアントから以下のURIでリソースを直接参照できま�
 ### データ保持期間
 
 * **`logRetention`**: ログの保持期間を時間単位で指定します。
+* **`logRetentionDays`**: ログの保持期間を日単位で指定します（Parquet保存時は `logRetention` と `logRetentionDays` の大きい方が適用されます）。
 * **`notifyRetention`**: 通知データの保持期間を日単位で指定します。
 * **`reportRetention`**: レポートデータの保持期間を日単位で指定します。
 
@@ -877,7 +887,7 @@ MCPクライアントから以下のURIでリソースを直接参照できま�
 * **`resolveHostName`**: IPアドレスからホスト名を解決するかどうかのブール値フラグ。
 * **`geoIPDB`**: GeoIPデータベースファイルのパス。
 * **`mibPath`**: SNMP MIBファイルのパス。
-* **`mcpEndpoint`**: Microsoft Cloud Platform (MCP) のエンドポイントURL。
+* **`mcpEndpoint`**: Model Context Protocol (MCP) のエンドポイントURL。
 * **`mcpFrom`**: MCPに送信されるメッセージの"From"アドレス。
 * **`mcpToken`**: MCPの認証トークン。
 * **`debug`**: デバッグモードを有効または無効にするブール値フラグ。
