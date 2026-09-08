@@ -21,7 +21,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type SigmaRuleEntry struct {
+	Evaluator *evaluator.RuleEvaluator
+	Source    string // e.g. "pack:windows-essential", "file:/path/to/rule.yaml", "db", "embed"
+	Path      string
+}
+
 var evaluators []*evaluator.RuleEvaluator
+var ruleEntries []*SigmaRuleEntry
 var grs []*grok.Grok
 var auditorCh chan *datastore.LogEnt
 var reloadCh chan bool
@@ -130,13 +137,32 @@ func getSigmaConfig(r *sigma.Rule) *sigma.Config {
 	return nil
 }
 
+func getSourcePriority(src string) int {
+	if strings.HasPrefix(src, "db") {
+		return 3
+	}
+	if strings.HasPrefix(src, "file:") {
+		return 2
+	}
+	if strings.HasPrefix(src, "embed") {
+		return 2
+	}
+	if strings.HasPrefix(src, "pack:") {
+		return 1
+	}
+	return 0
+}
+
 func loadSigmaRules() {
 	total := 0
 	skip := 0
 	fix := 0
 	dup := 0
-	idMap := make(map[string]bool)
-	datastore.ForEachSigmaRules(func(c []byte, path string) {
+	override := 0
+	ruleMap := make(map[string]*SigmaRuleEntry)
+	var orderedIDs []string
+
+	datastore.ForEachSigmaRulesWithSource(func(c []byte, path, source string) {
 		total++
 		rule, err := sigma.ParseRule(c)
 		if err != nil && strings.Contains(err.Error(), "'*'") {
@@ -164,19 +190,53 @@ func loadSigmaRules() {
 		if rule.ID == "" {
 			rule.ID = path
 		}
-		if _, ok := idMap[rule.ID]; ok {
+
+		if existing, exists := ruleMap[rule.ID]; exists {
+			newPrio := getSourcePriority(source)
+			existPrio := getSourcePriority(existing.Source)
+			if newPrio > existPrio {
+				config := getSigmaConfig(&rule)
+				var ev *evaluator.RuleEvaluator
+				if config != nil {
+					ev = evaluator.ForRule(rule, evaluator.WithConfig(*config), evaluator.CaseSensitive)
+				} else {
+					ev = evaluator.ForRule(rule, evaluator.CaseSensitive)
+				}
+				ruleMap[rule.ID] = &SigmaRuleEntry{
+					Evaluator: ev,
+					Source:    source,
+					Path:      path,
+				}
+				override++
+				return
+			}
 			dup++
 			return
 		}
-		idMap[rule.ID] = true
+
 		config := getSigmaConfig(&rule)
+		var ev *evaluator.RuleEvaluator
 		if config != nil {
-			evaluators = append(evaluators, evaluator.ForRule(rule, evaluator.WithConfig(*config), evaluator.CaseSensitive))
+			ev = evaluator.ForRule(rule, evaluator.WithConfig(*config), evaluator.CaseSensitive)
 		} else {
-			evaluators = append(evaluators, evaluator.ForRule(rule, evaluator.CaseSensitive))
+			ev = evaluator.ForRule(rule, evaluator.CaseSensitive)
 		}
+		ruleMap[rule.ID] = &SigmaRuleEntry{
+			Evaluator: ev,
+			Source:    source,
+			Path:      path,
+		}
+		orderedIDs = append(orderedIDs, rule.ID)
 	})
-	log.Printf("load sigma rules total=%d skip=%d fix=%d dup=%d", total, skip, fix, dup)
+
+	evaluators = make([]*evaluator.RuleEvaluator, 0, len(orderedIDs))
+	ruleEntries = make([]*SigmaRuleEntry, 0, len(orderedIDs))
+	for _, id := range orderedIDs {
+		entry := ruleMap[id]
+		ruleEntries = append(ruleEntries, entry)
+		evaluators = append(evaluators, entry.Evaluator)
+	}
+	log.Printf("load sigma rules total=%d active=%d skip=%d fix=%d dup=%d override=%d", total, len(evaluators), skip, fix, dup, override)
 }
 
 func loadSigmaConfigs() {
@@ -321,6 +381,16 @@ func GetSigmaRuleEvaluators() []*evaluator.RuleEvaluator {
 
 func GetEvaluators() []*evaluator.RuleEvaluator {
 	return evaluators
+}
+
+func GetSigmaRuleEntries() []*SigmaRuleEntry {
+	loadSigmaConfigs()
+	loadSigmaRules()
+	return ruleEntries
+}
+
+func GetRuleEntries() []*SigmaRuleEntry {
+	return ruleEntries
 }
 
 func ParseSigmaRule(c string) (string, error) {

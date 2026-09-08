@@ -26,12 +26,18 @@ import (
 	"github.com/twsnmp/twlogeye/datastore"
 )
 
+var (
+	filterPack   string
+	filterCustom bool
+)
+
 // sigmaCmd represents the sigma command
 var sigmaCmd = &cobra.Command{
 	Use:   "sigma",
-	Short: "Check sigma rules (list|stat|logsrc|field|check|test)",
-	Long: `Check sigma rules (list|stat|logsrc|field|check|test)
+	Short: "Check sigma rules (list|packs|stat|logsrc|field|check|test)",
+	Long: `Check sigma rules (list|packs|stat|logsrc|field|check|test)
 	list: list rules
+	packs: list available embedded rule packs
 	stat: stat rules
 	logsrc: list log sources
 	field: list fields
@@ -42,6 +48,8 @@ var sigmaCmd = &cobra.Command{
 		// no error  for sigma config and rule load
 		datastore.Config.SigmaSkipError = true
 		switch {
+		case len(args) > 0 && args[0] == "packs":
+			sigmaPacks()
 		case len(args) > 0 && args[0] == "stat":
 			sigmaStat()
 		case len(args) > 0 && args[0] == "logsrc":
@@ -61,15 +69,42 @@ var sigmaCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(sigmaCmd)
 	sigmaCmd.Flags().StringVar(&datastore.Config.SigmaRules, "sigmaRules", "", "SIGMA rule path")
-
+	sigmaCmd.Flags().StringSliceVar(&datastore.Config.SigmaPacks, "sigmaPacks", nil, "SIGMA rule packs (e.g. windows-essential,linux-auth)")
+	sigmaCmd.Flags().StringVar(&filterPack, "pack", "", "Filter rules by pack name")
+	sigmaCmd.Flags().BoolVar(&filterCustom, "custom", false, "Filter custom (file/db) rules only")
 }
 
+func sigmaPacks() {
+	packs := datastore.GetAvailableSigmaPacks()
+	fmt.Printf("Available Rule Packs (%d):\n", len(packs))
+	for _, p := range packs {
+		// count rules in this pack
+		count := 0
+		savePacks := datastore.Config.SigmaPacks
+		saveRules := datastore.Config.SigmaRules
+		datastore.Config.SigmaPacks = []string{p}
+		datastore.Config.SigmaRules = "none" // suppress default
+		datastore.ForEachSigmaRulesWithSource(func(c []byte, path, source string) {
+			if source == "pack:"+p {
+				count++
+			}
+		})
+		datastore.Config.SigmaPacks = savePacks
+		datastore.Config.SigmaRules = saveRules
+		fmt.Printf("  - %-20s (rules: %d)\n", p, count)
+	}
+}
+
+
 func sigmaStat() {
-	list := auditor.GetSigmaRuleEvaluators()
+	list := auditor.GetSigmaRuleEntries()
 	logSrcMap := make(map[string]int)
 	fieldMap := make(map[string]int)
 	titleMap := make(map[string]int)
-	for _, e := range list {
+	sourceMap := make(map[string]int)
+	for _, entry := range list {
+		e := entry.Evaluator
+		sourceMap[entry.Source]++
 		if _, ok := titleMap[e.Title]; !ok {
 			titleMap[e.Title] = 0
 		}
@@ -98,6 +133,10 @@ func sigmaStat() {
 		}
 	}
 	fmt.Printf("rules=%d logsrc=%d field=%d dupTitle=%d\n", len(list), len(logSrcMap), len(fieldMap), dupTitle)
+	fmt.Println("Sources:")
+	for s, c := range sourceMap {
+		fmt.Printf("  %-24s : %d\n", s, c)
+	}
 }
 
 func sigmaLogSrc() {
@@ -138,10 +177,22 @@ func sigmaField() {
 }
 
 func sigmaRuleList() {
-	list := auditor.GetSigmaRuleEvaluators()
-	for _, e := range list {
+	list := auditor.GetSigmaRuleEntries()
+	for _, entry := range list {
+		if filterPack != "" {
+			expected := "pack:" + filterPack
+			if entry.Source != expected {
+				continue
+			}
+		}
+		if filterCustom {
+			if strings.HasPrefix(entry.Source, "pack:") {
+				continue
+			}
+		}
+		e := entry.Evaluator
 		lsk := fmt.Sprintf("%s:%s:%s", e.Logsource.Product, e.Logsource.Category, e.Logsource.Service)
-		fmt.Printf("%s\t%s\t%s\t%s\n", e.ID, e.Level, lsk, e.Title)
+		fmt.Printf("%-24s\t%s\t%-8s\t%-20s\t%s\n", entry.Source, e.ID, e.Level, lsk, e.Title)
 	}
 }
 

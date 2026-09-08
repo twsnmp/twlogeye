@@ -88,6 +88,7 @@ func init() {
 	startCmd.Flags().StringVar(&datastore.Config.MCPToken, "mcpToken", "", "MCP server token")
 	startCmd.Flags().StringVar(&datastore.Config.TrapCommunity, "trapCommunity", "", "SNMP TRAP Community")
 	startCmd.Flags().StringVar(&datastore.Config.SigmaRules, "sigmaRules", "", "SIGMA rule path")
+	startCmd.Flags().StringSliceVar(&datastore.Config.SigmaPacks, "sigmaPacks", nil, "SIGMA rule packs (e.g. windows-essential,linux-auth)")
 	startCmd.Flags().StringVar(&datastore.Config.SigmaConfigs, "sigmaConfigs", "", "SIGMA config path")
 	startCmd.Flags().StringVar(&datastore.Config.NamedCaptures, "namedCaptures", "", "Named capture defs path")
 	startCmd.Flags().StringVar(&datastore.Config.GrokDef, "grokDef", "", "GROK define file")

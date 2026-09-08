@@ -78,9 +78,10 @@ type ConfigEnt struct {
 	GeoIPDB string `yaml:"geoIPDB"`
 
 	// Sigma
-	SigmaRules     string `yaml:"sigmaRules"`
-	SigmaConfigs   string `yaml:"sigmaConfigs"`
-	SigmaSkipError bool   `yaml:"sigmaSkipError"`
+	SigmaPacks     []string `yaml:"sigmaPacks"`
+	SigmaRules     string   `yaml:"sigmaRules"`
+	SigmaConfigs   string   `yaml:"sigmaConfigs"`
+	SigmaSkipError bool     `yaml:"sigmaSkipError"`
 	// SNMP MIB
 	MIBPath string `yaml:"mibPath"`
 	// MCP

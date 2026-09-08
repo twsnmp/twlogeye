@@ -925,7 +925,8 @@ MCPクライアントから以下のURIでリソースを直接参照できま�
 
 ### Sigmaルール
 
-* **`sigmaRules`**: Sigmaルールファイルのパス。
+* **`sigmaPacks`**: 組み込みの推奨ルールパックのリスト（例: `windows-essential`, `linux-auth`）。
+* **`sigmaRules`**: 個別のSigmaルールファイルまたはディレクトリのパス。
 * **`sigmaConfigs`**: Sigma設定ファイルのパス。
 * **`sigmaSkipError`**: 処理中にエラーが発生した場合にルールをスキップするかどうかのブール値フラグ。
 

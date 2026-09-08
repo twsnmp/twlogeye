@@ -47,6 +47,9 @@ namedCaptures: ""
 keyValParse: false
 resolveHostName: false
 geoIPDB: ""
+#sigmaPacks:
+#  - windows-essential
+#  - linux-auth
 #sigmaRules: "/datastore/sigma/rules"
 #sigmaConfigs: "/datastore/sigma/config"
 #sigmaRules: embed:test/syslog

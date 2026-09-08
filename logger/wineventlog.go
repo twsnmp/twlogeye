@@ -48,65 +48,72 @@ func StartWinEventLogd(ctx context.Context, wg *sync.WaitGroup) {
 // getWindowsEventLogs:
 func getWindowsEventLogs() []*datastore.LogEnt {
 	ret := []*datastore.LogEnt{}
+	channels := strings.Split(datastore.Config.WinEventLogChannel, ",")
 	filter := fmt.Sprintf(`/q:*[System[TimeCreated[@SystemTime>'%s']]]`, lastTime.UTC().Format("2006-01-02T15:04:05"))
 	lastTime = time.Now()
-	params := []string{"qe", datastore.Config.WinEventLogChannel, filter}
-	src := datastore.Config.WinEventLogChannel
-	if datastore.Config.WinRemote != "" {
-		src += "@" + datastore.Config.WinRemote
-		params = append(params, "/r:"+datastore.Config.WinRemote)
-		params = append(params, "/u:"+datastore.Config.WinUser)
-		params = append(params, "/p:"+datastore.Config.WinPassword)
-		if datastore.Config.WinAuth != "" {
-			params = append(params, "/a:"+datastore.Config.WinAuth)
-		}
-	}
-	out, err := exec.Command("wevtutil.exe", params...).Output()
-	if err != nil {
-		log.Printf("getWindowsEventLogs err=%v", err)
-		return ret
-	}
-	log.Printf("wevtutil.exe out len=%d", len(out))
-	if len(out) < 5 {
-		return ret
-	}
-	e := new(datastore.WindowsEvent)
-	for _, l := range strings.Split(strings.ReplaceAll(string(out), "\n", ""), "</Event>") {
-		l := strings.TrimSpace(l) + "</Event>"
-		if len(l) < 10 {
+
+	for _, ch := range channels {
+		ch = strings.TrimSpace(ch)
+		if ch == "" {
 			continue
 		}
-		if datastore.Config.WinLogSJIS {
-			if str, _, err := transform.String(japanese.ShiftJIS.NewDecoder(), l); err == nil {
-				l = str
+		params := []string{"qe", ch, filter}
+		src := ch
+		if datastore.Config.WinRemote != "" {
+			src += "@" + datastore.Config.WinRemote
+			params = append(params, "/r:"+datastore.Config.WinRemote)
+			params = append(params, "/u:"+datastore.Config.WinUser)
+			params = append(params, "/p:"+datastore.Config.WinPassword)
+			if datastore.Config.WinAuth != "" {
+				params = append(params, "/a:"+datastore.Config.WinAuth)
 			}
 		}
-		err := xml.Unmarshal([]byte(l), e)
+		out, err := exec.Command("wevtutil.exe", params...).Output()
 		if err != nil {
-			log.Printf("xml err=%v", err)
-			if datastore.Config.Debug {
-				log.Printf("log=%s", l)
+			log.Printf("getWindowsEventLogs channel=%s err=%v", ch, err)
+			continue
+		}
+		if len(out) < 5 {
+			continue
+		}
+		e := new(datastore.WindowsEvent)
+		for _, l := range strings.Split(strings.ReplaceAll(string(out), "\n", ""), "</Event>") {
+			l := strings.TrimSpace(l) + "</Event>"
+			if len(l) < 10 {
+				continue
 			}
-			continue
+			if datastore.Config.WinLogSJIS {
+				if str, _, err := transform.String(japanese.ShiftJIS.NewDecoder(), l); err == nil {
+					l = str
+				}
+			}
+			err := xml.Unmarshal([]byte(l), e)
+			if err != nil {
+				log.Printf("xml err=%v", err)
+				if datastore.Config.Debug {
+					log.Printf("log=%s", l)
+				}
+				continue
+			}
+			t := getEventTime(e.System.TimeCreated.SystemTime)
+			j, err := evtlogXML2JSON(e)
+			if err != nil {
+				log.Printf("evtlogXML2JSON err=%v", err)
+				continue
+			}
+			al := &datastore.LogEnt{
+				Time: t.UnixNano(),
+				Type: datastore.WindowsEventLog,
+				Src:  src,
+				Log:  j,
+			}
+			auditor.Audit(al)
+			ret = append(ret, al)
+			reporter.SendWindowsEvent(&datastore.WindowsEventEnt{
+				Time: t.UnixNano(),
+				Log:  e,
+			})
 		}
-		t := getEventTime(e.System.TimeCreated.SystemTime)
-		j, err := evtlogXML2JSON(e)
-		if err != nil {
-			log.Printf("evtlogXML2JSON err=%v", err)
-			continue
-		}
-		al := &datastore.LogEnt{
-			Time: t.UnixNano(),
-			Type: datastore.WindowsEventLog,
-			Src:  src,
-			Log:  j,
-		}
-		auditor.Audit(al)
-		ret = append(ret, al)
-		reporter.SendWindowsEvent(&datastore.WindowsEventEnt{
-			Time: t.UnixNano(),
-			Log:  e,
-		})
 	}
 	return ret
 }

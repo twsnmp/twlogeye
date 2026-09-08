@@ -16,12 +16,37 @@ import (
 //go:embed all:sigma
 var sigmaFS embed.FS
 
+// GetAvailableSigmaPacks : returns list of available embedded rule packs
+func GetAvailableSigmaPacks() []string {
+	ret := []string{}
+	entries, err := sigmaFS.ReadDir("sigma/rules/packs")
+	if err != nil {
+		return ret
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			ret = append(ret, entry.Name())
+		}
+	}
+	return ret
+}
+
 // ForEachSigmaConfig : for each sigma config data
 func ForEachSigmaConfig(callBack func(c string, d []byte)) {
-	for _, c := range []string{"windows"} {
-		p := path.Join("sigma", "config", c+".yaml")
-		if d, err := sigmaFS.ReadFile(p); err == nil {
-			callBack(c, d)
+	entries, err := sigmaFS.ReadDir("sigma/config")
+	if err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+			ext := strings.ToLower(filepath.Ext(entry.Name()))
+			if ext == ".yaml" || ext == ".yml" {
+				c := strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name()))
+				p := path.Join("sigma", "config", entry.Name())
+				if d, err := sigmaFS.ReadFile(p); err == nil {
+					callBack(c, d)
+				}
+			}
 		}
 	}
 	if Config.SigmaConfigs == "" {
@@ -46,50 +71,85 @@ func ForEachSigmaConfig(callBack func(c string, d []byte)) {
 	})
 }
 
-// ForEachSigmaRules : call back with sigma rule data
+// ForEachSigmaRules : call back with sigma rule data (backward compatible)
 func ForEachSigmaRules(callBack func(c []byte, path string)) {
-	rulePath := Config.SigmaRules
-	if rulePath == "" {
-		rulePath = "embed:"
-	}
-	if strings.HasPrefix(rulePath, "embed:") {
-		sub := ""
-		if len(rulePath) > 6 {
-			sub = rulePath[6:]
-		}
-		p := "sigma/rules"
-		if sub != "" {
-			p = path.Join("sigma", "rules", sub)
-		}
-		fs.WalkDir(sigmaFS, p, func(filePath string, info fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if info.IsDir() {
+	ForEachSigmaRulesWithSource(func(c []byte, path, _ string) {
+		callBack(c, path)
+	})
+}
+
+// ForEachSigmaRulesWithSource : call back with sigma rule data and source information
+func ForEachSigmaRulesWithSource(callBack func(c []byte, path, source string)) {
+	// 1. Load packs from embed
+	for _, pack := range Config.SigmaPacks {
+		packDir := path.Join("sigma", "rules", "packs", pack)
+		source := "pack:" + pack
+		_ = fs.WalkDir(sigmaFS, packDir, func(filePath string, info fs.DirEntry, err error) error {
+			if err != nil || info.IsDir() {
 				return nil
 			}
 			ext := strings.ToLower(filepath.Ext(filePath))
 			if ext != ".yaml" && ext != ".yml" {
 				return nil
 			}
-			c, err := sigmaFS.ReadFile(filePath)
-			if err != nil {
-				log.Printf("invalid rule path %s err=%v", filePath, err)
-				return nil
+			if c, err := sigmaFS.ReadFile(filePath); err == nil {
+				callBack(c, filePath, source)
 			}
-			callBack(c, filePath)
 			return nil
 		})
-	} else {
-		for _, path := range getRulePath(rulePath) {
-			c, err := os.ReadFile(path)
-			if err != nil {
-				log.Fatalf("invalid rule %s %s", path, err)
+	}
+
+	// 2. Load individual rules from path or default embed if nothing specified
+	rulePath := Config.SigmaRules
+	if rulePath == "" && len(Config.SigmaPacks) == 0 {
+		rulePath = "embed:"
+	}
+
+	if rulePath != "" {
+		if strings.HasPrefix(rulePath, "embed:") {
+			sub := ""
+			if len(rulePath) > 6 {
+				sub = rulePath[6:]
 			}
-			callBack(c, path)
+			p := "sigma/rules"
+			if sub != "" {
+				p = path.Join("sigma", "rules", sub)
+			}
+			source := "embed"
+			if sub != "" {
+				source = "embed:" + sub
+			}
+			_ = fs.WalkDir(sigmaFS, p, func(filePath string, info fs.DirEntry, err error) error {
+				if err != nil || info.IsDir() {
+					return nil
+				}
+				ext := strings.ToLower(filepath.Ext(filePath))
+				if ext != ".yaml" && ext != ".yml" {
+					return nil
+				}
+				c, err := sigmaFS.ReadFile(filePath)
+				if err != nil {
+					log.Printf("invalid rule path %s err=%v", filePath, err)
+					return nil
+				}
+				callBack(c, filePath, source)
+				return nil
+			})
+		} else {
+			for _, p := range getRulePath(rulePath) {
+				c, err := os.ReadFile(p)
+				if err != nil {
+					log.Fatalf("invalid rule %s %s", p, err)
+				}
+				callBack(c, p, "file:"+p)
+			}
 		}
 	}
-	ForEachSigmaRuleOnDB(callBack)
+
+	// 3. Load from DB
+	ForEachSigmaRuleOnDB(func(c []byte, id string) {
+		callBack(c, id, "db")
+	})
 }
 
 // getRulePath : get rule path list

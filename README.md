@@ -906,7 +906,8 @@ YAML format. It corresponds to the following keys.
 
 ### Sigma Rules
 
-* **`sigmaRules`**: The path to the Sigma rule files.
+* **`sigmaPacks`**: List of embedded rule packs (e.g. `windows-essential`, `linux-auth`).
+* **`sigmaRules`**: The path to custom Sigma rule files or directories.
 * **`sigmaConfigs`**: The path to the Sigma configuration files.
 * **`sigmaSkipError`**: A boolean flag to skip a rule if an error occurs during processing.
 

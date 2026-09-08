@@ -15,3 +15,20 @@ fieldmappings:
   Level:  $.Event.System.Level
   Provider.Guid:  $.Event.System.Provider.Guid
   Provider.Name:  $.Event.System.Provider.Name
+  TargetUserName: $.Event.EventData.TargetUserName
+  TargetDomainName: $.Event.EventData.TargetDomainName
+  SubjectUserName: $.Event.EventData.SubjectUserName
+  SubjectDomainName: $.Event.EventData.SubjectDomainName
+  ServiceName: $.Event.EventData.ServiceName
+  ServiceFileName: $.Event.EventData.ServiceFileName
+  TaskName: $.Event.EventData.TaskName
+  WorkstationName: $.Event.EventData.WorkstationName
+  IpAddress: $.Event.EventData.IpAddress
+  IpPort: $.Event.EventData.IpPort
+  LogonType: $.Event.EventData.LogonType
+  Status: $.Event.EventData.Status
+  SubStatus: $.Event.EventData.SubStatus
+  MemberName: $.Event.EventData.MemberName
+  TargetSid: $.Event.EventData.TargetSid
+  SubjectUserSid: $.Event.EventData.SubjectUserSid
+  AuditSourceName: $.Event.EventData.AuditSourceName
