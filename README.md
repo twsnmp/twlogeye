@@ -160,6 +160,7 @@ Available Commands:
   otel        Get OpenTelemetry info
   reload      Reload rules
   report      Get report
+  service     Manage twlogeye as a Windows service
   sigma       Check sigma rules (list|stat|logsrc|field|check|test)
   start       Start twlogeye
   stop        Stop twlogeye
@@ -462,6 +463,53 @@ Global Flags:
       --serverCert string   API server cert
       --serverKey string    API server private key
 ```
+
+#### service command (Windows only)
+
+Command to register and manage `twlogeye` as a background Windows Service. Run from an elevated Command Prompt or PowerShell (Run as Administrator).
+
+```terminal
+>twlogeye help service
+Manage twlogeye as a Windows service (install, remove, start, stop, status).
+
+Usage:
+  twlogeye service [command]
+
+Available Commands:
+  install     Install twlogeye as a Windows service
+  remove      Remove twlogeye Windows service
+  start       Start twlogeye Windows service
+  status      Show status of twlogeye Windows service
+  stop        Stop twlogeye Windows service
+
+Flags:
+  -h, --help          help for service
+      --name string   Service name (default "twlogeye")
+```
+
+##### Install service
+```terminal
+# Install with defaults (Auto-start enabled)
+>twlogeye service install
+
+# Install with explicit config file path
+>twlogeye service install --config C:\twlogeye\twlogeye.yaml
+```
+
+##### Start, Stop, and Status
+```terminal
+>twlogeye service start
+>twlogeye service status
+>twlogeye service stop
+```
+
+##### Remove service
+```terminal
+>twlogeye service remove
+```
+
+> **Note**: `twlogeye` can also be managed directly via standard Windows tools (`sc.exe`, PowerShell `New-Service`, or `services.msc`). When started by SCM, it automatically detects service mode and changes its working directory to the executable location. Startup/shutdown events are logged to the Windows Event Log (Application log).
+
 
 #### reload command
 

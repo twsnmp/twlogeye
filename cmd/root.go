@@ -18,6 +18,7 @@ package cmd
 import (
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -86,6 +87,9 @@ func initConfig() {
 	} else {
 		viper.AddConfigPath("/etc/")
 		viper.AddConfigPath(".")
+		if exe, err := os.Executable(); err == nil {
+			viper.AddConfigPath(filepath.Dir(exe))
+		}
 		viper.SetConfigType("yaml")
 		viper.SetConfigName("twlogeye")
 	}

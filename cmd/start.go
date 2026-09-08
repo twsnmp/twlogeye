@@ -175,38 +175,56 @@ func init() {
 }
 
 func start() {
+	if isWindowsService() {
+		if err := runWindowsService(); err != nil {
+			log.Fatalf("failed to run windows service: %v", err)
+		}
+		return
+	}
+	startStandalone()
+}
+
+func startServerDaemons(ctx context.Context, wg *sync.WaitGroup, sigterm chan os.Signal) {
 	log.Printf("start confg=%+v", datastore.Config)
-	var wg sync.WaitGroup
 	datastore.OpenDB()
 	auditor.Init()
 	notify.Init()
 	reporter.Init()
-	ctx, cancel := context.WithCancel(context.Background())
-	reporter.Start(ctx, &wg)
+	reporter.Start(ctx, wg)
 	wg.Add(1)
-	go auditor.Start(ctx, &wg)
+	go auditor.Start(ctx, wg)
 	wg.Add(1)
-	go notify.Start(ctx, &wg)
+	go notify.Start(ctx, wg)
 	wg.Add(1)
-	go logger.StartSyslogd(ctx, &wg)
+	go logger.StartSyslogd(ctx, wg)
 	wg.Add(1)
-	go logger.StartSnmpTrapd(ctx, &wg)
+	go logger.StartSnmpTrapd(ctx, wg)
 	wg.Add(1)
-	go logger.StartNetFlowd(ctx, &wg)
+	go logger.StartNetFlowd(ctx, wg)
 	wg.Add(1)
-	go logger.StartWinEventLogd(ctx, &wg)
+	go logger.StartWinEventLogd(ctx, wg)
 	wg.Add(1)
-	go logger.StartOTeld(ctx, &wg)
+	go logger.StartOTeld(ctx, wg)
 	wg.Add(1)
-	go logger.StartMqttd(ctx, &wg)
-	sigterm := make(chan os.Signal, 1)
-	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	go logger.StartMqttd(ctx, wg)
 	wg.Add(1)
-	go server.StartAPIServer(ctx, &wg, apiServerPort, apiServerCert, apiServerKey, apiCACert, sigterm)
+	go server.StartAPIServer(ctx, wg, apiServerPort, apiServerCert, apiServerKey, apiCACert, sigterm)
 	wg.Add(1)
-	go server.StartMCPServer(ctx, &wg, apiServerCert, apiServerKey, Version)
-	<-sigterm
+	go server.StartMCPServer(ctx, wg, apiServerCert, apiServerKey, Version)
+}
+
+func stopServerDaemons(cancel context.CancelFunc, wg *sync.WaitGroup) {
 	cancel()
 	wg.Wait()
 	datastore.CloseDB()
+}
+
+func startStandalone() {
+	var wg sync.WaitGroup
+	ctx, cancel := context.WithCancel(context.Background())
+	sigterm := make(chan os.Signal, 1)
+	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	startServerDaemons(ctx, &wg, sigterm)
+	<-sigterm
+	stopServerDaemons(cancel, &wg)
 }

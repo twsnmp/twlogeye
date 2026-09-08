@@ -159,6 +159,26 @@
   - --geoIPDB
   - --resolveHostName
 ## stop
+## service (Windows only)
+- install
+  - Flags:
+    - --name
+    - --displayName
+    - --description
+    - --config
+    - --autoStart
+- remove
+  - Flags:
+    - --name
+- start
+  - Flags:
+    - --name
+- stop
+  - Flags:
+    - --name
+- status
+  - Flags:
+    - --name
 ## version
 - Flags:
   - --color

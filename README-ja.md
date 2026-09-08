@@ -153,6 +153,7 @@ Available Commands:
   otel        Get OpenTelemetry info
   reload      Reload rules
   report      Get report
+  service     Manage twlogeye as a Windows service
   sigma       Check sigma rules (list|stat|logsrc|field|check|test)
   start       Start twlogeye
   stop        Stop twlogeye
@@ -472,6 +473,54 @@ Global Flags:
       --serverCert string   API server cert
       --serverKey string    API server private key
 ```
+
+#### service コマンド (Windows専用)
+
+Windows環境で twlogeye をバックグラウンドサービス（Windows Service）として登録・管理するためのコマンドです。
+管理者権限のコマンドプロンプトまたはPowerShellで実行します。
+
+```terminal
+>twlogeye help service
+Manage twlogeye as a Windows service (install, remove, start, stop, status).
+
+Usage:
+  twlogeye service [command]
+
+Available Commands:
+  install     Install twlogeye as a Windows service
+  remove      Remove twlogeye Windows service
+  start       Start twlogeye Windows service
+  status      Show status of twlogeye Windows service
+  stop        Stop twlogeye Windows service
+
+Flags:
+  -h, --help          help for service
+      --name string   Service name (default "twlogeye")
+```
+
+##### サービスのインストール
+```terminal
+# デフォルト設定でインストール（自動起動）
+>twlogeye service install
+
+# 設定ファイルパスを指定してインストール
+>twlogeye service install --config C:\twlogeye\twlogeye.yaml
+```
+
+##### サービスの開始・停止・状態確認
+```terminal
+>twlogeye service start
+>twlogeye service status
+>twlogeye service stop
+```
+
+##### サービスの削除
+```terminal
+>twlogeye service remove
+```
+
+> **Note**: Windowsの標準コマンド（`sc.exe`）やPowerShell（`New-Service`）、サービス管理ツール（`services.msc`）からも直接管理可能です。SCMから起動された場合は自動的にサービスモードで動作し、作業ディレクトリも実行ファイル配置場所に自動設定されます。また、サービスの起動・停止ログはWindowsイベントログ（「Windowsログ > アプリケーション」）に記録されます。
+
 
 #### reload コマンド
 
