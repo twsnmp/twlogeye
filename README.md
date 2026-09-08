@@ -21,7 +21,7 @@ SIGMA Rules
 
 https://github.com/SigmaHQ/sigma
 
-can be directly loaded for threat detection.
+can be directly loaded for threat detection. It includes built-in [recommended rule packs](sigma-packs.md) for Windows, Linux, network devices, and web exploits.
 It supports MCP servers and assists AI in log analysis.
 Notifications can be sent to AI-enabled automation tools via webhooks.
 Machine learning enables anomaly detection from logs.
@@ -906,7 +906,7 @@ YAML format. It corresponds to the following keys.
 
 ### Sigma Rules
 
-* **`sigmaPacks`**: List of embedded rule packs. Available packs:
+* **`sigmaPacks`**: List of embedded rule packs (see [Detailed Sigma Rule Packs Guide](sigma-packs.md)). Available packs:
   - `windows-essential`: Windows standard security events (logon failure, log cleared, new service, etc.)
   - `windows-ad`: Active Directory / Domain Controller threats (Kerberoasting, DCSync, etc.)
   - `windows-client`: Windows endpoint threats (suspicious RDP, UAC bypass, USB plugged, etc.)

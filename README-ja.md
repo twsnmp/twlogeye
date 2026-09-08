@@ -11,7 +11,7 @@ SIGMAルール
 
 https://github.com/SigmaHQ/sigma
 
-を直接読み込み脅威の検知をすることができます。
+を直接読み込み脅威の検知をすることができます。標準で Windows / Linux / ネットワーク機器 / Web 攻撃に対応した[組み込みルールパック](sigma-packs-ja.md)を備えており、簡単な設定ですぐに運用開始できます。
 MCPサーバーに対応しておりAIがログ分析することを助けます。
 WebhookによりAI対応の自動化ツールに通知することができます。
 機械学習によりログから異常を検知できます。
@@ -925,7 +925,7 @@ MCPクライアントから以下のURIでリソースを直接参照できま�
 
 ### Sigmaルール
 
-* **`sigmaPacks`**: 組み込みの推奨ルールパックのリスト。以下のパックが利用可能です：
+* **`sigmaPacks`**: 組み込みの推奨ルールパックのリスト（各パックの対象ログや詳細な検知項目は[組み込みルールパック詳細ガイド](sigma-packs-ja.md)を参照）。以下のパックが利用可能です：
   - `windows-essential`: Windows標準セキュリティイベント（認証失敗、ログ消去、新規サービス等）
   - `windows-ad`: Active Directory / ドメインコントローラ脅威（Kerberoasting、DCSync等）
   - `windows-client`: Windows端末・クライアント脅威（不審なRDP接続、UACバイパス、USB接続等）
