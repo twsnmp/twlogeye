@@ -925,7 +925,14 @@ MCPクライアントから以下のURIでリソースを直接参照できま�
 
 ### Sigmaルール
 
-* **`sigmaPacks`**: 組み込みの推奨ルールパックのリスト（例: `windows-essential`, `linux-auth`）。
+* **`sigmaPacks`**: 組み込みの推奨ルールパックのリスト。以下のパックが利用可能です：
+  - `windows-essential`: Windows標準セキュリティイベント（認証失敗、ログ消去、新規サービス等）
+  - `windows-ad`: Active Directory / ドメインコントローラ脅威（Kerberoasting、DCSync等）
+  - `windows-client`: Windows端末・クライアント脅威（不審なRDP接続、UACバイパス、USB接続等）
+  - `linux-auth`: Linux認証系ログ（SSHブルートフォース、sudo失敗等）
+  - `linux-system`: Linuxシステム永続化・改ざん（cron改変、systemdサービス追加等）
+  - `network-threats`: ネットワーク機器・FW（VPN認証失敗、管理ログイン失敗、スキャン検知等）
+  - `web-attacks`: Webサーバー攻撃（Log4Shell、パストラバーサル、SQLi、WebShell等）
 * **`sigmaRules`**: 個別のSigmaルールファイルまたはディレクトリのパス。
 * **`sigmaConfigs`**: Sigma設定ファイルのパス。
 * **`sigmaSkipError`**: 処理中にエラーが発生した場合にルールをスキップするかどうかのブール値フラグ。
@@ -976,5 +983,5 @@ $task
 [LICENSE](./LICENSE)を参照してください。
 
 ```
-Copyright 2025 Masayuki Yamai
+Copyright 2025 - 2026  Masayuki Yamai
 ```

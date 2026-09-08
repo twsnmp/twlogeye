@@ -49,7 +49,12 @@ resolveHostName: false
 geoIPDB: ""
 #sigmaPacks:
 #  - windows-essential
+#  - windows-ad
+#  - windows-client
 #  - linux-auth
+#  - linux-system
+#  - network-threats
+#  - web-attacks
 #sigmaRules: "/datastore/sigma/rules"
 #sigmaConfigs: "/datastore/sigma/config"
 #sigmaRules: embed:test/syslog

@@ -906,7 +906,14 @@ YAML format. It corresponds to the following keys.
 
 ### Sigma Rules
 
-* **`sigmaPacks`**: List of embedded rule packs (e.g. `windows-essential`, `linux-auth`).
+* **`sigmaPacks`**: List of embedded rule packs. Available packs:
+  - `windows-essential`: Windows standard security events (logon failure, log cleared, new service, etc.)
+  - `windows-ad`: Active Directory / Domain Controller threats (Kerberoasting, DCSync, etc.)
+  - `windows-client`: Windows endpoint threats (suspicious RDP, UAC bypass, USB plugged, etc.)
+  - `linux-auth`: Linux authentication logs (SSH brute force, sudo failure, etc.)
+  - `linux-system`: Linux system persistence / tampering (cron modified, systemd added, etc.)
+  - `network-threats`: Network devices / Firewalls (VPN failure, admin login failure, port scan, etc.)
+  - `web-attacks`: Web server attacks (Log4Shell, path traversal, SQLi, WebShell, etc.)
 * **`sigmaRules`**: The path to custom Sigma rule files or directories.
 * **`sigmaConfigs`**: The path to the Sigma configuration files.
 * **`sigmaSkipError`**: A boolean flag to skip a rule if an error occurs during processing.

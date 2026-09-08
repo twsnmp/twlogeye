@@ -32,3 +32,9 @@ fieldmappings:
   TargetSid: $.Event.EventData.TargetSid
   SubjectUserSid: $.Event.EventData.SubjectUserSid
   AuditSourceName: $.Event.EventData.AuditSourceName
+  TicketEncryptionType: $.Event.EventData.TicketEncryptionType
+  TicketOptions: $.Event.EventData.TicketOptions
+  PreAuthType: $.Event.EventData.PreAuthType
+  AccessMask: $.Event.EventData.AccessMask
+  Properties: $.Event.EventData.Properties
+  ShareName: $.Event.EventData.ShareName
