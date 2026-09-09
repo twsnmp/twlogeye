@@ -256,9 +256,10 @@ twlogeye は、オープンソース SIEM である [Wazuh](https://github.com/w
 
 | パック名 | 主な対象 | 収録ルール | 相関検知 |
 | :--- | :--- | :--- | :---: |
-| **`wazuh-linux`** | Linux (SSHD, Sudo, PAM) | 不正ユーザ認証試行、ブルートフォース攻撃、sudo特権昇格、sudoers未登録実行、PAM認証失敗 | 対応 (SSHD総当たり等) |
+| **`wazuh-linux`** | Linux (SSHD, Sudo, PAM) | 不正ユーザ認証試行、ブルートフォース攻撃、rootログイン検知、sudo特権昇格、sudoers未登録実行、PAM認証失敗 | 対応 (SSHD総当たり等) |
 | **`wazuh-web`** | Web (Apache, Nginx) | 脆弱性スキャナー (Nikto/sqlmap等)、機密隠しファイル (.git/.env/.htpasswd) 探索 | - |
 | **`wazuh-network`** | ネットワーク機器 (Cisco, FortiGate) | Cisco 管理画面認証失敗、FortiGate SSL-VPN 複数回連続認証失敗 | 対応 (VPN総当たり等) |
+| **`wazuh-compliance`** | コンプライアンス・監査基準<br>(PCI-DSS, NIST, GDPR, CIS) | Syslog/Auditd停止検知(10.2.6/AU-12)、BAD SU昇格失敗(10.2.4/AC-6)、sudoers改変(10.2.2/CM-5)、アカウントロック(8.1.6/AC-7)、特権グループ追加(10.2.5/AC-2)、システム時刻変更(10.4/AU-8)、DB認証拒否(10.2.4/AC-6) | - |
 
 ### Wazuh ルール XML の Sigma 変換コマンド (`convert-wazuh`)
 

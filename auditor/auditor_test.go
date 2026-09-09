@@ -247,3 +247,37 @@ func TestWazuhPackDecoders_ScopedActivation(t *testing.T) {
 		t.Errorf("expected wazuh decoders to be loaded when wazuh-linux is enabled")
 	}
 }
+
+func TestWazuhCompliancePackLoadingAndMatching(t *testing.T) {
+	datastore.Config.SigmaPacks = []string{"wazuh-compliance"}
+	datastore.Config.SigmaRules = "none"
+
+	entries := GetSigmaRuleEntries()
+	if len(entries) < 8 {
+		t.Fatalf("expected at least 8 rules in wazuh-compliance pack, got %d", len(entries))
+	}
+
+	// 1. Syslog stopped (PCI-DSS 10.2.6)
+	syslogStop := `{"hostname":"srv01","content":"rsyslogd: [origin software=\"rsyslogd\" swVersion=\"8.2112.0\" x-pid=\"123\" x-info=\"https://www.rsyslog.com\"] exiting on signal 15."}`
+	if m := matchSigmaRule(&datastore.LogEnt{Time: time.Now().UnixNano(), Type: datastore.Syslog, Src: "srv01", Log: syslogStop}); m == nil || m.ID != "wazuh-cmp-syslog-stopped" {
+		t.Errorf("expected wazuh-cmp-syslog-stopped match, got %v", m)
+	}
+
+	// 2. BAD SU to root (PCI-DSS 10.2.4, NIST AC-6)
+	suBad := `{"hostname":"srv01","content":"su[4321]: FAILED SU (to root) attacker on pts/2"}`
+	if m := matchSigmaRule(&datastore.LogEnt{Time: time.Now().UnixNano(), Type: datastore.Syslog, Src: "srv01", Log: suBad}); m == nil || m.ID != "wazuh-cmp-bad-su" {
+		t.Errorf("expected wazuh-cmp-bad-su match, got %v", m)
+	}
+
+	// 3. Auditd stopped (PCI-DSS 10.2.6)
+	auditStop := `{"hostname":"srv01","content":"auditd[500]: Audit daemon is exiting"}`
+	if m := matchSigmaRule(&datastore.LogEnt{Time: time.Now().UnixNano(), Type: datastore.Syslog, Src: "srv01", Log: auditStop}); m == nil || m.ID != "wazuh-cmp-auditd-stopped" {
+		t.Errorf("expected wazuh-cmp-auditd-stopped match, got %v", m)
+	}
+
+	// 4. Account locked (PCI-DSS 8.1.6, NIST AC-7)
+	lockedLog := `{"hostname":"srv01","content":"pam_faillock[600]: Consecutive login failures for user testuser Account locked"}`
+	if m := matchSigmaRule(&datastore.LogEnt{Time: time.Now().UnixNano(), Type: datastore.Syslog, Src: "srv01", Log: lockedLog}); m == nil || m.ID != "wazuh-cmp-account-locked" {
+		t.Errorf("expected wazuh-cmp-account-locked match, got %v", m)
+	}
+}
