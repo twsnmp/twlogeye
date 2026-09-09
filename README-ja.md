@@ -801,6 +801,38 @@ TwLogEyeにロードされているSigmaルールを再読み込みします。
 
 - **パラメータ:** なし
 
+### `get_sigma_packs`
+利用可能な組み込みSigmaルールパックの一覧、または指定したパック内のルール一覧を取得します。
+
+- **パラメータ:**
+  - `pack` (string, 任意): 特定のパック名 (例: `windows-essential`, `linux-auth`)。省略時は全パックの概要（説明・ルール数）を返します。
+
+### `convert_wazuh_rules`
+WazuhのXMLルールを階層依存関係（`if_sid`, `if_matched_sid`）および相関分析属性（`frequency`, `timeframe`）を含めてSigma YAMLルールに変換します。
+
+- **パラメータ:**
+  - `xml` (string, 必須): 変換対象のWazuh XMLルール文字列。
+  - `min_level` (int, 任意): 変換対象とする最小Wazuhルールレベル (デフォルト 0)。
+  - `skip_frequency` (bool, 任意): 頻度/時間相関ルールの除外フラグ。
+  - `default_product` (string, 任意): デフォルトのSigma logsource product (例: `linux`, `windows`)。
+  - `default_service` (string, 任意): デフォルトのSigma logsource service (例: `sshd`, `sudo`)。
+
+### `convert_and_add_wazuh_rule`
+WazuhのXMLルールをSigma YAMLルールに変換し、直接TwLogEyeのSigmaルールデータベースへ追加・自動再読み込みを行います。
+
+- **パラメータ:**
+  - `xml` (string, 必須): 変換対象のWazuh XMLルール文字列。
+  - `min_level` (int, 任意): 変換対象とする最小Wazuhルールレベル (デフォルト 0)。
+  - `skip_frequency` (bool, 任意): 頻度/時間相関ルールの除外フラグ。
+  - `default_product` (string, 任意): デフォルトのSigma logsource product。
+  - `default_service` (string, 任意): デフォルトのSigma logsource service。
+
+### `convert_wazuh_decoder`
+WazuhのXMLデコーダーをTwLogEyeの名前付き正規表現抽出パターンに変換します。
+
+- **パラメータ:**
+  - `xml` (string, 必須): 変換対象のWazuh XMLデコーダー文字列。
+
 ---
 
 ## MCP Resources (リソース)
@@ -809,6 +841,7 @@ MCPクライアントから以下のURIでリソースを直接参照できま�
 
 * `twlogeye://status`: システム状態・リソース情報
 * `twlogeye://sigma/rules`: 有効なSigmaルールIDリスト
+* `twlogeye://sigma/packs`: 組み込みSigmaルールパック一覧（説明・ルール数）
 * `twlogeye://reports/{type}/latest`: 各種最新レポート (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`, `monitor`, `anomaly`)
 
 ---

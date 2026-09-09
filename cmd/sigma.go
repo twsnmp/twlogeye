@@ -80,19 +80,10 @@ func sigmaPacks() {
 	packs := datastore.GetAvailableSigmaPacks()
 	fmt.Printf("Available Rule Packs (%d):\n", len(packs))
 	for _, p := range packs {
-		// count rules in this pack
 		count := 0
-		savePacks := datastore.Config.SigmaPacks
-		saveRules := datastore.Config.SigmaRules
-		datastore.Config.SigmaPacks = []string{p}
-		datastore.Config.SigmaRules = "none" // suppress default
-		datastore.ForEachSigmaRulesWithSource(func(c []byte, path, source string) {
-			if source == "pack:"+p {
-				count++
-			}
-		})
-		datastore.Config.SigmaPacks = savePacks
-		datastore.Config.SigmaRules = saveRules
+		if info, err := datastore.GetSigmaPackInfo(p, false); err == nil {
+			count = info.RuleCount
+		}
 		fmt.Printf("  - %-20s (rules: %d)\n", p, count)
 	}
 }

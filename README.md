@@ -781,6 +781,38 @@ Reloads the Sigma rules loaded in TwLogEye.
 
 - **Parameters:** None
 
+### `get_sigma_packs`
+Retrieves a list of available built-in Sigma rule packs, or detailed rule list of a specific pack.
+
+- **Parameters:**
+  - `pack` (string, optional): Specific pack name (e.g., `windows-essential`, `linux-auth`) to get its rule list. If omitted, returns all packs with descriptions and rule counts.
+
+### `convert_wazuh_rules`
+Converts Wazuh XML rules into Sigma YAML rules, resolving parent/child rule hierarchies (`if_sid`, `if_matched_sid`) and correlation attributes (`frequency`, `timeframe`).
+
+- **Parameters:**
+  - `xml` (string, required): Wazuh XML rules content.
+  - `min_level` (int, optional): Minimum Wazuh rule level to convert (default 0).
+  - `skip_frequency` (bool, optional): Skip frequency/timeframe correlation rules.
+  - `default_product` (string, optional): Default Sigma logsource product (e.g. `linux`, `windows`).
+  - `default_service` (string, optional): Default Sigma logsource service (e.g. `sshd`, `sudo`).
+
+### `convert_and_add_wazuh_rule`
+Converts Wazuh XML rules and immediately imports them into TwLogEye's Sigma rule database, triggering automatic rule reload.
+
+- **Parameters:**
+  - `xml` (string, required): Wazuh XML rules content.
+  - `min_level` (int, optional): Minimum Wazuh rule level to convert (default 0).
+  - `skip_frequency` (bool, optional): Skip frequency/timeframe correlation rules.
+  - `default_product` (string, optional): Default Sigma logsource product.
+  - `default_service` (string, optional): Default Sigma logsource service.
+
+### `convert_wazuh_decoder`
+Converts Wazuh XML decoders into Go named-capture regular expression patterns for log parsing.
+
+- **Parameters:**
+  - `xml` (string, required): Wazuh XML decoders content.
+
 ---
 
 ## MCP Resources
@@ -789,6 +821,7 @@ Clients can read resources directly using the `twlogeye://` URI scheme:
 
 * `twlogeye://status`: System performance metrics and storage status
 * `twlogeye://sigma/rules`: List of active Sigma rule IDs
+* `twlogeye://sigma/packs`: Available built-in Sigma rule packs with descriptions and rule counts
 * `twlogeye://reports/{type}/latest`: Latest report for specified category (`syslog`, `trap`, `netflow`, `winevent`, `otel`, `mqtt`, `monitor`, `anomaly`)
 
 ---

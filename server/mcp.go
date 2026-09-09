@@ -152,6 +152,22 @@ func addTools(s *mcp.Server) {
 		Description: "reload sigma rule",
 	}, ReloadSigmaRule)
 	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_sigma_packs",
+		Description: "Get list of available built-in Sigma rule packs or details of a specific pack.",
+	}, getSigmaPacks)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "convert_wazuh_rules",
+		Description: "Convert Wazuh XML rules to Sigma YAML rules with hierarchy resolution and correlation.",
+	}, convertWazuhRules)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "convert_and_add_wazuh_rule",
+		Description: "Convert Wazuh XML rules and add them directly to TwLogEye Sigma rule database.",
+	}, convertAndAddWazuhRule)
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        "convert_wazuh_decoder",
+		Description: "Convert Wazuh XML decoders to Go named-capture regex patterns for TwLogEye log extraction.",
+	}, convertWazuhDecoder)
+	mcp.AddTool(s, &mcp.Tool{
 		Name:        "investigate_ip",
 		Description: "Investigate IP address including GeoIP, DNS PTR, and related logs (Netflow, Syslog, WinEvent, Trap).",
 	}, investigateIP)
@@ -400,6 +416,24 @@ func addResources(s *mcp.Server) {
 			Contents: []*mcp.ResourceContents{
 				{
 					URI:      "twlogeye://sigma/rules",
+					MIMEType: "application/json",
+					Text:     string(j),
+				},
+			},
+		}, nil
+	})
+	s.AddResource(&mcp.Resource{
+		URI:         "twlogeye://sigma/packs",
+		Name:        "Sigma Rule Packs",
+		Description: "List of available built-in Sigma rule packs with descriptions and rule counts.",
+		MIMEType:    "application/json",
+	}, func(ctx context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+		packs := datastore.GetAllSigmaPacksInfo()
+		j, _ := json.Marshal(packs)
+		return &mcp.ReadResourceResult{
+			Contents: []*mcp.ResourceContents{
+				{
+					URI:      "twlogeye://sigma/packs",
 					MIMEType: "application/json",
 					Text:     string(j),
 				},
@@ -1939,6 +1973,50 @@ func getSigmaRuleEvaluatorList(ctx context.Context, req *mcp.CallToolRequest, _ 
 			}, nil, nil
 		}
 	}
+	entries := auditor.GetRuleEntries()
+	if len(entries) > 0 {
+		type ruleInfo struct {
+			ID          string                     `json:"id"`
+			Title       string                     `json:"title"`
+			Level       string                     `json:"level"`
+			Logsource   map[string]string          `json:"logsource,omitempty"`
+			Source      string                     `json:"source,omitempty"`
+			Path        string                     `json:"path,omitempty"`
+			Correlation *auditor.CorrelationConfig `json:"correlation,omitempty"`
+		}
+		var list []ruleInfo
+		for _, e := range entries {
+			if e != nil && e.Evaluator != nil {
+				ls := make(map[string]string)
+				if e.Evaluator.Rule.Logsource.Product != "" {
+					ls["product"] = e.Evaluator.Rule.Logsource.Product
+				}
+				if e.Evaluator.Rule.Logsource.Category != "" {
+					ls["category"] = e.Evaluator.Rule.Logsource.Category
+				}
+				if e.Evaluator.Rule.Logsource.Service != "" {
+					ls["service"] = e.Evaluator.Rule.Logsource.Service
+				}
+				list = append(list, ruleInfo{
+					ID:          e.Evaluator.Rule.ID,
+					Title:       e.Evaluator.Rule.Title,
+					Level:       e.Evaluator.Rule.Level,
+					Logsource:   ls,
+					Source:      e.Source,
+					Path:        e.Path,
+					Correlation: e.Correlation,
+				})
+			}
+		}
+		j, err := json.Marshal(&list)
+		if err == nil {
+			return &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{Text: string(j)},
+				},
+			}, nil, nil
+		}
+	}
 	list := auditor.GetEvaluators()
 	j, err := json.Marshal(&list)
 	if err != nil {
@@ -2102,6 +2180,227 @@ func ReloadSigmaRule(ctx context.Context, req *mcp.CallToolRequest, _ any) (*mcp
 			&mcp.TextContent{Text: "start reload"},
 		},
 	}, nil, nil
+}
+
+type getSigmaPacksParams struct {
+	Pack string `json:"pack,omitempty" jsonschema:"Optional pack name to get detailed rule list for a specific pack"`
+}
+
+func getSigmaPacks(ctx context.Context, req *mcp.CallToolRequest, args getSigmaPacksParams) (*mcp.CallToolResult, any, error) {
+	if args.Pack != "" {
+		info, err := datastore.GetSigmaPackInfo(args.Pack, true)
+		if err != nil {
+			return toolError(err.Error())
+		}
+		j, err := json.Marshal(info)
+		if err != nil {
+			return toolError(err.Error())
+		}
+		return toolSuccess(string(j))
+	}
+	packs := datastore.GetAllSigmaPacksInfo()
+	j, err := json.Marshal(packs)
+	if err != nil {
+		return toolError(err.Error())
+	}
+	return toolSuccess(string(j))
+}
+
+type convertWazuhRulesParams struct {
+	XML            string `json:"xml" jsonschema:"Wazuh rules XML content to convert"`
+	MinLevel       int    `json:"min_level,omitempty" jsonschema:"Minimum Wazuh rule level to convert (default 0)"`
+	SkipFrequency  bool   `json:"skip_frequency,omitempty" jsonschema:"Skip frequency/timeframe correlation attributes"`
+	DefaultProduct string `json:"default_product,omitempty" jsonschema:"Default Sigma logsource product (e.g. linux, windows)"`
+	DefaultService string `json:"default_service,omitempty" jsonschema:"Default Sigma logsource service (e.g. sshd, sudo)"`
+}
+
+type mcpConvertedRule struct {
+	ID             string                    `json:"id"`
+	Title          string                    `json:"title"`
+	Level          string                    `json:"level"`
+	YAML           string                    `json:"yaml"`
+	HasCorrelation bool                      `json:"has_correlation"`
+	Correlation    *auditor.SigmaCorrelation `json:"correlation,omitempty"`
+}
+
+type mcpConvertWazuhResult struct {
+	TotalRules     int                `json:"total_rules"`
+	ConvertedCount int                `json:"converted_count"`
+	Rules          []mcpConvertedRule `json:"rules"`
+}
+
+func convertWazuhRules(ctx context.Context, req *mcp.CallToolRequest, args convertWazuhRulesParams) (*mcp.CallToolResult, any, error) {
+	xmlStr := strings.TrimSpace(args.XML)
+	if xmlStr == "" {
+		return toolError("xml is required")
+	}
+	rawRules, err := auditor.ParseWazuhRulesXML([]byte(xmlStr))
+	if err != nil {
+		return toolError(fmt.Sprintf("failed to parse Wazuh rules XML: %v", err))
+	}
+	resolved := auditor.ResolveRuleHierarchy(rawRules, args.DefaultService)
+	opts := auditor.WazuhConvertOptions{
+		MinLevel:       args.MinLevel,
+		SkipFrequency:  args.SkipFrequency,
+		DefaultProduct: args.DefaultProduct,
+		DefaultService: args.DefaultService,
+	}
+	result := mcpConvertWazuhResult{
+		TotalRules: len(rawRules),
+		Rules:      []mcpConvertedRule{},
+	}
+	for _, r := range resolved {
+		sigmaRule, err := auditor.ConvertWazuhRuleToSigma(r, opts)
+		if err != nil || sigmaRule == nil {
+			continue
+		}
+		yamlBytes, err := auditor.FormatSigmaYAML(sigmaRule)
+		if err != nil {
+			continue
+		}
+		converted := mcpConvertedRule{
+			ID:             sigmaRule.ID,
+			Title:          sigmaRule.Title,
+			Level:          sigmaRule.Level,
+			YAML:           string(yamlBytes),
+			HasCorrelation: sigmaRule.Correlation != nil,
+			Correlation:    sigmaRule.Correlation,
+		}
+		result.Rules = append(result.Rules, converted)
+	}
+	result.ConvertedCount = len(result.Rules)
+	j, err := json.Marshal(result)
+	if err != nil {
+		return toolError(err.Error())
+	}
+	return toolSuccess(string(j))
+}
+
+type mcpConvertAndAddResult struct {
+	TotalRules int      `json:"total_rules"`
+	AddedCount int      `json:"added_count"`
+	AddedIDs   []string `json:"added_ids"`
+	Errors     []string `json:"errors,omitempty"`
+}
+
+func convertAndAddWazuhRule(ctx context.Context, req *mcp.CallToolRequest, args convertWazuhRulesParams) (*mcp.CallToolResult, any, error) {
+	xmlStr := strings.TrimSpace(args.XML)
+	if xmlStr == "" {
+		return toolError("xml is required")
+	}
+	rawRules, err := auditor.ParseWazuhRulesXML([]byte(xmlStr))
+	if err != nil {
+		return toolError(fmt.Sprintf("failed to parse Wazuh rules XML: %v", err))
+	}
+	resolved := auditor.ResolveRuleHierarchy(rawRules, args.DefaultService)
+	opts := auditor.WazuhConvertOptions{
+		MinLevel:       args.MinLevel,
+		SkipFrequency:  args.SkipFrequency,
+		DefaultProduct: args.DefaultProduct,
+		DefaultService: args.DefaultService,
+	}
+	res := mcpConvertAndAddResult{
+		TotalRules: len(rawRules),
+		AddedIDs:   []string{},
+	}
+	for _, r := range resolved {
+		sigmaRule, err := auditor.ConvertWazuhRuleToSigma(r, opts)
+		if err != nil || sigmaRule == nil {
+			continue
+		}
+		yamlBytes, err := auditor.FormatSigmaYAML(sigmaRule)
+		if err != nil {
+			res.Errors = append(res.Errors, fmt.Sprintf("rule %s format yaml error: %v", sigmaRule.ID, err))
+			continue
+		}
+		id := sigmaRule.ID
+		ruleContent := string(yamlBytes)
+		if grpcClient != nil {
+			resp, err := grpcClient.AddSigmaRule(ctx, &api.SigmaRuleRequest{Id: id, Rule: ruleContent})
+			if err != nil {
+				res.Errors = append(res.Errors, fmt.Sprintf("rule %s grpc error: %v", id, err))
+				continue
+			}
+			_ = resp
+			res.AddedIDs = append(res.AddedIDs, id)
+			res.AddedCount++
+		} else {
+			if err := datastore.AddSigmaRuleToDB(id, ruleContent); err != nil {
+				res.Errors = append(res.Errors, fmt.Sprintf("rule %s db error: %v", id, err))
+				continue
+			}
+			res.AddedIDs = append(res.AddedIDs, id)
+			res.AddedCount++
+		}
+	}
+	if res.AddedCount > 0 {
+		if grpcClient != nil {
+			_, _ = grpcClient.Reload(ctx, &api.Empty{})
+		} else {
+			go func() {
+				time.Sleep(time.Second)
+				auditor.Reload()
+			}()
+		}
+	}
+	j, err := json.Marshal(res)
+	if err != nil {
+		return toolError(err.Error())
+	}
+	return toolSuccess(string(j))
+}
+
+type convertWazuhDecoderParams struct {
+	XML string `json:"xml" jsonschema:"Wazuh decoders XML content to convert"`
+}
+
+type mcpConvertedDecoder struct {
+	Name   string `json:"name"`
+	Parent string `json:"parent,omitempty"`
+	Order  string `json:"order"`
+	Regex  string `json:"regex"`
+}
+
+type mcpConvertDecoderResult struct {
+	TotalDecoders  int                   `json:"total_decoders"`
+	ConvertedCount int                   `json:"converted_count"`
+	Decoders       []mcpConvertedDecoder `json:"decoders"`
+}
+
+func convertWazuhDecoder(ctx context.Context, req *mcp.CallToolRequest, args convertWazuhDecoderParams) (*mcp.CallToolResult, any, error) {
+	xmlStr := strings.TrimSpace(args.XML)
+	if xmlStr == "" {
+		return toolError("xml is required")
+	}
+	decs, err := auditor.ParseWazuhDecodersXML([]byte(xmlStr))
+	if err != nil {
+		return toolError(fmt.Sprintf("failed to parse Wazuh decoders XML: %v", err))
+	}
+	res := mcpConvertDecoderResult{
+		TotalDecoders: len(decs),
+		Decoders:      []mcpConvertedDecoder{},
+	}
+	for _, d := range decs {
+		if d.Regex == "" || d.Order == "" {
+			continue
+		}
+		re, err := auditor.ConvertDecoderToNamedRegex(d)
+		if err != nil {
+			continue
+		}
+		res.Decoders = append(res.Decoders, mcpConvertedDecoder{
+			Name:   d.Name,
+			Parent: d.Parent,
+			Order:  d.Order,
+			Regex:  re,
+		})
+	}
+	res.ConvertedCount = len(res.Decoders)
+	j, err := json.Marshal(res)
+	if err != nil {
+		return toolError(err.Error())
+	}
+	return toolSuccess(string(j))
 }
 
 type investigateIPParams struct {
