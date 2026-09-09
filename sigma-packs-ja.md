@@ -245,3 +245,49 @@ Apache、Nginx、リバースプロキシ等の**Web アクセスログに現れ
 
 ### 活用例（ルールのチューニング）
 組み込みパックのルール（例: `win_security_failed_logons`）をそのまま使いたいが、「特定の社内 IP や開発アカウントを除外したい」「重要度レベルを `low` から `high` に引き上げたい」という場合、同じ ID を持つ YAML ファイルを自作して `sigmaRules` に指定するだけで、**組み込みパック側のルールが自動的にカスタムルールで置き換わります**。
+
+---
+
+## 5. Wazuh ルールパックおよびルール変換・相関検知
+
+twlogeye は、オープンソース SIEM である [Wazuh](https://github.com/wazuh/wazuh) の膨大なルールセット資産を Sigma ルールとして取り込み、活用するための機能を標準で備えています。
+
+### 組み込み Wazuh ルールパック
+
+| パック名 | 主な対象 | 収録ルール | 相関検知 |
+| :--- | :--- | :--- | :---: |
+| **`wazuh-linux`** | Linux (SSHD, Sudo, PAM) | 不正ユーザ認証試行、ブルートフォース攻撃、sudo特権昇格、sudoers未登録実行、PAM認証失敗 | 対応 (SSHD総当たり等) |
+| **`wazuh-web`** | Web (Apache, Nginx) | 脆弱性スキャナー (Nikto/sqlmap等)、機密隠しファイル (.git/.env/.htpasswd) 探索 | - |
+| **`wazuh-network`** | ネットワーク機器 (Cisco, FortiGate) | Cisco 管理画面認証失敗、FortiGate SSL-VPN 複数回連続認証失敗 | 対応 (VPN総当たり等) |
+
+### Wazuh ルール XML の Sigma 変換コマンド (`convert-wazuh`)
+
+手元の Wazuh ルール XML ファイルや公式リポジトリのルールセットを、twlogeye で利用可能な Sigma YAML ルールへ変換できます。`<if_sid>` による親ルールの階層条件は自動的に AND 展開され、`<frequency>` / `<timeframe>` による相関条件も保持されます。
+
+```bash
+# 単一の Wazuh ルール XML を Sigma YAML に変換
+twlogeye sigma convert-wazuh -o ./my-rules ./0095-sshd_rules.xml
+
+# ディレクトリ内の全 XML を一括変換
+twlogeye sigma convert-wazuh -o ./my-rules /path/to/wazuh/ruleset/rules/
+
+# 標準出力へ YAML を出力（パイプ処理用）
+twlogeye sigma convert-wazuh --stdout ./0095-sshd_rules.xml
+```
+
+### Wazuh デコーダ XML の正規表現変換コマンド (`convert-wazuh-decoder`)
+
+Wazuh のデコーダ定義（`<prematch>`, `<regex>`, `<order>`）から、twlogeye の NamedCaptures で使用できる名前付きキャプチャグループ正規表現を自動生成します。
+
+```bash
+# デコーダ XML を変換してファイルに出力
+twlogeye sigma convert-wazuh-decoder -o ./captures ./0310-ssh_decoders.xml
+
+# 標準出力に出力して確認
+twlogeye sigma convert-wazuh-decoder --stdout ./0310-ssh_decoders.xml
+```
+
+### スライディングウィンドウによる相関検知（案A）
+
+変換された Sigma ルールに含まれる `correlation:` メタデータ（`frequency`, `timeframe`, `group_by`）を twlogeye の `auditor` が解釈し、インメモリのスライディング時間窓で同一送信元（`client`）等からの発生頻度を監視します。指定時間枠内に指定回数以上イベントが発生した時点でアラート通知（`Notify`）がトリガーされます。
+

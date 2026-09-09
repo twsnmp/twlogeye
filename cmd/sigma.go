@@ -34,8 +34,8 @@ var (
 // sigmaCmd represents the sigma command
 var sigmaCmd = &cobra.Command{
 	Use:   "sigma",
-	Short: "Check sigma rules (list|packs|stat|logsrc|field|check|test)",
-	Long: `Check sigma rules (list|packs|stat|logsrc|field|check|test)
+	Short: "Check sigma rules (list|packs|stat|logsrc|field|check|test|convert-wazuh)",
+	Long: `Check sigma rules (list|packs|stat|logsrc|field|check|test|convert-wazuh)
 	list: list rules
 	packs: list available embedded rule packs
 	stat: stat rules
@@ -43,6 +43,8 @@ var sigmaCmd = &cobra.Command{
 	field: list fields
 	check: check rule
 	test: test rule args
+	convert-wazuh: convert Wazuh rules XML to Sigma YAML
+	convert-wazuh-decoder: convert Wazuh decoders XML to named-capture regex patterns
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// no error  for sigma config and rule load

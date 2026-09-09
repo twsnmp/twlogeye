@@ -22,9 +22,10 @@ import (
 )
 
 type SigmaRuleEntry struct {
-	Evaluator *evaluator.RuleEvaluator
-	Source    string // e.g. "pack:windows-essential", "file:/path/to/rule.yaml", "db", "embed"
-	Path      string
+	Evaluator   *evaluator.RuleEvaluator
+	Source      string // e.g. "pack:windows-essential", "file:/path/to/rule.yaml", "db", "embed"
+	Path        string
+	Correlation *CorrelationConfig
 }
 
 var evaluators []*evaluator.RuleEvaluator
@@ -191,6 +192,7 @@ func loadSigmaRules() {
 			rule.ID = path
 		}
 
+		corr := ParseCorrelationConfig(rule.AdditionalFields["correlation"])
 		if existing, exists := ruleMap[rule.ID]; exists {
 			newPrio := getSourcePriority(source)
 			existPrio := getSourcePriority(existing.Source)
@@ -203,9 +205,10 @@ func loadSigmaRules() {
 					ev = evaluator.ForRule(rule, evaluator.CaseSensitive)
 				}
 				ruleMap[rule.ID] = &SigmaRuleEntry{
-					Evaluator: ev,
-					Source:    source,
-					Path:      path,
+					Evaluator:   ev,
+					Source:      source,
+					Path:        path,
+					Correlation: corr,
 				}
 				override++
 				return
@@ -222,9 +225,10 @@ func loadSigmaRules() {
 			ev = evaluator.ForRule(rule, evaluator.CaseSensitive)
 		}
 		ruleMap[rule.ID] = &SigmaRuleEntry{
-			Evaluator: ev,
-			Source:    source,
-			Path:      path,
+			Evaluator:   ev,
+			Source:      source,
+			Path:        path,
+			Correlation: corr,
 		}
 		orderedIDs = append(orderedIDs, rule.ID)
 	})
@@ -338,12 +342,25 @@ func MatchSigmaRuleWithEvaluator(ev *evaluator.RuleEvaluator, l *datastore.LogEn
 	return r.Match
 }
 
+func extractGroupKey(data map[string]interface{}, defaultSrc string, groupBy []string) string {
+	var parts []string
+	for _, k := range groupBy {
+		if v, ok := data[k]; ok && v != nil {
+			parts = append(parts, fmt.Sprintf("%v", v))
+		}
+	}
+	if len(parts) == 0 {
+		return defaultSrc
+	}
+	return strings.Join(parts, "/")
+}
+
 func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 	data := ParseLogData(l)
 	if data == nil {
 		return nil
 	}
-	for _, ev := range evaluators {
+	for i, ev := range evaluators {
 		r, err := ev.Matches(context.Background(), data)
 		if err != nil {
 			if datastore.Config.Debug {
@@ -352,6 +369,15 @@ func matchSigmaRule(l *datastore.LogEnt) *evaluator.RuleEvaluator {
 			continue
 		}
 		if r.Match {
+			if i < len(ruleEntries) {
+				entry := ruleEntries[i]
+				if entry.Correlation != nil {
+					groupVal := extractGroupKey(data, l.Src, entry.Correlation.GroupBy)
+					if !globalCorrelationTracker.RecordAndCheck(ev.Rule.ID, groupVal, l.Time, entry.Correlation) {
+						continue
+					}
+				}
+			}
 			return ev
 		}
 	}
@@ -386,6 +412,7 @@ func GetEvaluators() []*evaluator.RuleEvaluator {
 func GetSigmaRuleEntries() []*SigmaRuleEntry {
 	loadSigmaConfigs()
 	loadSigmaRules()
+	loadNamedCaptures()
 	return ruleEntries
 }
 
@@ -410,6 +437,8 @@ func ParseSigmaRule(c string) (string, error) {
 func TestRule(args []string) {
 	loadSigmaConfigs()
 	loadSigmaRules()
+	setGrok()
+	loadNamedCaptures()
 	if len(evaluators) < 1 {
 		log.Fatalln("no rule to test")
 	}
@@ -468,7 +497,38 @@ func setGrok() {
 	}
 }
 
+var wazuhLinuxDecoders = []string{
+	// SSHD Accepted (extracts user, client, srcport)
+	`Accepted \S+ for (?P<user>\S+) from (?P<client>\S+) port (?P<srcport>\d+)`,
+	// SSHD Failed (extracts user, client, srcport)
+	`Failed \S+ for (?:invalid user )?(?P<user>\S+) from (?P<client>\S+) port (?P<srcport>\d+)`,
+	// Sudo execution (extracts user, dstuser, command)
+	`(?P<user>\S+) : (?:TTY=\S+ ; )?(?:PWD=\S+ ; )?USER=(?P<dstuser>\S+) ; COMMAND=(?P<command>.+)`,
+	// PAM authentication failure (extracts user)
+	`pam_\S+\(sshd:auth\): authentication failure; .*user=(?P<user>\S+)`,
+}
+
+func loadWazuhPackDecoders() {
+	hasWazuhLinux := false
+	for _, p := range datastore.Config.SigmaPacks {
+		if p == "wazuh-linux" {
+			hasWazuhLinux = true
+			break
+		}
+	}
+	if !hasWazuhLinux {
+		return
+	}
+	for _, pat := range wazuhLinuxDecoders {
+		if r, err := regexp.Compile(pat); err == nil {
+			namedCaptureRegList = append(namedCaptureRegList, r)
+		}
+	}
+}
+
 func loadNamedCaptures() {
+	namedCaptureRegList = []*regexp.Regexp{}
+	loadWazuhPackDecoders()
 	if datastore.Config.NamedCaptures == "" {
 		return
 	}
@@ -477,7 +537,10 @@ func loadNamedCaptures() {
 		log.Fatalf("load name captures err=%v", err)
 	}
 	for _, l := range strings.Split(string(c), "\n") {
-		namedCaptureRegList = append(namedCaptureRegList, regexp.MustCompile(l))
+		l = strings.TrimSpace(l)
+		if l != "" && !strings.HasPrefix(l, "#") {
+			namedCaptureRegList = append(namedCaptureRegList, regexp.MustCompile(l))
+		}
 	}
 }
 

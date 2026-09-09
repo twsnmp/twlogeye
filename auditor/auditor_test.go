@@ -180,3 +180,70 @@ level: critical
 		t.Errorf("expected title Customized Failed Logon, got %s", overriddenEntry.Evaluator.Title)
 	}
 }
+
+func TestWazuhSigmaPacksLoadingAndMatching(t *testing.T) {
+	datastore.Config.SigmaPacks = []string{"wazuh-linux", "wazuh-web", "wazuh-network"}
+	datastore.Config.SigmaRules = "none"
+
+	entries := GetSigmaRuleEntries()
+	if len(entries) < 8 {
+		t.Fatalf("expected at least 8 rules from Wazuh packs, got %d", len(entries))
+	}
+
+	globalCorrelationTracker.Reset()
+
+	// 1. Wazuh Linux SSH Invalid User (5710)
+	sshLog := `{"hostname":"srv01","content":"sshd[1234]: Failed password for invalid user hacker from 192.168.1.100 port 4567 ssh2"}`
+	if m := matchSigmaRule(&datastore.LogEnt{Time: time.Now().UnixNano(), Type: datastore.Syslog, Src: "srv01", Log: sshLog}); m == nil || m.ID != "wazuh-5710" {
+		t.Errorf("expected wazuh-5710 match, got %v", m)
+	}
+
+	// 2. Wazuh Linux Sudo Not In Sudoers (5404)
+	sudoLog := `{"hostname":"srv01","content":"sudo: attacker : user NOT in sudoers ; TTY=pts/0 ; PWD=/home/attacker ; USER=root ; COMMAND=/bin/bash"}`
+	if m := matchSigmaRule(&datastore.LogEnt{Time: time.Now().UnixNano(), Type: datastore.Syslog, Src: "srv01", Log: sudoLog}); m == nil || m.ID != "wazuh-5404" {
+		t.Errorf("expected wazuh-5404 match, got %v", m)
+	}
+
+	// 3. Wazuh Web Scanner (30112)
+	webLog := `{"hostname":"web01","content":"GET /login HTTP/1.1 200 - Mozilla/5.0 sqlmap/1.5#stable (http://sqlmap.org)"}`
+	if m := matchSigmaRule(&datastore.LogEnt{Time: time.Now().UnixNano(), Type: datastore.Syslog, Src: "web01", Log: webLog}); m == nil || m.ID != "wazuh-30112" {
+		t.Errorf("expected wazuh-30112 match, got %v", m)
+	}
+
+	// 4. Wazuh Network Cisco Auth Fail (40101)
+	ciscoLog := `{"hostname":"cisco-gw","content":"%SEC_LOGIN-4-LOGIN_FAILED: Login failed [user: admin] [Source: 10.0.0.5] [localport: 22] [Reason: Login Authentication Failed]"}`
+	if m := matchSigmaRule(&datastore.LogEnt{Time: time.Now().UnixNano(), Type: datastore.Syslog, Src: "cisco-gw", Log: ciscoLog}); m == nil || m.ID != "wazuh-40101" {
+		t.Errorf("expected wazuh-40101 match, got %v", m)
+	}
+
+	// 5. Wazuh Linux SSH Root Login (5715-root) - Requires NamedCapture field extraction: user=root
+	rootLog := `{"hostname":"srv01","content":"sshd[5555]: Accepted password for root from 192.168.1.50 port 2222 ssh2"}`
+	if m := matchSigmaRule(&datastore.LogEnt{Time: time.Now().UnixNano(), Type: datastore.Syslog, Src: "srv01", Log: rootLog}); m == nil || m.ID != "wazuh-5715-root" {
+		t.Errorf("expected wazuh-5715-root match via user field extraction, got %v", m)
+	}
+
+	// 6. Wazuh Linux SSH Normal User Login (user=alice) - Should NOT match wazuh-5715-root
+	aliceLog := `{"hostname":"srv01","content":"sshd[5556]: Accepted password for alice from 192.168.1.50 port 2222 ssh2"}`
+	if m := matchSigmaRule(&datastore.LogEnt{Time: time.Now().UnixNano(), Type: datastore.Syslog, Src: "srv01", Log: aliceLog}); m != nil && m.ID == "wazuh-5715-root" {
+		t.Errorf("expected alice login NOT to match wazuh-5715-root, but got match")
+	}
+}
+
+func TestWazuhPackDecoders_ScopedActivation(t *testing.T) {
+	// 1. When wazuh-linux is NOT in SigmaPacks, wazuh decoders should NOT be loaded
+	datastore.Config.SigmaPacks = []string{"windows-essential"}
+	datastore.Config.SigmaRules = "none"
+	datastore.Config.NamedCaptures = ""
+
+	loadNamedCaptures()
+	if len(namedCaptureRegList) != 0 {
+		t.Errorf("expected 0 decoders when wazuh-linux is not enabled, got %d", len(namedCaptureRegList))
+	}
+
+	// 2. When wazuh-linux IS in SigmaPacks, wazuh decoders are automatically loaded
+	datastore.Config.SigmaPacks = []string{"wazuh-linux"}
+	loadNamedCaptures()
+	if len(namedCaptureRegList) == 0 {
+		t.Errorf("expected wazuh decoders to be loaded when wazuh-linux is enabled")
+	}
+}
