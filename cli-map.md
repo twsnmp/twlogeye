@@ -93,13 +93,29 @@
   - --noList
 ## sigma
 - list (default)
+- packs
 - stat
 - logsrc
 - field
 - check
 - test
+- convert-wazuh
+  - Flags:
+    - --output (-o)
+    - --min-level
+    - --skip-frequency
+    - --stdout
+    - --service
+    - --product
+- convert-wazuh-decoder
+  - Flags:
+    - --output (-o)
+    - --stdout
 - Flags:
   - --sigmaRules
+  - --sigmaPacks
+  - --pack
+  - --custom
 ## start
 - Flags:
   - --dbPath (-d)
@@ -128,6 +144,7 @@
   - --mcpToken
   - --trapCommunity
   - --sigmaRules
+  - --sigmaPacks
   - --sigmaConfigs
   - --namedCaptures
   - --grokDef

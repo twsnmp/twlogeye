@@ -245,3 +245,50 @@ When multiple rules share the same `id` (UUID), **higher priority sources automa
 
 ### Example: Tuning an Embedded Rule
 If you want to use the embedded `win_security_failed_logons` rule but need to add an exception for a specific internal service account, or change its severity level from `low` to `high`, simply place your modified YAML rule with the same ID in your custom rules directory (`sigmaRules`). **twlogeye will automatically replace the pack rule with your custom version.**
+
+---
+
+## 5. Wazuh Rule Packs, Rule Conversion, and Correlation Detection
+
+twlogeye provides built-in capabilities to ingest and leverage rules from the open-source SIEM [Wazuh](https://github.com/wazuh/wazuh) as Sigma rules.
+
+### Embedded Wazuh Rule Packs
+
+| Pack Name | Target Platform | Covered Detections | Correlation |
+| :--- | :--- | :--- | :---: |
+| **`wazuh-linux`** | Linux (SSHD, Sudo, PAM) | Unauthorized user authentication attempts, brute force attacks, root logins, sudo privilege escalation, unregistered sudo execution, PAM authentication failures | Supported (e.g. SSHD brute force) |
+| **`wazuh-web`** | Web (Apache, Nginx) | Vulnerability scanners (Nikto/sqlmap), sensitive hidden file (.git/.env/.htpasswd) reconnaissance | - |
+| **`wazuh-network`** | Network Devices (Cisco, FortiGate) | Cisco admin auth failures, FortiGate SSL-VPN multiple consecutive authentication failures | Supported (e.g. VPN brute force) |
+| **`wazuh-compliance`** | Compliance & Audit Benchmarks<br>(PCI-DSS, NIST, GDPR, CIS) | Syslog/Auditd stopped (10.2.6/AU-12), BAD SU escalation failure (10.2.4/AC-6), sudoers modification (10.2.2/CM-5), account lockouts (8.1.6/AC-7), privileged group changes (10.2.5/AC-2), system time changes (10.4/AU-8), database auth failures (10.2.4/AC-6) | - |
+
+### Wazuh XML Rule Conversion Command (`convert-wazuh`)
+
+Convert Wazuh XML rule files or rulesets into Sigma YAML rules compatible with twlogeye. Parent/child rule hierarchies defined via `<if_sid>` are automatically expanded into boolean AND expressions, and correlation conditions (`<frequency>` / `<timeframe>`) are preserved.
+
+```bash
+# Convert a single Wazuh XML rule file to Sigma YAML
+twlogeye sigma convert-wazuh -o ./my-rules ./0095-sshd_rules.xml
+
+# Convert all XML rules in a directory
+twlogeye sigma convert-wazuh -o ./my-rules /path/to/wazuh/ruleset/rules/
+
+# Output YAML directly to stdout (useful for piping)
+twlogeye sigma convert-wazuh --stdout ./0095-sshd_rules.xml
+```
+
+### Wazuh Decoder XML Regex Conversion Command (`convert-wazuh-decoder`)
+
+Automatically generates named-capture regular expressions compatible with twlogeye NamedCaptures from Wazuh decoder definitions (`<prematch>`, `<regex>`, `<order>`).
+
+```bash
+# Convert decoder XML and save to file
+twlogeye sigma convert-wazuh-decoder -o ./captures ./0310-ssh_decoders.xml
+
+# Output to stdout for review
+twlogeye sigma convert-wazuh-decoder --stdout ./0310-ssh_decoders.xml
+```
+
+### Sliding-Window Correlation Detection
+
+twlogeye's `auditor` interprets `correlation:` metadata (`frequency`, `timeframe`, `group_by`) in converted Sigma rules and monitors event frequency grouped by sender/target (`client`, etc.) using an in-memory sliding time window. Once the count within the window exceeds the threshold, an alert notification (`Notify`) is triggered.
+

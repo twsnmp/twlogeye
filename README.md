@@ -89,7 +89,7 @@ To start with a specific version, specify the tag as follows:
 $docker run --rm -v ./twlogeye:/datastore \
 -p 2055:2055/udp -p 514:514/udp -p 162:162/udp -p 1883:1883 \
 -e TZ=Asia/Tokyo \
-ghcr.io/twsnmp/twlogeye:v0.6.0
+ghcr.io/twsnmp/twlogeye:v0.7.0
 ```
 
 Please create config.yaml.
@@ -620,21 +620,34 @@ $twlogeye gencert --serverCert s.crt --serverKey s.key
 
 #### sigma command
 
+Inspect Sigma rules and embedded rule packs, or convert Wazuh rules:
+
 ```terminal
-Check sigma rules (list|stat|logsrc|field|check|test)
-	directory: list rules
+Check sigma rules (list|packs|stat|logsrc|field|check|test|convert-wazuh)
+	list: list rules
+	packs: list available embedded rule packs
 	stat: stat rules
 	logsrc: list log sources
 	field: list fields
 	check: check rule
 	test: test rule args
+	convert-wazuh: convert Wazuh rules XML to Sigma YAML
+	convert-wazuh-decoder: convert Wazuh decoders XML to named-capture regex patterns
 
 Usage:
   twlogeye sigma [flags]
+  twlogeye sigma [command]
+
+Available Commands:
+  convert-wazuh         Convert Wazuh XML rules to Sigma YAML rules
+  convert-wazuh-decoder Convert Wazuh XML decoders to named-capture regex patterns
 
 Flags:
-  -h, --help                help for sigma
-      --sigmaRules string   SIGMA rule path
+      --custom               Filter custom (file/db) rules only
+  -h, --help                 help for sigma
+      --pack string          Filter rules by pack name
+      --sigmaPacks strings   SIGMA rule packs (e.g. windows-essential,linux-auth)
+      --sigmaRules string    SIGMA rule path
 
 Global Flags:
   -p, --apiPort int         API Server port (default 8081)
@@ -646,6 +659,25 @@ Global Flags:
       --serverCert string   API server cert
       --serverKey string    API server private key
 ```
+
+Examples:
+```bash
+# List available embedded rule packs
+$ twlogeye sigma packs
+
+# List rules with specific embedded packs enabled
+$ twlogeye sigma list --sigmaPacks windows-essential,linux-auth
+
+# Filter rule list to a single pack
+$ twlogeye sigma list --sigmaPacks windows-essential,linux-auth --pack linux-auth
+
+# Convert Wazuh XML rules to Sigma YAML
+$ twlogeye sigma convert-wazuh -o ./converted-rules ./ruleset/rules/0095-sshd_rules.xml
+
+# Convert Wazuh XML decoders to Go named-capture regex patterns
+$ twlogeye sigma convert-wazuh-decoder -o ./patterns ./decoders/0310-ssh_decoders.xml
+```
+
 
 ## MCP (Model Context Protocol) Server
 
@@ -947,6 +979,10 @@ YAML format. It corresponds to the following keys.
   - `linux-system`: Linux system persistence / tampering (cron modified, systemd added, etc.)
   - `network-threats`: Network devices / Firewalls (VPN failure, admin login failure, port scan, etc.)
   - `web-attacks`: Web server attacks (Log4Shell, path traversal, SQLi, WebShell, etc.)
+  - `wazuh-linux`: Converted Wazuh Linux rules (SSHD brute force, sudo escalation, PAM failure, etc.)
+  - `wazuh-web`: Converted Wazuh Web rules (vulnerability scanners, hidden file reconnaissance, etc.)
+  - `wazuh-network`: Converted Wazuh Network rules (Cisco admin auth failure, FortiGate VPN brute force, etc.)
+  - `wazuh-compliance`: Compliance & audit benchmarks (PCI-DSS, NIST, GDPR, CIS account audit, tampering detection)
 * **`sigmaRules`**: The path to custom Sigma rule files or directories.
 * **`sigmaConfigs`**: The path to the Sigma configuration files.
 * **`sigmaSkipError`**: A boolean flag to skip a rule if an error occurs during processing.

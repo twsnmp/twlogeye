@@ -81,7 +81,7 @@ ghcr.io/twsnmp/twlogeye:latest
 $docker run --rm -v ./twlogeye:/datastore \
 -p 2055:2055/udp -p 514:514/udp -p 162:162/udp -p 1883:1883 \
 -e TZ=Asia/Tokyo \
-ghcr.io/twsnmp/twlogeye:v0.6.0
+ghcr.io/twsnmp/twlogeye:v0.7.0
 ```
 
 config.yamlを編集してください。
@@ -638,23 +638,34 @@ $twlogeye gencert --serverCert s.crt --serverKey s.key
 
 #### sigma コマンド
 
-sigmaルールを確認するためのコマンドです。
+Sigmaルールや組み込みルールパックの確認、およびWazuhルールの変換を行うためのコマンドです。
 
 ```terminal
-Check sigma rules (list|stat|logsrc|field|check|test)
+Check sigma rules (list|packs|stat|logsrc|field|check|test|convert-wazuh)
 	list: list rules
+	packs: list available embedded rule packs
 	stat: stat rules
 	logsrc: list log sources
 	field: list fields
 	check: check rule
 	test: test rule args
+	convert-wazuh: convert Wazuh rules XML to Sigma YAML
+	convert-wazuh-decoder: convert Wazuh decoders XML to named-capture regex patterns
 
 Usage:
   twlogeye sigma [flags]
+  twlogeye sigma [command]
+
+Available Commands:
+  convert-wazuh         Convert Wazuh XML rules to Sigma YAML rules
+  convert-wazuh-decoder Convert Wazuh XML decoders to named-capture regex patterns
 
 Flags:
-  -h, --help                help for sigma
-      --sigmaRules string   SIGMA rule path
+      --custom               Filter custom (file/db) rules only
+  -h, --help                 help for sigma
+      --pack string          Filter rules by pack name
+      --sigmaPacks strings   SIGMA rule packs (e.g. windows-essential,linux-auth)
+      --sigmaRules string    SIGMA rule path
 
 Global Flags:
   -p, --apiPort int         API Server port (default 8081)
@@ -666,6 +677,25 @@ Global Flags:
       --serverCert string   API server cert
       --serverKey string    API server private key
 ```
+
+主な利用例：
+```bash
+# 利用可能な組み込みルールパック一覧の表示
+$ twlogeye sigma packs
+
+# 指定したルールパックを有効にしてルール一覧を表示
+$ twlogeye sigma list --sigmaPacks windows-essential,linux-auth
+
+# 特定のルールパックのみを絞り込み表示
+$ twlogeye sigma list --sigmaPacks windows-essential,linux-auth --pack linux-auth
+
+# Wazuh XMLルールをSigma YAMLルールに変換
+$ twlogeye sigma convert-wazuh -o ./converted-rules ./ruleset/rules/0095-sshd_rules.xml
+
+# Wazuh XMLデコーダーをNamedCaptures用正規表現パターンに変換
+$ twlogeye sigma convert-wazuh-decoder -o ./patterns ./decoders/0310-ssh_decoders.xml
+```
+
 
 ## MCP (Model Context Protocol) サーバー
 
@@ -966,6 +996,10 @@ MCPクライアントから以下のURIでリソースを直接参照できま�
   - `linux-system`: Linuxシステム永続化・改ざん（cron改変、systemdサービス追加等）
   - `network-threats`: ネットワーク機器・FW（VPN認証失敗、管理ログイン失敗、スキャン検知等）
   - `web-attacks`: Webサーバー攻撃（Log4Shell、パストラバーサル、SQLi、WebShell等）
+  - `wazuh-linux`: Wazuh変換Linuxルール（SSHDブルートフォース、sudo不正昇格、PAM失敗等）
+  - `wazuh-web`: Wazuh変換Webルール（脆弱性スキャナー、隠しファイルアクセス等）
+  - `wazuh-network`: Wazuh変換ネットワーク機器ルール（Cisco管理ログイン失敗、FortiGate VPN連続失敗等）
+  - `wazuh-compliance`: コンプライアンス基準（PCI-DSS, NIST, GDPR, CIS等に基づく監査・アカウント管理・改ざん検知）
 * **`sigmaRules`**: 個別のSigmaルールファイルまたはディレクトリのパス。
 * **`sigmaConfigs`**: Sigma設定ファイルのパス。
 * **`sigmaSkipError`**: 処理中にエラーが発生した場合にルールをスキップするかどうかのブール値フラグ。

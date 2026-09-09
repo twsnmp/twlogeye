@@ -16,7 +16,7 @@ func TestMCPResourcesAndEmptyTools(t *testing.T) {
 	datastore.Config.SigmaRules = "embed:test"
 	auditor.Init()
 
-	s := NewMCPServer("v0.6.0")
+	s := NewMCPServer("v0.7.0")
 	c := mcp.NewClient(&mcp.Implementation{Name: "client", Version: "v0.0.1"}, nil)
 
 	t1, t2 := mcp.NewInMemoryTransports()
@@ -98,7 +98,7 @@ func TestMCPResourcesAndEmptyTools(t *testing.T) {
 
 func TestMCPSigmaPacks(t *testing.T) {
 	ctx := context.Background()
-	s := NewMCPServer("v0.6.0")
+	s := NewMCPServer("v0.7.0")
 	c := mcp.NewClient(&mcp.Implementation{Name: "client", Version: "v0.0.1"}, nil)
 
 	t1, t2 := mcp.NewInMemoryTransports()
@@ -197,7 +197,7 @@ func TestMCPWazuhConversion(t *testing.T) {
 	defer datastore.CloseDB()
 	auditor.Init()
 
-	s := NewMCPServer("v0.6.0")
+	s := NewMCPServer("v0.7.0")
 	c := mcp.NewClient(&mcp.Implementation{Name: "client", Version: "v0.0.1"}, nil)
 
 	t1, t2 := mcp.NewInMemoryTransports()
